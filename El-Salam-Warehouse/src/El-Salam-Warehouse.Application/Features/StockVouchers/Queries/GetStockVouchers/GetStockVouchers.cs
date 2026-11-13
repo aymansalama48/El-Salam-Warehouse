@@ -89,7 +89,9 @@ internal sealed class GetStockVouchersQueryHandler
                 v.ReceiverName,
                 v.DelivererName,
                 v.Status,
-                v.Items.Count()))
+                v.Items.Count(),
+                v.ReturnDirection,
+                v.ReturnReason))
             .ToListAsync(cancellationToken);
 
         // إنشاء كائن PaginationMetadata و PagedResult

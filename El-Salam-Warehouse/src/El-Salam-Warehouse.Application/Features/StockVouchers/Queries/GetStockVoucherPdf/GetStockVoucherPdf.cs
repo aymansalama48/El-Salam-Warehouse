@@ -143,7 +143,7 @@ internal sealed class GetStockVoucherPdfQueryHandler : IQueryHandler<GetStockVou
 
         var partyName = voucher.Source == VoucherSource.ProductionHall
             ? "صالة الإنتاج والتجليد"
-            : (!string.IsNullOrWhiteSpace(voucher.PartyName) ? voucher.PartyName : (voucher.Type == StockVoucherType.Inbound ? "مورد خارجي" : "عميل تجاري"));
+            : (!string.IsNullOrWhiteSpace(voucher.PartyName) ? voucher.PartyName : (voucher.Type == StockVoucherType.Return ? "عميل / جهة المرتجع" : (voucher.Type == StockVoucherType.Inbound ? "مورد خارجي" : "عميل تجاري")));
 
         var pdfModel = new StockVoucherPdfModel(
             VoucherId: voucher.Id,
@@ -161,7 +161,9 @@ internal sealed class GetStockVoucherPdfQueryHandler : IQueryHandler<GetStockVou
             CancelledByName: cancelledByName,
             CancelledAtCairo: voucher.CancelledAtUtc?.ToLocalTime(),
             CancellationReason: voucher.CancelReason,
-            Items: pdfItems
+            Items: pdfItems,
+            ReturnDirection: voucher.ReturnDirection,
+            ReturnReason: voucher.ReturnReason
         );
 
         var bytes = _reportGenerator.GenerateStockVoucherPdf(pdfModel);

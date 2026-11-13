@@ -11,14 +11,16 @@ public record StockVoucherItemRequest(
 
 // إنشاء إذن
 public record CreateStockVoucherRequest(
-    StockVoucherType Type,            // 1 وارد | 2 صرف
+    StockVoucherType Type,            // 1 وارد | 2 صرف | 3 مرتجع
     DateOnly? Date,                   // اختياري (الافتراضي النهاردة)
     VoucherSource Source,             // 1 خارجي | 2 صالة الإنتاج
     string? PartyName,
     string ReceiverName,
     string? DelivererName,
     string? Notes,
-    List<StockVoucherItemRequest> Items);
+    List<StockVoucherItemRequest> Items,
+    ReturnDirection? ReturnDirection = null,
+    string? ReturnReason = null);
 
 // إلغاء إذن
 public record CancelStockVoucherRequest(string Reason);

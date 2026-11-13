@@ -1,4 +1,4 @@
-﻿using El_Salam_Warehouse.Domain.Common.Entities;
+using El_Salam_Warehouse.Domain.Common.Entities;
 using El_Salam_Warehouse.Domain.Enums;
 
 namespace El_Salam_Warehouse.Domain.Entities.StockVouchers;
@@ -11,6 +11,12 @@ public class StockVoucher : AuditableEntity
 
     // نوع الإذن
     public StockVoucherType Type { get; private set; }
+
+    // اتجاه حركة المرتجع (وارد / منصرف) - خاص بأذونات المرتجع
+    public ReturnDirection? ReturnDirection { get; private set; }
+
+    // سبب الإرجاع (خاص بأذونات المرتجع)
+    public string? ReturnReason { get; private set; }
 
     // تاريخ الإذن (يوم العمل)
     public DateOnly VoucherDate { get; private set; }
@@ -58,7 +64,9 @@ public class StockVoucher : AuditableEntity
         string? partyName,
         string receiverName,
         string? delivererName,
-        string? notes)
+        string? notes,
+        ReturnDirection? returnDirection = null,
+        string? returnReason = null)
     {
         VoucherNumber = voucherNumber;
         Type = type;
@@ -68,6 +76,8 @@ public class StockVoucher : AuditableEntity
         ReceiverName = receiverName;
         DelivererName = delivererName;
         Notes = notes;
+        ReturnDirection = returnDirection;
+        ReturnReason = returnReason;
         Status = StockVoucherStatus.Active;
         OccurredAtUtc = DateTime.UtcNow;
     }

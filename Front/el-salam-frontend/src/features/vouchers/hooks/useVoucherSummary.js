@@ -20,6 +20,8 @@ export function useVoucherSummary() {
     inboundThisMonth: 0,
     outboundThisMonth: 0,
     cancelledToday: 0,
+    returnsToday: 0,
+    returnsThisMonth: 0,
     lastVoucherNumber: null,
     lastVoucherAtUtc: null,
   });

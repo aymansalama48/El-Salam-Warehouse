@@ -1,4 +1,4 @@
-﻿using El_Salam_Warehouse.Domain.Entities.StockVouchers;
+using El_Salam_Warehouse.Domain.Entities.StockVouchers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,6 +19,7 @@ public class StockVoucherConfiguration : IEntityTypeConfiguration<StockVoucher>
         builder.Property(v => v.ReceiverName).IsRequired().HasMaxLength(150);
         builder.Property(v => v.DelivererName).HasMaxLength(150);
         builder.Property(v => v.Notes).HasMaxLength(500);
+        builder.Property(v => v.ReturnReason).HasMaxLength(250);
         builder.Property(v => v.CancelReason).HasMaxLength(300);
 
         // فهرس للفلاتر

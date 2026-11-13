@@ -113,6 +113,7 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                 foreach (var r in day.Rows)
                 {
                     var isInbound = r.Type == StockVoucherType.Inbound;
+                    var isReturn = r.Type == StockVoucherType.Return;
 
                     string qtyDisplay = $"{Num(r.Quantity)} {r.UnitLabel}";
 
@@ -122,9 +123,9 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     table.Cell().Element(TextCell).Text(string.IsNullOrWhiteSpace(r.Party) ? "-" : r.Party);
                     table.Cell().Element(BodyCell).Text(qtyDisplay);
                     table.Cell().Element(BodyCell)
-                        .Text(isInbound ? "وارد" : "صرف")
+                        .Text(isReturn ? "مرتجع" : (isInbound ? "وارد" : "صرف"))
                         .Bold()
-                        .FontColor(isInbound ? Colors.Green.Darken2 : Colors.Red.Darken2);
+                        .FontColor(isReturn ? Colors.Orange.Darken2 : (isInbound ? Colors.Green.Darken2 : Colors.Red.Darken2));
                 }
             });
         });
@@ -331,9 +332,12 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
     public byte[] GenerateStockVoucherPdf(StockVoucherPdfModel model)
     {
         var isInbound = model.Type == StockVoucherType.Inbound;
+        var isReturn = model.Type == StockVoucherType.Return;
         var isCancelled = model.Status == StockVoucherStatus.Cancelled;
 
-        var title = isInbound ? "إذن استلام وارد مخزني" : "إذن صرف بضاعة من المخزن";
+        var title = isReturn
+            ? (model.ReturnDirection == ReturnDirection.Outbound ? "إذن رد بضاعة مرتجعة (منصرف)" : "إذن استلام بضاعة مرتجعة (وارد)")
+            : (isInbound ? "إذن استلام وارد مخزني" : "إذن صرف بضاعة من المخزن");
         var subtitle = $"رقم الإذن: {model.VoucherNumber} | تاريخ الإذن: {FormatDate(model.VoucherDate)}";
 
         return Build(title, subtitle, model.OccurredAtCairo, landscape: false, content =>
@@ -356,6 +360,15 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     });
                 }
 
+                // شارة سبب المرتجع إذا كان إذن مرتجع
+                if (isReturn && !string.IsNullOrWhiteSpace(model.ReturnReason))
+                {
+                    col.Item().Border(1.2f).BorderColor(Colors.Orange.Medium).Background(Colors.Orange.Lighten5).Padding(7).Row(r =>
+                    {
+                        r.RelativeItem().Text($"بيان وسبب المرتجع: {model.ReturnReason}").Bold().FontSize(9.5f).FontColor(Colors.Orange.Darken3);
+                    });
+                }
+
                 // 2. بطاقات بيانات أطراف الإذن
                 col.Item().Row(row =>
                 {
@@ -364,19 +377,26 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     // الطرف الأول (الجهة)
                     row.RelativeItem().Border(0.6f).BorderColor(Colors.Grey.Lighten1).Background(Colors.Grey.Lighten5).Padding(6).Column(c =>
                     {
-                        c.Item().Text(isInbound ? "جهة التوريد / المصدر" : "الجهة المستلمة (العميل)").FontSize(8).FontColor(Colors.Grey.Darken2);
+                        var partyLabel = isReturn
+                            ? (model.ReturnDirection == ReturnDirection.Outbound ? "الجهة المرتجع إليها (المورّد)" : "الجهة المرتجع منها (العميل)")
+                            : (isInbound ? "جهة التوريد / المصدر" : "الجهة المستلمة (العميل)");
+                        c.Item().Text(partyLabel).FontSize(8).FontColor(Colors.Grey.Darken2);
                         c.Item().Text(model.PartyName).Bold().FontSize(10);
                     });
 
                     // الطرف الثاني (المستلم والمورّد)
                     row.RelativeItem().Border(0.6f).BorderColor(Colors.Grey.Lighten1).Background(Colors.Grey.Lighten5).Padding(6).Column(c =>
                     {
-                        c.Item().Text(isInbound ? "المستلم (أمين المخزن)" : "المستلم الفعلي").FontSize(8).FontColor(Colors.Grey.Darken2);
+                        var receiverLabel = isReturn
+                            ? (model.ReturnDirection == ReturnDirection.Outbound ? "القائم بالصرف (أمين المخزن)" : "المستلم (أمين المخزن)")
+                            : (isInbound ? "المستلم (أمين المخزن)" : "المستلم الفعلي");
+                        c.Item().Text(receiverLabel).FontSize(8).FontColor(Colors.Grey.Darken2);
                         c.Item().Text(model.ReceiverName).Bold().FontSize(10);
 
                         if (!string.IsNullOrWhiteSpace(model.DelivererName))
                         {
-                            c.Item().PaddingTop(2).Text($"المسلّم: {model.DelivererName}").FontSize(8).FontColor(Colors.Grey.Darken3);
+                            var delivererLabel = isReturn ? "مندوب الإرجاع / السائق: " : "المسلّم: ";
+                            c.Item().PaddingTop(2).Text($"{delivererLabel}{model.DelivererName}").FontSize(8).FontColor(Colors.Grey.Darken3);
                         }
                     });
 
@@ -446,8 +466,12 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                 {
                     row.Spacing(24);
 
-                    var sig1 = isInbound ? "توقيع أمين المخزن المستلم" : "توقيع أمين المخزن المنصرف";
-                    var sig2 = isInbound ? "توقيع مندوب صالة الإنتاج / المورّد" : "توقيع المستلم / العميل";
+                    var sig1 = isReturn
+                        ? (model.ReturnDirection == ReturnDirection.Outbound ? "توقيع أمين المخزن المنصرف" : "توقيع أمين المخزن المستلم")
+                        : (isInbound ? "توقيع أمين المخزن المستلم" : "توقيع أمين المخزن المنصرف");
+                    var sig2 = isReturn
+                        ? (model.ReturnDirection == ReturnDirection.Outbound ? "توقيع مندوب الاستلام (المورّد)" : "توقيع مندوب الإرجاع / العميل")
+                        : (isInbound ? "توقيع مندوب صالة الإنتاج / المورّد" : "توقيع المستلم / العميل");
                     var sig3 = "اعتماد مدير المخازن والتشغيل";
 
                     foreach (var sigTitle in new[] { sig1, sig2, sig3 })

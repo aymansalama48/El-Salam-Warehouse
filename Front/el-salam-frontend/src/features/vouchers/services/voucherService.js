@@ -75,6 +75,8 @@ export const createStockVoucher = async (payload) => {
     receiverName: payload.receiverName.trim(),
     delivererName: payload.delivererName?.trim() || null,
     notes: payload.notes?.trim() || null,
+    returnDirection: payload.returnDirection ? Number(payload.returnDirection) : null,
+    returnReason: payload.returnReason?.trim() || null,
     items: payload.items.map((it) => ({
       productId: it.productId,
       quantity: Number(it.quantity),
@@ -112,6 +114,8 @@ export const getStockVouchersSummary = async () => {
     inboundThisMonth: Number(data?.inboundThisMonth ?? data?.InboundThisMonth ?? 0),
     outboundThisMonth: Number(data?.outboundThisMonth ?? data?.OutboundThisMonth ?? 0),
     cancelledToday: Number(data?.cancelledToday ?? data?.CancelledToday ?? 0),
+    returnsToday: Number(data?.returnsToday ?? data?.ReturnsToday ?? 0),
+    returnsThisMonth: Number(data?.returnsThisMonth ?? data?.ReturnsThisMonth ?? 0),
     lastVoucherNumber: data?.lastVoucherNumber ?? data?.LastVoucherNumber ?? null,
     lastVoucherAtUtc: data?.lastVoucherAtUtc ?? data?.LastVoucherAtUtc ?? null,
   };

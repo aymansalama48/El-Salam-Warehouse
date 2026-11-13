@@ -14,6 +14,7 @@ export function VouchersTable({
   onPageChange,
 }) {
   const isInbound = type === VOUCHER_TYPE.INBOUND;
+  const isReturn = type === VOUCHER_TYPE.RETURN;
 
   if (loading) {
     return (
@@ -31,10 +32,16 @@ export function VouchersTable({
           <Hash className="w-7 h-7" />
         </div>
         <p className="text-slate-800 font-bold text-base mb-1">
-          {isInbound ? "لا توجد أذونات وارد مسجلة" : "لا توجد أذونات صرف مسجلة"}
+          {isReturn
+            ? "لا توجد أذونات مرتجع مسجلة"
+            : isInbound
+            ? "لا توجد أذونات وارد مسجلة"
+            : "لا توجد أذونات صرف مسجلة"}
         </p>
         <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-          {isInbound
+          {isReturn
+            ? "لم يتم العثور على أي أذونات مرتجع مطابقة للفلاتر. يمكنك تسجيل إذن مرتجع جديد لضبط حركة المخزون."
+            : isInbound
             ? "لم يتم العثور على أي أذونات وارد مطابقة للفلاتر. يمكنك تسجيل إذن استلام إنتاج أو وارد جديد."
             : "لم يتم العثور على أي أذونات صرف مطابقة للفلاتر. يمكنك تسجيل إذن صرف طلبيات جديد."}
         </p>
@@ -50,13 +57,23 @@ export function VouchersTable({
             <tr>
               <th className="py-3 px-4 whitespace-nowrap">رقم الإذن</th>
               <th className="py-3 px-4 whitespace-nowrap">التاريخ والوقت (توقيت القاهرة)</th>
+              {isReturn && <th className="py-3 px-4 whitespace-nowrap">نوع المرتجع</th>}
+              {isReturn && <th className="py-3 px-4 whitespace-nowrap">سبب الإرجاع</th>}
               <th className="py-3 px-4 whitespace-nowrap">
-                {isInbound ? "المصدر / المورّد" : "الجهة المنصرف إليها"}
+                {isReturn
+                  ? "الجهة (العميل / المورّد)"
+                  : isInbound
+                  ? "المصدر / المورّد"
+                  : "الجهة المنصرف إليها"}
               </th>
               <th className="py-3 px-4 whitespace-nowrap">
-                {isInbound ? "المستلم (أمين المخزن)" : "المستلم"}
+                {isInbound || isReturn ? "المستلم (أمين المخزن)" : "المستلم"}
               </th>
-              {isInbound && <th className="py-3 px-4 whitespace-nowrap">المُسلِّم</th>}
+              {(isInbound || isReturn) && (
+                <th className="py-3 px-4 whitespace-nowrap">
+                  {isReturn ? "مندوب الإرجاع" : "المُسلِّم"}
+                </th>
+              )}
               <th className="py-3 px-4 text-center whitespace-nowrap">عدد الأصناف</th>
               <th className="py-3 px-4 whitespace-nowrap">الحالة</th>
               <th className="py-3 px-4 text-center whitespace-nowrap">الإجراءات</th>
@@ -66,6 +83,7 @@ export function VouchersTable({
             {vouchers.map((item) => {
               const isCancelled = item.status === VOUCHER_STATUS.CANCELLED;
               const isProduction = item.source === VOUCHER_SOURCE.PRODUCTION;
+              const isOutwardReturn = item.returnDirection === 2;
 
               return (
                 <tr
@@ -80,7 +98,9 @@ export function VouchersTable({
                   <td className="py-3.5 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
                     <span className="inline-flex items-center gap-1.5">
                       <Hash className="w-3.5 h-3.5 text-slate-400" />
-                      {item.voucherNumber || item.id}
+                      <span className={isReturn ? "text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200" : ""}>
+                        {item.voucherNumber || item.id}
+                      </span>
                     </span>
                   </td>
 
@@ -92,11 +112,37 @@ export function VouchersTable({
                     </span>
                   </td>
 
+                  {/* في المرتجع: نوع المرتجع */}
+                  {isReturn && (
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {isOutwardReturn ? (
+                        <span className="px-2.5 py-1 text-2xs font-bold rounded-lg bg-rose-50 text-rose-700 border border-rose-200">
+                          مرتجع منصرف (رد لمورد)
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 text-2xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          مرتجع وارد (إيداع بالمخزن)
+                        </span>
+                      )}
+                    </td>
+                  )}
+
+                  {/* في المرتجع: سبب الإرجاع */}
+                  {isReturn && (
+                    <td className="py-3.5 px-4 text-xs font-semibold text-slate-700 whitespace-nowrap">
+                      <span className="inline-block max-w-xs truncate" title={item.returnReason || "غير محدد"}>
+                        {item.returnReason || "غير محدد"}
+                      </span>
+                    </td>
+                  )}
+
                   {/* المصدر / المورد / الجهة */}
                   <td className="py-3.5 px-4 font-bold text-slate-800 whitespace-nowrap">
                     <span className="inline-flex items-center gap-1.5">
                       <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      {isInbound
+                      {isReturn
+                        ? item.partyName || (isOutwardReturn ? "مورد خارجي" : "عميل")
+                        : isInbound
                         ? isProduction
                           ? "صالة الإنتاج والتجليد"
                           : item.partyName || "جهة خارجية"
@@ -112,8 +158,8 @@ export function VouchersTable({
                     </span>
                   </td>
 
-                  {/* المسلم (الجايب) - في الوارد فقط */}
-                  {isInbound && (
+                  {/* المسلم (الجايب / مندوب الإرجاع) */}
+                  {(isInbound || isReturn) && (
                     <td className="py-3.5 px-4 text-xs font-medium text-slate-600 whitespace-nowrap">
                       {item.delivererName ? (
                         <span className="inline-flex items-center gap-1.5">

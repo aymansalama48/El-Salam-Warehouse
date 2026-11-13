@@ -57,7 +57,9 @@ internal sealed class GetStockVouchersSummaryQueryHandler
             OutboundThisMonth: active.Count(v => v.Type == StockVoucherType.Outbound),
             CancelledToday: monthVouchers.Count(v => v.Status == StockVoucherStatus.Cancelled && v.VoucherDate == today),
             LastVoucherNumber: last?.VoucherNumber,
-            LastVoucherAtUtc: last?.OccurredAtUtc);
+            LastVoucherAtUtc: last?.OccurredAtUtc,
+            ReturnsToday: active.Count(v => v.Type == StockVoucherType.Return && v.VoucherDate == today),
+            ReturnsThisMonth: active.Count(v => v.Type == StockVoucherType.Return));
 
         return Result<StockVouchersSummaryDto>.Success(summary);
     }

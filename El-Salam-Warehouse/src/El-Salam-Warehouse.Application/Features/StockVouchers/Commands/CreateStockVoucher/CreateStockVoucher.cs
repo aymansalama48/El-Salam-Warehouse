@@ -26,7 +26,9 @@ public record CreateStockVoucherCommand(
     string ReceiverName,
     string? DelivererName,
     string? Notes,
-    List<StockVoucherItemInput> Items) : ICommand<Guid>;
+    List<StockVoucherItemInput> Items,
+    ReturnDirection? ReturnDirection = null,
+    string? ReturnReason = null) : ICommand<Guid>;
 
 // 2. الـ Validator
 public class CreateStockVoucherCommandValidator : AbstractValidator<CreateStockVoucherCommand>
@@ -37,7 +39,7 @@ public class CreateStockVoucherCommandValidator : AbstractValidator<CreateStockV
         RuleFor(x => x.Type).IsInEnum().WithMessage("نوع الإذن غير صحيح.");
         RuleFor(x => x.Source).IsInEnum().WithMessage("مصدر الإذن غير صحيح.");
 
-        // إذن الصرف لجهة خارجية فقط
+        // إذن الصرف والمرتجع لجهة خارجية فقط
         RuleFor(x => x.Source)
             .Equal(VoucherSource.External)
             .When(x => x.Type == StockVoucherType.Outbound)
@@ -49,12 +51,25 @@ public class CreateStockVoucherCommandValidator : AbstractValidator<CreateStockV
             .When(x => x.Date.HasValue)
             .WithMessage("تاريخ الإذن لا يمكن أن يكون في المستقبل.");
 
-        // اسم الجهة مطلوب لو خارجي
+        // اسم الجهة مطلوب لو خارجي أو مرتجع
         RuleFor(x => x.PartyName).MaximumLength(150).WithMessage("اسم الجهة طويل جداً.");
         RuleFor(x => x.PartyName)
             .NotEmpty()
-            .When(x => x.Source == VoucherSource.External)
+            .When(x => x.Source == VoucherSource.External || x.Type == StockVoucherType.Return)
             .WithMessage("اسم الجهة مطلوب.");
+
+        // سبب المرتجع مطلوب إذا كان إذن مرتجع
+        RuleFor(x => x.ReturnReason)
+            .NotEmpty()
+            .When(x => x.Type == StockVoucherType.Return)
+            .WithMessage("سبب الإرجاع مطلوب لإذن المرتجع.")
+            .MaximumLength(250).WithMessage("سبب الإرجاع طويل جداً.");
+
+        // اتجاه المرتجع
+        RuleFor(x => x.ReturnDirection)
+            .IsInEnum()
+            .When(x => x.Type == StockVoucherType.Return && x.ReturnDirection.HasValue)
+            .WithMessage("اتجاه حركة المرتجع غير صحيح.");
 
         // المستلم مطلوب دايماً
         RuleFor(x => x.ReceiverName)
@@ -109,12 +124,27 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
         // استخدام IDateTime بدلاً من CairoTime
         var voucherDate = request.Date ?? DateOnly.FromDateTime(_dateTime.Now);
         var isInbound = request.Type == StockVoucherType.Inbound;
+        var isReturn = request.Type == StockVoucherType.Return;
+        var isStockIncrease = isInbound || (isReturn && request.ReturnDirection != ReturnDirection.Outbound);
 
-        // التحقق من الصلاحيات حسب نوع الإذن (وارد / منصرف)
-        var requiredPermission = isInbound ? Permissions.Vouchers.CreateInbound : Permissions.Vouchers.CreateOutbound;
+        // التحقق من الصلاحيات حسب نوع الإذن (وارد / منصرف / مرتجع)
+        var requiredPermission = request.Type switch
+        {
+            StockVoucherType.Inbound => Permissions.Vouchers.CreateInbound,
+            StockVoucherType.Outbound => Permissions.Vouchers.CreateOutbound,
+            StockVoucherType.Return => Permissions.Vouchers.CreateReturn,
+            _ => Permissions.Vouchers.CreateInbound
+        };
+
         if (!_currentUser.HasPermission(requiredPermission))
         {
-            var actionTitle = isInbound ? "تسجيل إذن وارد" : "تسجيل إذن منصرف";
+            var actionTitle = request.Type switch
+            {
+                StockVoucherType.Inbound => "تسجيل إذن وارد",
+                StockVoucherType.Outbound => "تسجيل إذن منصرف",
+                StockVoucherType.Return => "تسجيل إذن مرتجع",
+                _ => "تسجيل إذن مخزن"
+            };
             return Result<Guid>.Failure(new Error("Auth.Forbidden", $"ليس لديك الصلاحية المطلوبة لـ {actionTitle}.", ErrorType.Forbidden));
         }
 
@@ -139,12 +169,19 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
             }
         }
 
-        // توليد رقم الإذن (IN-2026-0001)
-        var prefix = $"{(isInbound ? "IN" : "OUT")}-{voucherDate.Year}-";
+        // توليد رقم الإذن (IN-2026-0001 / OUT-2026-0001 / RET-2026-0001)
+        var typePrefix = request.Type switch
+        {
+            StockVoucherType.Inbound => "IN",
+            StockVoucherType.Outbound => "OUT",
+            StockVoucherType.Return => "RET",
+            _ => "VOU"
+        };
+        var prefix = $"{typePrefix}-{voucherDate.Year}-";
         var count = await _context.StockVouchers.CountAsync(v => v.VoucherNumber.StartsWith(prefix), cancellationToken);
         var voucherNumber = $"{prefix}{count + 1:D4}";
 
-        var isExternal = request.Source == VoucherSource.External;
+        var isExternal = request.Source == VoucherSource.External || isReturn;
 
         var voucher = new StockVoucher(
             voucherNumber,
@@ -154,7 +191,9 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
             isExternal ? request.PartyName?.Trim() : null,
             request.ReceiverName.Trim(),
             request.DelivererName?.Trim(),
-            request.Notes?.Trim());
+            request.Notes?.Trim(),
+            request.ReturnDirection,
+            request.ReturnReason?.Trim());
 
         // نعدّل الرصيد ونضيف البنود
         foreach (var line in request.Items)
@@ -168,7 +207,7 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
                 : line.Quantity;
             var balanceBefore = product.TotalSubUnitStock;
 
-            if (isInbound)
+            if (isStockIncrease)
             {
                 product.IncreaseStock(quantitySubUnits);
             }

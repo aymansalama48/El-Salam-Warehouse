@@ -68,9 +68,13 @@ public class StockVouchersController : BaseApiController
         [FromServices] IPermissionService permissionService,
         CancellationToken cancellationToken)
     {
-        var requiredPermission = request.Type == StockVoucherType.Inbound
-            ? Permissions.Vouchers.CreateInbound
-            : Permissions.Vouchers.CreateOutbound;
+        var requiredPermission = request.Type switch
+        {
+            StockVoucherType.Inbound => Permissions.Vouchers.CreateInbound,
+            StockVoucherType.Outbound => Permissions.Vouchers.CreateOutbound,
+            StockVoucherType.Return => Permissions.Vouchers.CreateReturn,
+            _ => Permissions.Vouchers.CreateInbound
+        };
 
         if (currentUser.UserId.HasValue)
         {
@@ -92,7 +96,9 @@ public class StockVouchersController : BaseApiController
             request.ReceiverName,
             request.DelivererName,
             request.Notes,
-            request.Items.Select(i => new StockVoucherItemInput(i.ProductId, i.Quantity, i.EntryUnit)).ToList());
+            request.Items.Select(i => new StockVoucherItemInput(i.ProductId, i.Quantity, i.EntryUnit)).ToList(),
+            request.ReturnDirection,
+            request.ReturnReason);
 
         var result = await Sender.Send(command, cancellationToken);
         return HandleResult(result);

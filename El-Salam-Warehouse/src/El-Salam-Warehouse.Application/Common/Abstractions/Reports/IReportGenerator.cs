@@ -122,7 +122,9 @@ public record StockVoucherPdfModel(
     string? CancelledByName,
     DateTime? CancelledAtCairo,
     string? CancellationReason,
-    List<StockVoucherPdfItem> Items
+    List<StockVoucherPdfItem> Items,
+    ReturnDirection? ReturnDirection = null,
+    string? ReturnReason = null
 );
 
 // ---------- بطاقة تعريف ومواصفات صنف تام الصنع ----------

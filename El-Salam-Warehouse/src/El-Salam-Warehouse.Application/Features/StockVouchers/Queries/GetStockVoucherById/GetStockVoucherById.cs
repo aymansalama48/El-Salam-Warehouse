@@ -49,6 +49,8 @@ internal sealed class GetStockVoucherByIdQueryHandler : IQueryHandler<GetStockVo
                 v.Status,
                 v.CancelReason,
                 v.CancelledAtUtc,
+                v.ReturnDirection,
+                v.ReturnReason,
                 Items = v.Items.Select(i => new StockVoucherItemDto(
                     i.ProductId,
                     i.ProductName,
@@ -127,7 +129,9 @@ internal sealed class GetStockVoucherByIdQueryHandler : IQueryHandler<GetStockVo
             rawVoucher.Items,
             rawVoucher.CreatedAt,
             createdByName,
-            cancelledByName);
+            cancelledByName,
+            rawVoucher.ReturnDirection,
+            rawVoucher.ReturnReason);
 
         return Result<StockVoucherDto>.Success(voucher);
     }

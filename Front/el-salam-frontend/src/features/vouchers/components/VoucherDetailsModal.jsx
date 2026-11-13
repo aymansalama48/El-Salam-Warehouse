@@ -64,7 +64,11 @@ export function VoucherDetailsModal({
     setPrinting(true);
     try {
       const blob = await getStockVoucherPdf(voucherId);
-      const prefix = voucher?.type === VOUCHER_TYPE.INBOUND ? "إذن_استلام_وارد" : "إذن_صرف_مخزني";
+      const prefix = voucher?.type === VOUCHER_TYPE.RETURN
+        ? "إذن_مرتجع_مخزني"
+        : voucher?.type === VOUCHER_TYPE.INBOUND
+        ? "إذن_استلام_وارد"
+        : "إذن_صرف_مخزني";
       const fileName = `${prefix}_${voucher?.voucherNumber || voucherId}.pdf`;
       handlePdfDownloadAndPreview(blob, fileName);
     } catch (err) {
@@ -76,6 +80,7 @@ export function VoucherDetailsModal({
   };
 
   const isInbound = voucher?.type === VOUCHER_TYPE.INBOUND;
+  const isReturn = voucher?.type === VOUCHER_TYPE.RETURN;
   const isCancelled = voucher?.status === VOUCHER_STATUS.CANCELLED;
   const isProduction = voucher?.source === VOUCHER_SOURCE.PRODUCTION;
 
@@ -89,6 +94,8 @@ export function VoucherDetailsModal({
               className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs ring-4 ring-slate-100 ${
                 isCancelled
                   ? "bg-slate-200 text-slate-600"
+                  : isReturn
+                  ? "bg-amber-600 text-white"
                   : isInbound
                   ? "bg-emerald-600 text-white"
                   : "bg-rose-600 text-white"
@@ -99,7 +106,7 @@ export function VoucherDetailsModal({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-extrabold text-slate-900 text-base leading-tight">
-                  {isInbound ? "إذن استلام وارد" : "إذن صرف مخزني"}
+                  {isReturn ? "إذن مرتجع مخزني" : isInbound ? "إذن استلام وارد" : "إذن صرف مخزني"}
                 </h3>
                 {voucher?.voucherNumber && (
                   <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold bg-slate-100 text-slate-800 border border-slate-200">
@@ -109,6 +116,15 @@ export function VoucherDetailsModal({
                 {isCancelled && (
                   <span className="px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
                     ملغي
+                  </span>
+                )}
+                {isReturn && (
+                  <span className={`px-2.5 py-0.5 rounded-full text-2xs font-extrabold border ${
+                    voucher?.returnDirection === 2
+                      ? "bg-rose-50 text-rose-800 border-rose-200"
+                      : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                  }`}>
+                    {voucher?.returnDirection === 2 ? "مرتجع منصرف (لمورد)" : "مرتجع وارد (بالمخزن)"}
                   </span>
                 )}
               </div>
@@ -162,11 +178,26 @@ export function VoucherDetailsModal({
                 </div>
               )}
 
+              {/* شارة سبب المرتجع إذا وجد */}
+              {isReturn && voucher.returnReason && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-1 text-amber-900">
+                  <div className="flex items-center gap-2 font-bold text-xs">
+                    <span className="w-2 h-2 rounded-full bg-amber-600" />
+                    <span>سبب وبيان الإرجاع:</span>
+                  </div>
+                  <p className="text-xs text-amber-900 font-semibold pr-4">
+                    {voucher.returnReason}
+                  </p>
+                </div>
+              )}
+
               {/* ترويسة الإذن الرسمية للطباعة */}
               <div className="border-b border-slate-200 pb-3.5 flex justify-between items-start">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-slate-900">
-                    {isInbound ? "إذن استلام وإيداع بضاعة واردة" : "إذن صرف وخروج بضاعة"}
+                    {isReturn
+                      ? (voucher.returnDirection === 2 ? "إذن رد بضاعة مرتجعة (منصرف لمورد)" : "إذن استلام بضاعة مرتجعة (وارد للمخزن)")
+                      : (isInbound ? "إذن استلام وإيداع بضاعة واردة" : "إذن صرف وخروج بضاعة")}
                   </h2>
                   <p className="text-xs text-slate-500 font-semibold mt-0.5">شركة ومصنع السلام للكراسات والحلول الورقية</p>
                 </div>
@@ -193,7 +224,9 @@ export function VoucherDetailsModal({
                 <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all">
                   <span className="text-2xs text-slate-400 font-bold flex items-center gap-1.5 mb-1">
                     <Building2 className="w-3.5 h-3.5 text-slate-500" />
-                    {isInbound ? "المصدر / المورّد:" : "الجهة المنصرف إليها:"}
+                    {isReturn
+                      ? (voucher.returnDirection === 2 ? "الجهة المرتجع إليها (المورد):" : "الجهة المرتجع منها (العميل):")
+                      : (isInbound ? "المصدر / المورّد:" : "الجهة المنصرف إليها:")}
                   </span>
                   <span className="font-extrabold text-slate-800 block truncate" title={isProduction ? "صالة الإنتاج والتجليد" : voucher.partyName || "جهة خارجية"}>
                     {isProduction ? "صالة الإنتاج والتجليد" : voucher.partyName || "جهة خارجية"}
@@ -216,7 +249,9 @@ export function VoucherDetailsModal({
                 <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all">
                   <span className="text-2xs text-slate-400 font-bold flex items-center gap-1.5 mb-1">
                     <User className="w-3.5 h-3.5 text-slate-500" />
-                    {isInbound ? "المستلم (أمين المخزن):" : "المستلم:"}
+                    {isReturn
+                      ? (voucher.returnDirection === 2 ? "القائم بالصرف (أمين المخزن):" : "المستلم (أمين المخزن):")
+                      : (isInbound ? "المستلم (أمين المخزن):" : "المستلم:")}
                   </span>
                   <span className="font-extrabold text-slate-800 block truncate">
                     {voucher.receiverName || "—"}
@@ -227,7 +262,11 @@ export function VoucherDetailsModal({
                 <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all">
                   <span className="text-2xs text-slate-400 font-bold flex items-center gap-1.5 mb-1">
                     <Truck className="w-3.5 h-3.5 text-slate-500" />
-                    {isProduction ? "المُسلِّم (الإنتاج):" : "المُسلِّم / الناقل:"}
+                    {isReturn
+                      ? "مندوب الإرجاع / السائق:"
+                      : isProduction
+                      ? "المُسلِّم (الإنتاج):"
+                      : "المُسلِّم / الناقل:"}
                   </span>
                   <span className="font-extrabold text-slate-800 block truncate">
                     {voucher.delivererName || "—"}

@@ -6,6 +6,7 @@ import CategoriesPage from "../pages/CategoriesPage";
 import DailyTransactionsPage from "../pages/DailyTransactionsPage";
 import InboundPage from "../pages/InboundPage";
 import OutboundPage from "../pages/OutboundPage";
+import ReturnsPage from "../pages/ReturnsPage";
 import LoginPage from "../pages/LoginPage";
 import UsersPage from "../pages/UsersPage";
 import RolesPage from "../pages/RolesPage";
@@ -40,6 +41,7 @@ export function AppRoutes() {
         <Route path="transactions" element={<Navigate to="/stock-ledger" replace />} />
         <Route path="inbound" element={<InboundPage />} />
         <Route path="outbound" element={<OutboundPage />} />
+        <Route path="returns" element={<ReturnsPage />} />
 
         {/* د. إدارة النظام والمستخدمين (Admin Only) */}
         <Route

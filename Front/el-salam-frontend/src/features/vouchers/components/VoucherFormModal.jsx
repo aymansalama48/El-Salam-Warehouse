@@ -3,6 +3,7 @@ import {
   X, 
   ArrowDownToLine, 
   ArrowUpFromLine, 
+  RotateCcw,
   Plus, 
   Trash2, 
   Calendar, 
@@ -13,20 +14,23 @@ import {
   AlertCircle, 
   Loader2,
   Package,
-  Sparkles
+  Sparkles,
+  HelpCircle
 } from "lucide-react";
 import { ProductCombobox } from "./ProductCombobox";
 import { AdvancedProductPickerModal } from "./AdvancedProductPickerModal";
-import { validateVoucher, VOUCHER_TYPE, VOUCHER_SOURCE } from "../schemas/voucherSchema";
+import { validateVoucher, VOUCHER_TYPE, VOUCHER_SOURCE, RETURN_DIRECTION } from "../schemas/voucherSchema";
 import { getTodayDateString } from "../../../utils/dateUtils";
 
 export function VoucherFormModal({ 
   isOpen, 
   onClose, 
   onSave, 
-  type = VOUCHER_TYPE.INBOUND // 1: وارد | 2: صرف
+  type = VOUCHER_TYPE.INBOUND // 1: وارد | 2: صرف | 3: مرتجع
 }) {
   const isInbound = type === VOUCHER_TYPE.INBOUND;
+  const isReturn = type === VOUCHER_TYPE.RETURN;
+  const isOutbound = type === VOUCHER_TYPE.OUTBOUND;
 
   // حقول رأس الإذن
   const [date, setDate] = useState(getTodayDateString());
@@ -35,6 +39,8 @@ export function VoucherFormModal({
   const [receiverName, setReceiverName] = useState("");
   const [delivererName, setDelivererName] = useState("");
   const [notes, setNotes] = useState("");
+  const [returnDirection, setReturnDirection] = useState(RETURN_DIRECTION.INBOUND);
+  const [returnReason, setReturnReason] = useState("");
 
   // بنود الأصناف في الإذن: كل بند يحتفظ بكائن الصنف المختار كاملاً والوحدة المحددة
   const [items, setItems] = useState([
@@ -48,6 +54,9 @@ export function VoucherFormModal({
 
   // صالة الإنتاج في الوارد: تتطلب notebooksOnly=true
   const isProductionSource = isInbound && source === VOUCHER_SOURCE.PRODUCTION;
+
+  // هل الحركة تخصم من رصيد المخزن؟ (صرف أو مرتجع منصرف لمورد)
+  const isStockDeduction = isOutbound || (isReturn && returnDirection === RETURN_DIRECTION.OUTBOUND);
 
   // عند تغيير المصدر: مسح الأصناف المختارة والبدء من جديد
   const handleSourceChange = (newSource) => {
@@ -143,8 +152,8 @@ export function VoucherFormModal({
       return;
     }
 
-    // التحقق من الرصيد المتاح في الصرف (type = 2)
-    if (!isInbound) {
+    // التحقق من الرصيد المتاح في الحركات التي تخصم من المخزون (صرف أو مرتجع لمورد)
+    if (isStockDeduction) {
       for (let i = 0; i < items.length; i++) {
         const it = items[i];
         const prod = it.product;
@@ -179,15 +188,17 @@ export function VoucherFormModal({
       }
     }
 
-    // تجهيز كائن الطلب (في الصرف: delivererName دائماً null)
+    // تجهيز كائن الطلب
     const payload = {
       type,
       date: date || null,
       source: isInbound ? source : VOUCHER_SOURCE.EXTERNAL,
       partyName: isProductionSource ? null : partyName.trim() || null,
       receiverName: receiverName.trim(),
-      delivererName: isInbound ? delivererName.trim() || null : null,
+      delivererName: isOutbound ? null : (delivererName.trim() || null),
       notes: notes.trim() || null,
+      returnDirection: isReturn ? returnDirection : null,
+      returnReason: isReturn ? returnReason.trim() || null : null,
       items: items.map((it) => {
         const isCopyPaper = it.product?.unitType === 3 || it.product?.baseUnit === "كرتونة";
         const defaultUnit = isCopyPaper ? 2 : 1;
@@ -225,17 +236,33 @@ export function VoucherFormModal({
           <div className="flex items-center gap-3">
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${
-                isInbound ? "bg-emerald-100/80 text-emerald-700" : "bg-rose-100/80 text-rose-700"
+                isReturn
+                  ? "bg-amber-100/90 text-amber-800"
+                  : isInbound
+                  ? "bg-emerald-100/80 text-emerald-700"
+                  : "bg-rose-100/80 text-rose-700"
               }`}
             >
-              {isInbound ? <ArrowDownToLine className="w-5 h-5" /> : <ArrowUpFromLine className="w-5 h-5" />}
+              {isReturn ? (
+                <RotateCcw className="w-5 h-5" />
+              ) : isInbound ? (
+                <ArrowDownToLine className="w-5 h-5" />
+              ) : (
+                <ArrowUpFromLine className="w-5 h-5" />
+              )}
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                {isInbound ? "تسجيل إذن وارد جديد" : "تسجيل إذن صرف جديد"}
+                {isReturn
+                  ? "تسجيل إذن مرتجع جديد"
+                  : isInbound
+                  ? "تسجيل إذن وارد جديد"
+                  : "تسجيل إذن صرف جديد"}
               </h2>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {isInbound
+                {isReturn
+                  ? "توثيق استلام بضاعة مرتجعة من عميل أو رد بضاعة لمورد وضبط أرصدة المخزن"
+                  : isInbound
                   ? "إضافة بضاعة مستلمة من صالة الإنتاج أو مورد خارجي"
                   : "صرف وتسليم بضاعة للعملاء وتجار الجملة"}
               </p>
@@ -260,7 +287,184 @@ export function VoucherFormModal({
           )}
 
           {/* حقول رأس الإذن */}
-          {isInbound ? (
+          {isReturn ? (
+            <>
+              {/* 1. نوع حركة المرتجع (وارد للمخزن أم منصرف لمورد) */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">
+                  نوع حركة المرتجع <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setReturnDirection(RETURN_DIRECTION.INBOUND)}
+                    className={`p-3 rounded-xl border text-right transition-all cursor-pointer ${
+                      returnDirection === RETURN_DIRECTION.INBOUND
+                        ? "border-amber-600 bg-amber-50/70 text-amber-950 font-bold ring-2 ring-amber-600/20"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <p className="text-xs sm:text-sm">مرتجع وارد (إيداع بالمخزن)</p>
+                    </div>
+                    <p className="text-2xs text-slate-400 mt-1">بضاعة مرتجعة من عميل أو صالة وتضاف للرصيد (+)</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setReturnDirection(RETURN_DIRECTION.OUTBOUND)}
+                    className={`p-3 rounded-xl border text-right transition-all cursor-pointer ${
+                      returnDirection === RETURN_DIRECTION.OUTBOUND
+                        ? "border-amber-600 bg-amber-50/70 text-amber-950 font-bold ring-2 ring-amber-600/20"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500" />
+                      <p className="text-xs sm:text-sm">مرتجع منصرف (رد لمورّد)</p>
+                    </div>
+                    <p className="text-2xs text-slate-400 mt-1">إرجاع بضاعة من المخزن لمورد خارجي (-)</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. سبب الإرجاع واختصارات شائعة */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+                    سبب الإرجاع <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-2xs text-slate-400">انقر على أحد الأسباب أو اكتب سبباً مخصصاً</span>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                  {[
+                    "مرتجع مبيعات / عميل",
+                    "عيوب تصنيع أو طباعة",
+                    "زيادة عن الطلبية المطلوبة",
+                    "تالف أثناء النقل أو التحميل",
+                    "فائض عن تشغيل الصالة",
+                    "خطأ في المقاس أو الوزن"
+                  ].map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => {
+                        setReturnReason(chip);
+                        if (errors.returnReason) setErrors((prev) => ({ ...prev, returnReason: null }));
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-2xs font-bold transition-all cursor-pointer ${
+                        returnReason === chip
+                          ? "bg-amber-600 text-white shadow-2xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-800"
+                      }`}
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={returnReason}
+                  onChange={(e) => {
+                    setReturnReason(e.target.value);
+                    if (errors.returnReason) setErrors((prev) => ({ ...prev, returnReason: null }));
+                  }}
+                  placeholder="اكتب سبب إرجاع البضاعة بالتفصيل..."
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
+                    errors.returnReason ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                  }`}
+                />
+                {errors.returnReason && <p className="text-xs text-rose-500 font-bold mt-1">{errors.returnReason}</p>}
+              </div>
+
+              {/* 3. التاريخ والجهة */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    تاريخ الإذن <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={date}
+                    max={getTodayDateString()}
+                    onChange={(e) => {
+                      setDate(e.target.value);
+                      if (errors.date) setErrors((prev) => ({ ...prev, date: null }));
+                    }}
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
+                      errors.date ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                    }`}
+                  />
+                  {errors.date && <p className="text-xs text-rose-500 font-bold mt-1">{errors.date}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                    {returnDirection === RETURN_DIRECTION.OUTBOUND ? "الجهة المرتجع إليها (المورّد)" : "الجهة المرتجع منها (العميل)"} <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={partyName}
+                    onChange={(e) => {
+                      setPartyName(e.target.value);
+                      if (errors.partyName) setErrors((prev) => ({ ...prev, partyName: null }));
+                    }}
+                    placeholder={returnDirection === RETURN_DIRECTION.OUTBOUND ? "اسم المورد أو المصنع الخارجي" : "اسم العميل أو المكتبة أو المعرض"}
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
+                      errors.partyName ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                    }`}
+                  />
+                  {errors.partyName && <p className="text-xs text-rose-500 font-bold mt-1">{errors.partyName}</p>}
+                </div>
+              </div>
+
+              {/* 4. المستلم والقائم بالإرجاع */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-slate-400" />
+                    المستلم (أمين المخزن) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={receiverName}
+                    onChange={(e) => {
+                      setReceiverName(e.target.value);
+                      if (errors.receiverName) setErrors((prev) => ({ ...prev, receiverName: null }));
+                    }}
+                    placeholder="اسم أمين المخزن الذي استلم وفحص المرتجع"
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
+                      errors.receiverName ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                    }`}
+                  />
+                  {errors.receiverName && <p className="text-xs text-rose-500 font-bold mt-1">{errors.receiverName}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                    <Truck className="w-3.5 h-3.5 text-slate-400" />
+                    القائم بالإرجاع (المندوب / السائق)
+                  </label>
+                  <input
+                    type="text"
+                    value={delivererName}
+                    onChange={(e) => {
+                      setDelivererName(e.target.value);
+                      if (errors.delivererName) setErrors((prev) => ({ ...prev, delivererName: null }));
+                    }}
+                    placeholder="اسم الشخص أو السائق الذي أحضر البضاعة"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-800 focus:bg-white font-medium"
+                  />
+                </div>
+              </div>
+            </>
+          ) : isInbound ? (
             <>
               {/* نوع ومصدر الإذن في حالة الوارد */}
               <div className="space-y-1.5">
@@ -754,11 +958,21 @@ export function VoucherFormModal({
               type="submit"
               disabled={submitting}
               className={`px-5 py-2 text-xs font-bold text-white rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 ${
-                isInbound ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"
+                isReturn
+                  ? "bg-amber-600 hover:bg-amber-700"
+                  : isInbound
+                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  : "bg-rose-600 hover:bg-rose-700"
               }`}
             >
               {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {submitting ? "جاري التسجيل..." : isInbound ? "تسجيل إذن الوارد" : "تسجيل إذن الصرف"}
+              {submitting
+                ? "جاري التسجيل..."
+                : isReturn
+                ? "تسجيل إذن المرتجع"
+                : isInbound
+                ? "تسجيل إذن الوارد"
+                : "تسجيل إذن الصرف"}
             </button>
           </div>
         </form>
@@ -771,7 +985,7 @@ export function VoucherFormModal({
           selectedProductIds={items.map((it) => it.product?.id).filter(Boolean)}
           onToggleProduct={handleToggleProductFromPicker}
           notebooksOnly={isProductionSource}
-          isOutbound={!isInbound}
+          isOutbound={isStockDeduction}
         />
       )}
     </div>

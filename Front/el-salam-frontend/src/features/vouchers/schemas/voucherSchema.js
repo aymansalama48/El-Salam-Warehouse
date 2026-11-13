@@ -2,9 +2,20 @@ import { z } from "zod";
 
 /**
  * أنواع أذونات المخزن
- * 1 = وارد | 2 = صرف
+ * 1 = وارد | 2 = صرف | 3 = مرتجع
  */
 export const VOUCHER_TYPE = {
+  INBOUND: 1,
+  OUTBOUND: 2,
+  RETURN: 3,
+};
+
+/**
+ * اتجاه حركة المرتجع
+ * 1 = وارد إلى المخزن (استلام بضاعة مرتجعة - زيادة رصيد)
+ * 2 = منصرف من المخزن (إرجاع بضاعة لمورد - خصم رصيد)
+ */
+export const RETURN_DIRECTION = {
   INBOUND: 1,
   OUTBOUND: 2,
 };
@@ -54,7 +65,7 @@ export const voucherItemSchema = z.object({
  */
 export const createVoucherSchema = z
   .object({
-    type: z.union([z.literal(1), z.literal(2)]),
+    type: z.union([z.literal(1), z.literal(2), z.literal(3)]),
     date: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, "صيغة التاريخ غير صالحة")
@@ -65,6 +76,8 @@ export const createVoucherSchema = z
     receiverName: z.string().trim().min(1, "اسم المستلم مطلوب"),
     delivererName: z.string().nullable().optional(),
     notes: z.string().nullable().optional(),
+    returnDirection: z.union([z.literal(1), z.literal(2)]).nullable().optional(),
+    returnReason: z.string().nullable().optional(),
     items: z.array(voucherItemSchema).min(1, "يجب إضافة صنف واحد على الأقل في الإذن"),
   })
   .superRefine((data, ctx) => {
@@ -97,13 +110,31 @@ export const createVoucherSchema = z
       }
     }
 
-    // 2) صرف (type = 2)
+    // 3) صرف (type = 2)
     if (data.type === 2) {
       if (!data.partyName || !data.partyName.trim()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "اسم الجهة المنصرف إليها مطلوب",
           path: ["partyName"],
+        });
+      }
+    }
+
+    // 4) مرتجع (type = 3)
+    if (data.type === 3) {
+      if (!data.partyName || !data.partyName.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: data.returnDirection === 2 ? "اسم المورد / الجهة المرتجع إليها مطلوب" : "اسم العميل / الجهة المرتجع منها مطلوب",
+          path: ["partyName"],
+        });
+      }
+      if (!data.returnReason || !data.returnReason.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "سبب الإرجاع مطلوب لإذن المرتجع",
+          path: ["returnReason"],
         });
       }
     }

@@ -59,13 +59,16 @@ internal sealed class CancelStockVoucherCommandHandler : ICommandHandler<CancelS
             .Where(p => productIds.Contains(p.Id))
             .ToDictionaryAsync(p => p.Id, cancellationToken);
 
+        var isStockIncrease = voucher.Type == StockVoucherType.Inbound ||
+            (voucher.Type == StockVoucherType.Return && voucher.ReturnDirection != ReturnDirection.Outbound);
+
         foreach (var item in voucher.Items)
         {
             var product = products[item.ProductId];
 
-            if (voucher.Type == StockVoucherType.Inbound)
+            if (isStockIncrease)
             {
-                // إلغاء وارد = نشيل الكمية، بس لازم الرصيد يكفي
+                // إلغاء إذن زوّد الرصيد (وارد أو مرتجع وارد) = نشيل الكمية، بس لازم الرصيد يكفي
                 if (product.TotalSubUnitStock < item.QuantitySubUnits)
                 {
                     return Result.Failure(StockVoucherErrors.CannotCancelInbound(product.Name));
@@ -75,7 +78,7 @@ internal sealed class CancelStockVoucherCommandHandler : ICommandHandler<CancelS
             }
             else
             {
-                // إلغاء صرف = نرجّع الكمية للرصيد
+                // إلغاء صرف أو مرتجع منصرف = نرجّع الكمية للرصيد
                 product.IncreaseStock(item.QuantitySubUnits);
             }
         }

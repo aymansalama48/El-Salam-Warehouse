@@ -16,7 +16,9 @@ public record StockVoucherListItemDto(
     string ReceiverName,
     string? DelivererName,
     StockVoucherStatus Status,
-    int ItemsCount);          // عدد الأصناف في الإذن
+    int ItemsCount,
+    ReturnDirection? ReturnDirection = null,
+    string? ReturnReason = null);
 
 // بند في تفاصيل الإذن
 public record StockVoucherItemDto(
@@ -47,7 +49,9 @@ public record StockVoucherDto(
     List<StockVoucherItemDto> Items,
     DateTime CreatedAt,
     string? CreatedByName,
-    string? CancelledByName);
+    string? CancelledByName,
+    ReturnDirection? ReturnDirection = null,
+    string? ReturnReason = null);
 
 // ملخص الإذونات (الشريط الجانبي + الكروت)
 public record StockVouchersSummaryDto(
@@ -57,4 +61,6 @@ public record StockVouchersSummaryDto(
     int OutboundThisMonth,
     int CancelledToday,
     string? LastVoucherNumber,
-    DateTime? LastVoucherAtUtc);
+    DateTime? LastVoucherAtUtc,
+    int ReturnsToday = 0,
+    int ReturnsThisMonth = 0);

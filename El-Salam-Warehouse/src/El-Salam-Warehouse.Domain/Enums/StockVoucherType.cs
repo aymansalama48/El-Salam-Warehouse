@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,6 +11,9 @@ namespace El_Salam_Warehouse.Domain.Enums
         Inbound = 1,
 
         // إذن صرف (بينقّص الرصيد)
-        Outbound = 2
+        Outbound = 2,
+
+        // إذن مرتجع (حركات إرجاع البضاعة)
+        Return = 3
     }
 }
