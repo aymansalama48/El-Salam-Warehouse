@@ -33,7 +33,8 @@ public record DaybookEntryDto(
     string BaseUnit = "",
     string SubUnit = "",
     ReturnDirection? ReturnDirection = null,
-    string? ReturnReason = null);
+    string? ReturnReason = null,
+    string? ShortageReason = null);
 
 // إجماليات الفترة (من غير الإذونات الملغية)
 public record DaybookTotalsDto(
@@ -48,7 +49,11 @@ public record DaybookTotalsDto(
     int ReturnVouchers = 0,
     int ReturnNotebooks = 0,
     int ReturnCartons = 0,
-    int ReturnReams = 0);
+    int ReturnReams = 0,
+    int ShortageVouchers = 0,
+    int ShortageNotebooks = 0,
+    int ShortageCartons = 0,
+    int ShortageReams = 0);
 
 // الرد الكامل باستخدام PagedResult
 public record DaybookResponse(DaybookTotalsDto Totals, PagedResult<DaybookEntryDto> Entries);
@@ -156,7 +161,11 @@ internal sealed class GetDaybookQueryHandler : IQueryHandler<GetDaybookQuery, Da
             Vouchers(StockVoucherType.Return),
             QtyNotebooks(StockVoucherType.Return),
             QtyCartons(StockVoucherType.Return),
-            QtyReams(StockVoucherType.Return));
+            QtyReams(StockVoucherType.Return),
+            Vouchers(StockVoucherType.Shortage),
+            QtyNotebooks(StockVoucherType.Shortage),
+            QtyCartons(StockVoucherType.Shortage),
+            QtyReams(StockVoucherType.Shortage));
 
         // السطور بالصفحات
         var totalCount = await query.CountAsync(cancellationToken);
@@ -189,7 +198,8 @@ internal sealed class GetDaybookQueryHandler : IQueryHandler<GetDaybookQuery, Da
                 x.Item.Product.BaseUnit,
                 x.Item.Product.SubUnit,
                 x.Voucher.ReturnDirection,
-                x.Voucher.ReturnReason))
+                x.Voucher.ReturnReason,
+                x.Voucher.ShortageReason))
             .ToListAsync(cancellationToken);
 
         // إنشاء كائن PaginationMetadata و PagedResult

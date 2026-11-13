@@ -115,7 +115,11 @@ internal sealed class GetDaybookReportQueryHandler : IQueryHandler<GetDaybookRep
             Vouchers(StockVoucherType.Return),
             QtyNotebooks(StockVoucherType.Return),
             QtyCartons(StockVoucherType.Return),
-            QtyReams(StockVoucherType.Return));
+            QtyReams(StockVoucherType.Return),
+            Vouchers(StockVoucherType.Shortage),
+            QtyNotebooks(StockVoucherType.Shortage),
+            QtyCartons(StockVoucherType.Shortage),
+            QtyReams(StockVoucherType.Shortage));
 
         var days = rows.GroupBy(r => r.VoucherDate).Select(g => new DaybookReportDay(
             g.Key,
@@ -130,7 +134,8 @@ internal sealed class GetDaybookReportQueryHandler : IQueryHandler<GetDaybookRep
             StockVoucherType.Inbound => "حركات الوارد",
             StockVoucherType.Outbound => "حركات الصرف",
             StockVoucherType.Return => "حركات المرتجع",
-            _ => "جميع الحركات (الوارد والصرف والمرتجع)"
+            StockVoucherType.Shortage => "حركات العجز والتسويات المخزنية",
+            _ => "جميع الحركات (الوارد والصرف والمرتجع والعجز)"
         };
 
         var filterParts = new List<string>();

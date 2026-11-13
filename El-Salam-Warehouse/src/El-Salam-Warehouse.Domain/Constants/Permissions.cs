@@ -35,13 +35,14 @@ public static class Permissions
         public const string Delete = "Categories.Delete";
     }
 
-    // 4. صلاحيات أذونات المخزن (الوارد والمنصرف والمرتجع)
+    // 4. صلاحيات أذونات المخزن (الوارد والمنصرف والمرتجع والعجز)
     public static class Vouchers
     {
         public const string View = "Vouchers.View";
         public const string CreateInbound = "Vouchers.CreateInbound";
         public const string CreateOutbound = "Vouchers.CreateOutbound";
         public const string CreateReturn = "Vouchers.CreateReturn";
+        public const string CreateShortage = "Vouchers.CreateShortage";
         public const string Cancel = "Vouchers.Cancel";
     }
 
@@ -104,11 +105,12 @@ public static class Permissions
         new(Categories.Delete, "حذف فئة تصنيف", "فئات الأصناف", "إزالة فئة تصنيف لا تحتوي على منتجات مرتبطة"),
 
         // أذونات المخزن
-        new(Vouchers.View, "عرض أذونات الوارد والمنصرف والمرتجع", "أذونات المخزن", "استعراض سجلات أذونات الاستلام والصرف والمرتجعات المخزنية وتفاصيل كل إذن"),
+        new(Vouchers.View, "عرض أذونات الوارد والمنصرف والمرتجع والعجز", "أذونات المخزن", "استعراض سجلات أذونات الاستلام والصرف والمرتجعات والعجز وتفاصيل كل إذن"),
         new(Vouchers.CreateInbound, "تسجيل إذن وارد (استلام إنتاج)", "أذونات المخزن", "إنشاء وتوثيق إذن استلام بضاعة جديدة أو وارد إنتاج للمستودع"),
         new(Vouchers.CreateOutbound, "تسجيل إذن منصرف (صرف بضاعة)", "أذونات المخزن", "إنشاء وتوثيق إذن صرف بضاعة للعملاء أو جهات التسليم"),
         new(Vouchers.CreateReturn, "تسجيل إذن مرتجع", "أذونات المخزن", "إنشاء وتوثيق إذن استلام بضاعة مرتجعة أو رد بضاعة وضبط أرصدة المخزن"),
-        new(Vouchers.Cancel, "إلغاء إذن مخزني", "أذونات المخزن", "إلغاء إذن وارد أو منصرف أو مرتجع وعكس تأثيره على رصيد المخزون"),
+        new(Vouchers.CreateShortage, "تسجيل إذن تسوية عجز", "أذونات المخزن", "إنشاء وتوثيق إذن عجز وفاقد مخزني وخصم الكميات من أرصدة المخزن"),
+        new(Vouchers.Cancel, "إلغاء إذن مخزني", "أذونات المخزن", "إلغاء إذن وارد أو منصرف أو مرتجع أو عجز وعكس تأثيره على رصيد المخزون"),
 
         // دفتر اليومية
         new(Daybook.View, "تصفح دفتر اليومية", "دفتر اليومية", "استعراض السجل الزمني لكافة حركات الوارد والمنصرف اليومية بالمستودع"),
@@ -148,6 +150,7 @@ public static class Permissions
         Vouchers.CreateInbound,
         Vouchers.CreateOutbound,
         Vouchers.CreateReturn,
+        Vouchers.CreateShortage,
         Daybook.View,
         Daybook.Export,
         Profile.View,

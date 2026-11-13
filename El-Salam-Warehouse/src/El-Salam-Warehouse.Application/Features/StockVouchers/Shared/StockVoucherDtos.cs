@@ -18,7 +18,8 @@ public record StockVoucherListItemDto(
     StockVoucherStatus Status,
     int ItemsCount,
     ReturnDirection? ReturnDirection = null,
-    string? ReturnReason = null);
+    string? ReturnReason = null,
+    string? ShortageReason = null);
 
 // بند في تفاصيل الإذن
 public record StockVoucherItemDto(
@@ -51,7 +52,8 @@ public record StockVoucherDto(
     string? CreatedByName,
     string? CancelledByName,
     ReturnDirection? ReturnDirection = null,
-    string? ReturnReason = null);
+    string? ReturnReason = null,
+    string? ShortageReason = null);
 
 // ملخص الإذونات (الشريط الجانبي + الكروت)
 public record StockVouchersSummaryDto(
@@ -63,4 +65,6 @@ public record StockVouchersSummaryDto(
     string? LastVoucherNumber,
     DateTime? LastVoucherAtUtc,
     int ReturnsToday = 0,
-    int ReturnsThisMonth = 0);
+    int ReturnsThisMonth = 0,
+    int ShortagesToday = 0,
+    int ShortagesThisMonth = 0);

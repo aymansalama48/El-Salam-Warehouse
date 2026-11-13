@@ -1,26 +1,30 @@
-import { ArrowDownToLine, ArrowUpFromLine, RotateCcw, BookOpen, Box, Hash } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, RotateCcw, AlertTriangle, BookOpen, Box, Hash } from "lucide-react";
 
 export function DaybookSummaryCards({ totals = {} }) {
   const {
     inboundVouchers = 0,
     outboundVouchers = 0,
     returnVouchers = 0,
+    shortageVouchers = 0,
     inboundNotebooks = 0,
     outboundNotebooks = 0,
     returnNotebooks = 0,
+    shortageNotebooks = 0,
     inboundCartons = 0,
     outboundCartons = 0,
     returnCartons = 0,
+    shortageCartons = 0,
     inboundReams = 0,
     outboundReams = 0,
     returnReams = 0,
+    shortageReams = 0,
   } = totals;
 
-  const totalVouchers = inboundVouchers + outboundVouchers + returnVouchers;
+  const totalVouchers = inboundVouchers + outboundVouchers + returnVouchers + shortageVouchers;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-right">
-      {/* 1. أذونات الوارد والصرف والمرتجع */}
+      {/* 1. أذونات الوارد والصرف والمرتجع والعجز */}
       <div className="p-3.5 bg-white rounded-xl border border-slate-200/70 shadow-2xs space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-2xs font-bold text-slate-400 flex items-center gap-1.5">
@@ -31,7 +35,7 @@ export function DaybookSummaryCards({ totals = {} }) {
             {totalVouchers} إذن
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-100">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 border-t border-slate-100">
           <div className="flex items-center gap-1.5">
             <span className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
               <ArrowDownToLine className="w-3.5 h-3.5" />
@@ -59,6 +63,15 @@ export function DaybookSummaryCards({ totals = {} }) {
               <p className="text-xs sm:text-sm font-bold text-amber-700">{returnVouchers.toLocaleString()}</p>
             </div>
           </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-6 h-6 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-3.5 h-3.5" />
+            </span>
+            <div>
+              <p className="text-3xs text-slate-400">العجز</p>
+              <p className="text-xs sm:text-sm font-bold text-purple-700">{shortageVouchers.toLocaleString()}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -73,7 +86,7 @@ export function DaybookSummaryCards({ totals = {} }) {
             بالكشكول
           </span>
         </div>
-        <div className={`grid ${returnNotebooks > 0 ? "grid-cols-3" : "grid-cols-2"} gap-2 pt-1 border-t border-slate-100`}>
+        <div className={`grid ${(returnNotebooks > 0 || shortageNotebooks > 0) ? (returnNotebooks > 0 && shortageNotebooks > 0 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3") : "grid-cols-2"} gap-2 pt-1 border-t border-slate-100`}>
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 font-bold">
               +
@@ -103,6 +116,17 @@ export function DaybookSummaryCards({ totals = {} }) {
               </div>
             </div>
           )}
+          {shortageNotebooks > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center shrink-0 font-bold">
+                !
+              </span>
+              <div>
+                <p className="text-2xs text-slate-400">إجمالي العجز</p>
+                <p className="text-sm font-bold text-purple-700">{shortageNotebooks.toLocaleString()} <span className="text-2xs font-normal">كشكول</span></p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -117,7 +141,7 @@ export function DaybookSummaryCards({ totals = {} }) {
             بالكرتونة
           </span>
         </div>
-        <div className={`grid ${(returnCartons > 0 || returnReams > 0) ? "grid-cols-3" : "grid-cols-2"} gap-2 pt-1 border-t border-slate-100`}>
+        <div className={`grid ${(returnCartons > 0 || returnReams > 0 || shortageCartons > 0 || shortageReams > 0) ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2"} gap-2 pt-1 border-t border-slate-100`}>
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 font-bold">
               +
@@ -172,6 +196,24 @@ export function DaybookSummaryCards({ totals = {} }) {
                   {returnReams > 0 && (
                     <span className="block text-2xs font-semibold text-amber-600">
                       ({returnReams.toLocaleString()} رزمة)
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+          {(shortageCartons > 0 || shortageReams > 0) && (
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center shrink-0 font-bold">
+                !
+              </span>
+              <div>
+                <p className="text-2xs text-slate-400">إجمالي العجز</p>
+                <p className="text-sm font-bold text-purple-700">
+                  {shortageCartons.toLocaleString()} <span className="text-2xs font-normal">كرتونة</span>
+                  {shortageReams > 0 && (
+                    <span className="block text-2xs font-semibold text-purple-600">
+                      ({shortageReams.toLocaleString()} رزمة)
                     </span>
                   )}
                 </p>

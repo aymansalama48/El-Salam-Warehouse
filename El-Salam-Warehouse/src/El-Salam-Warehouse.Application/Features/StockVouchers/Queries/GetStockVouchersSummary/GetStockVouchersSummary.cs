@@ -59,7 +59,9 @@ internal sealed class GetStockVouchersSummaryQueryHandler
             LastVoucherNumber: last?.VoucherNumber,
             LastVoucherAtUtc: last?.OccurredAtUtc,
             ReturnsToday: active.Count(v => v.Type == StockVoucherType.Return && v.VoucherDate == today),
-            ReturnsThisMonth: active.Count(v => v.Type == StockVoucherType.Return));
+            ReturnsThisMonth: active.Count(v => v.Type == StockVoucherType.Return),
+            ShortagesToday: active.Count(v => v.Type == StockVoucherType.Shortage && v.VoucherDate == today),
+            ShortagesThisMonth: active.Count(v => v.Type == StockVoucherType.Shortage));
 
         return Result<StockVouchersSummaryDto>.Success(summary);
     }

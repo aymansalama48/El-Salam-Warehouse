@@ -2,12 +2,13 @@ import { z } from "zod";
 
 /**
  * أنواع أذونات المخزن
- * 1 = وارد | 2 = صرف | 3 = مرتجع
+ * 1 = وارد | 2 = صرف | 3 = مرتجع | 4 = عجز
  */
 export const VOUCHER_TYPE = {
   INBOUND: 1,
   OUTBOUND: 2,
   RETURN: 3,
+  SHORTAGE: 4,
 };
 
 /**
@@ -65,7 +66,7 @@ export const voucherItemSchema = z.object({
  */
 export const createVoucherSchema = z
   .object({
-    type: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    type: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
     date: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, "صيغة التاريخ غير صالحة")
@@ -78,6 +79,7 @@ export const createVoucherSchema = z
     notes: z.string().nullable().optional(),
     returnDirection: z.union([z.literal(1), z.literal(2)]).nullable().optional(),
     returnReason: z.string().nullable().optional(),
+    shortageReason: z.string().nullable().optional(),
     items: z.array(voucherItemSchema).min(1, "يجب إضافة صنف واحد على الأقل في الإذن"),
   })
   .superRefine((data, ctx) => {
@@ -135,6 +137,17 @@ export const createVoucherSchema = z
           code: z.ZodIssueCode.custom,
           message: "سبب الإرجاع مطلوب لإذن المرتجع",
           path: ["returnReason"],
+        });
+      }
+    }
+
+    // 5) عجز وتسوية مخزنية (type = 4)
+    if (data.type === 4) {
+      if (!data.shortageReason || !data.shortageReason.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "سبب وبيان العجز المخزني مطلوب",
+          path: ["shortageReason"],
         });
       }
     }

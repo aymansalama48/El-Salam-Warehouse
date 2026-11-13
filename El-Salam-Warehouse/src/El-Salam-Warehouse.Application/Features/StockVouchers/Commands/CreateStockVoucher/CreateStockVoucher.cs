@@ -28,7 +28,8 @@ public record CreateStockVoucherCommand(
     string? Notes,
     List<StockVoucherItemInput> Items,
     ReturnDirection? ReturnDirection = null,
-    string? ReturnReason = null) : ICommand<Guid>;
+    string? ReturnReason = null,
+    string? ShortageReason = null) : ICommand<Guid>;
 
 // 2. الـ Validator
 public class CreateStockVoucherCommandValidator : AbstractValidator<CreateStockVoucherCommand>
@@ -64,6 +65,13 @@ public class CreateStockVoucherCommandValidator : AbstractValidator<CreateStockV
             .When(x => x.Type == StockVoucherType.Return)
             .WithMessage("سبب الإرجاع مطلوب لإذن المرتجع.")
             .MaximumLength(250).WithMessage("سبب الإرجاع طويل جداً.");
+
+        // سبب العجز مطلوب إذا كان إذن عجز
+        RuleFor(x => x.ShortageReason)
+            .NotEmpty()
+            .When(x => x.Type == StockVoucherType.Shortage)
+            .WithMessage("سبب العجز مطلوب لإذن العجز.")
+            .MaximumLength(250).WithMessage("سبب وبيان العجز طويل جداً.");
 
         // اتجاه المرتجع
         RuleFor(x => x.ReturnDirection)
@@ -125,14 +133,16 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
         var voucherDate = request.Date ?? DateOnly.FromDateTime(_dateTime.Now);
         var isInbound = request.Type == StockVoucherType.Inbound;
         var isReturn = request.Type == StockVoucherType.Return;
+        var isShortage = request.Type == StockVoucherType.Shortage;
         var isStockIncrease = isInbound || (isReturn && request.ReturnDirection != ReturnDirection.Outbound);
 
-        // التحقق من الصلاحيات حسب نوع الإذن (وارد / منصرف / مرتجع)
+        // التحقق من الصلاحيات حسب نوع الإذن (وارد / منصرف / مرتجع / عجز)
         var requiredPermission = request.Type switch
         {
             StockVoucherType.Inbound => Permissions.Vouchers.CreateInbound,
             StockVoucherType.Outbound => Permissions.Vouchers.CreateOutbound,
             StockVoucherType.Return => Permissions.Vouchers.CreateReturn,
+            StockVoucherType.Shortage => Permissions.Vouchers.CreateShortage,
             _ => Permissions.Vouchers.CreateInbound
         };
 
@@ -143,6 +153,7 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
                 StockVoucherType.Inbound => "تسجيل إذن وارد",
                 StockVoucherType.Outbound => "تسجيل إذن منصرف",
                 StockVoucherType.Return => "تسجيل إذن مرتجع",
+                StockVoucherType.Shortage => "تسجيل إذن عجز",
                 _ => "تسجيل إذن مخزن"
             };
             return Result<Guid>.Failure(new Error("Auth.Forbidden", $"ليس لديك الصلاحية المطلوبة لـ {actionTitle}.", ErrorType.Forbidden));
@@ -169,12 +180,13 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
             }
         }
 
-        // توليد رقم الإذن (IN-2026-0001 / OUT-2026-0001 / RET-2026-0001)
+        // توليد رقم الإذن (IN-2026-0001 / OUT-2026-0001 / RET-2026-0001 / SHT-2026-0001)
         var typePrefix = request.Type switch
         {
             StockVoucherType.Inbound => "IN",
             StockVoucherType.Outbound => "OUT",
             StockVoucherType.Return => "RET",
+            StockVoucherType.Shortage => "SHT",
             _ => "VOU"
         };
         var prefix = $"{typePrefix}-{voucherDate.Year}-";
@@ -188,12 +200,13 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
             request.Type,
             voucherDate,
             request.Source,
-            isExternal ? request.PartyName?.Trim() : null,
+            isExternal ? request.PartyName?.Trim() : (isShortage ? (!string.IsNullOrWhiteSpace(request.PartyName) ? request.PartyName.Trim() : "لجنة الجرد والمطابقة") : null),
             request.ReceiverName.Trim(),
             request.DelivererName?.Trim(),
             request.Notes?.Trim(),
             request.ReturnDirection,
-            request.ReturnReason?.Trim());
+            request.ReturnReason?.Trim(),
+            request.ShortageReason?.Trim());
 
         // نعدّل الرصيد ونضيف البنود
         foreach (var line in request.Items)

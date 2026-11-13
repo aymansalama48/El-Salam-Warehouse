@@ -18,6 +18,9 @@ public class StockVoucher : AuditableEntity
     // سبب الإرجاع (خاص بأذونات المرتجع)
     public string? ReturnReason { get; private set; }
 
+    // سبب وبيان العجز (خاص بأذونات العجز والتسويات)
+    public string? ShortageReason { get; private set; }
+
     // تاريخ الإذن (يوم العمل)
     public DateOnly VoucherDate { get; private set; }
 
@@ -66,7 +69,8 @@ public class StockVoucher : AuditableEntity
         string? delivererName,
         string? notes,
         ReturnDirection? returnDirection = null,
-        string? returnReason = null)
+        string? returnReason = null,
+        string? shortageReason = null)
     {
         VoucherNumber = voucherNumber;
         Type = type;
@@ -78,6 +82,7 @@ public class StockVoucher : AuditableEntity
         Notes = notes;
         ReturnDirection = returnDirection;
         ReturnReason = returnReason;
+        ShortageReason = shortageReason;
         Status = StockVoucherStatus.Active;
         OccurredAtUtc = DateTime.UtcNow;
     }

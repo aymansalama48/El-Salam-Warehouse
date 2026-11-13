@@ -73,6 +73,7 @@ public class StockVouchersController : BaseApiController
             StockVoucherType.Inbound => Permissions.Vouchers.CreateInbound,
             StockVoucherType.Outbound => Permissions.Vouchers.CreateOutbound,
             StockVoucherType.Return => Permissions.Vouchers.CreateReturn,
+            StockVoucherType.Shortage => Permissions.Vouchers.CreateShortage,
             _ => Permissions.Vouchers.CreateInbound
         };
 
@@ -98,7 +99,8 @@ public class StockVouchersController : BaseApiController
             request.Notes,
             request.Items.Select(i => new StockVoucherItemInput(i.ProductId, i.Quantity, i.EntryUnit)).ToList(),
             request.ReturnDirection,
-            request.ReturnReason);
+            request.ReturnReason,
+            request.ShortageReason);
 
         var result = await Sender.Send(command, cancellationToken);
         return HandleResult(result);

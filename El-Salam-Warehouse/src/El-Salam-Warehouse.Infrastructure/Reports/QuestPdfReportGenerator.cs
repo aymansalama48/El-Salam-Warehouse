@@ -114,6 +114,7 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                 {
                     var isInbound = r.Type == StockVoucherType.Inbound;
                     var isReturn = r.Type == StockVoucherType.Return;
+                    var isShortage = r.Type == StockVoucherType.Shortage;
 
                     string qtyDisplay = $"{Num(r.Quantity)} {r.UnitLabel}";
 
@@ -123,9 +124,9 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     table.Cell().Element(TextCell).Text(string.IsNullOrWhiteSpace(r.Party) ? "-" : r.Party);
                     table.Cell().Element(BodyCell).Text(qtyDisplay);
                     table.Cell().Element(BodyCell)
-                        .Text(isReturn ? "مرتجع" : (isInbound ? "وارد" : "صرف"))
+                        .Text(isShortage ? "عجز" : (isReturn ? "مرتجع" : (isInbound ? "وارد" : "صرف")))
                         .Bold()
-                        .FontColor(isReturn ? Colors.Orange.Darken2 : (isInbound ? Colors.Green.Darken2 : Colors.Red.Darken2));
+                        .FontColor(isShortage ? Colors.Purple.Darken2 : (isReturn ? Colors.Orange.Darken2 : (isInbound ? Colors.Green.Darken2 : Colors.Red.Darken2)));
                 }
             });
         });
@@ -333,11 +334,14 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
     {
         var isInbound = model.Type == StockVoucherType.Inbound;
         var isReturn = model.Type == StockVoucherType.Return;
+        var isShortage = model.Type == StockVoucherType.Shortage;
         var isCancelled = model.Status == StockVoucherStatus.Cancelled;
 
-        var title = isReturn
-            ? (model.ReturnDirection == ReturnDirection.Outbound ? "إذن رد بضاعة مرتجعة (منصرف)" : "إذن استلام بضاعة مرتجعة (وارد)")
-            : (isInbound ? "إذن استلام وارد مخزني" : "إذن صرف بضاعة من المخزن");
+        var title = isShortage
+            ? "إذن تسوية عجز وفاقد مخزني"
+            : (isReturn
+                ? (model.ReturnDirection == ReturnDirection.Outbound ? "إذن رد بضاعة مرتجعة (منصرف)" : "إذن استلام بضاعة مرتجعة (وارد)")
+                : (isInbound ? "إذن استلام وارد مخزني" : "إذن صرف بضاعة من المخزن"));
         var subtitle = $"رقم الإذن: {model.VoucherNumber} | تاريخ الإذن: {FormatDate(model.VoucherDate)}";
 
         return Build(title, subtitle, model.OccurredAtCairo, landscape: false, content =>
@@ -366,6 +370,15 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     col.Item().Border(1.2f).BorderColor(Colors.Orange.Medium).Background(Colors.Orange.Lighten5).Padding(7).Row(r =>
                     {
                         r.RelativeItem().Text($"بيان وسبب المرتجع: {model.ReturnReason}").Bold().FontSize(9.5f).FontColor(Colors.Orange.Darken3);
+                    });
+                }
+
+                // شارة سبب العجز إذا كان إذن تسوية عجز
+                if (isShortage && !string.IsNullOrWhiteSpace(model.ShortageReason))
+                {
+                    col.Item().Border(1.2f).BorderColor(Colors.Purple.Medium).Background(Colors.Purple.Lighten5).Padding(7).Row(r =>
+                    {
+                        r.RelativeItem().Text($"بيان وسبب العجز والتسوية: {model.ShortageReason}").Bold().FontSize(9.5f).FontColor(Colors.Purple.Darken3);
                     });
                 }
 
@@ -466,13 +479,17 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                 {
                     row.Spacing(24);
 
-                    var sig1 = isReturn
-                        ? (model.ReturnDirection == ReturnDirection.Outbound ? "توقيع أمين المخزن المنصرف" : "توقيع أمين المخزن المستلم")
-                        : (isInbound ? "توقيع أمين المخزن المستلم" : "توقيع أمين المخزن المنصرف");
-                    var sig2 = isReturn
-                        ? (model.ReturnDirection == ReturnDirection.Outbound ? "توقيع مندوب الاستلام (المورّد)" : "توقيع مندوب الإرجاع / العميل")
-                        : (isInbound ? "توقيع مندوب صالة الإنتاج / المورّد" : "توقيع المستلم / العميل");
-                    var sig3 = "اعتماد مدير المخازن والتشغيل";
+                    var sig1 = isShortage
+                        ? "توقيع أمين المخزن المسؤول"
+                        : (isReturn
+                            ? (model.ReturnDirection == ReturnDirection.Outbound ? "توقيع أمين المخزن المنصرف" : "توقيع أمين المخزن المستلم")
+                            : (isInbound ? "توقيع أمين المخزن المستلم" : "توقيع أمين المخزن المنصرف"));
+                    var sig2 = isShortage
+                        ? "توقيع رئيس لجنة الجرد والتسويات"
+                        : (isReturn
+                            ? (model.ReturnDirection == ReturnDirection.Outbound ? "توقيع مندوب الاستلام (المورّد)" : "توقيع مندوب الإرجاع / العميل")
+                            : (isInbound ? "توقيع مندوب صالة الإنتاج / المورّد" : "توقيع المستلم / العميل"));
+                    var sig3 = "اعتماد مدير المستودع والتشغيل";
 
                     foreach (var sigTitle in new[] { sig1, sig2, sig3 })
                     {

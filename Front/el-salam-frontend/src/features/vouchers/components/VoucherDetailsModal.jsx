@@ -64,7 +64,9 @@ export function VoucherDetailsModal({
     setPrinting(true);
     try {
       const blob = await getStockVoucherPdf(voucherId);
-      const prefix = voucher?.type === VOUCHER_TYPE.RETURN
+      const prefix = voucher?.type === VOUCHER_TYPE.SHORTAGE
+        ? "إذن_عجز_مخزني"
+        : voucher?.type === VOUCHER_TYPE.RETURN
         ? "إذن_مرتجع_مخزني"
         : voucher?.type === VOUCHER_TYPE.INBOUND
         ? "إذن_استلام_وارد"
@@ -81,6 +83,7 @@ export function VoucherDetailsModal({
 
   const isInbound = voucher?.type === VOUCHER_TYPE.INBOUND;
   const isReturn = voucher?.type === VOUCHER_TYPE.RETURN;
+  const isShortage = voucher?.type === VOUCHER_TYPE.SHORTAGE;
   const isCancelled = voucher?.status === VOUCHER_STATUS.CANCELLED;
   const isProduction = voucher?.source === VOUCHER_SOURCE.PRODUCTION;
 
@@ -94,6 +97,8 @@ export function VoucherDetailsModal({
               className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs ring-4 ring-slate-100 ${
                 isCancelled
                   ? "bg-slate-200 text-slate-600"
+                  : isShortage
+                  ? "bg-purple-600 text-white"
                   : isReturn
                   ? "bg-amber-600 text-white"
                   : isInbound
@@ -106,7 +111,7 @@ export function VoucherDetailsModal({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-extrabold text-slate-900 text-base leading-tight">
-                  {isReturn ? "إذن مرتجع مخزني" : isInbound ? "إذن استلام وارد" : "إذن صرف مخزني"}
+                  {isShortage ? "إذن تسوية عجز وفاقد مخزني" : isReturn ? "إذن مرتجع مخزني" : isInbound ? "إذن استلام وارد" : "إذن صرف مخزني"}
                 </h3>
                 {voucher?.voucherNumber && (
                   <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold bg-slate-100 text-slate-800 border border-slate-200">
@@ -191,11 +196,26 @@ export function VoucherDetailsModal({
                 </div>
               )}
 
+              {/* شارة سبب العجز والتسوية إذا وجد */}
+              {isShortage && voucher.shortageReason && (
+                <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl space-y-1 text-purple-900">
+                  <div className="flex items-center gap-2 font-bold text-xs">
+                    <span className="w-2 h-2 rounded-full bg-purple-600" />
+                    <span>سبب وبيان العجز والتسوية المخزنية:</span>
+                  </div>
+                  <p className="text-xs text-purple-900 font-semibold pr-4">
+                    {voucher.shortageReason}
+                  </p>
+                </div>
+              )}
+
               {/* ترويسة الإذن الرسمية للطباعة */}
               <div className="border-b border-slate-200 pb-3.5 flex justify-between items-start">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-slate-900">
-                    {isReturn
+                    {isShortage
+                      ? "إذن تسوية عجز وفاقد مخزني"
+                      : isReturn
                       ? (voucher.returnDirection === 2 ? "إذن رد بضاعة مرتجعة (منصرف لمورد)" : "إذن استلام بضاعة مرتجعة (وارد للمخزن)")
                       : (isInbound ? "إذن استلام وإيداع بضاعة واردة" : "إذن صرف وخروج بضاعة")}
                   </h2>
@@ -224,12 +244,14 @@ export function VoucherDetailsModal({
                 <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all">
                   <span className="text-2xs text-slate-400 font-bold flex items-center gap-1.5 mb-1">
                     <Building2 className="w-3.5 h-3.5 text-slate-500" />
-                    {isReturn
+                    {isShortage
+                      ? "لجنة الجرد والمطابقة:"
+                      : isReturn
                       ? (voucher.returnDirection === 2 ? "الجهة المرتجع إليها (المورد):" : "الجهة المرتجع منها (العميل):")
                       : (isInbound ? "المصدر / المورّد:" : "الجهة المنصرف إليها:")}
                   </span>
-                  <span className="font-extrabold text-slate-800 block truncate" title={isProduction ? "صالة الإنتاج والتجليد" : voucher.partyName || "جهة خارجية"}>
-                    {isProduction ? "صالة الإنتاج والتجليد" : voucher.partyName || "جهة خارجية"}
+                  <span className="font-extrabold text-slate-800 block truncate" title={isShortage ? (voucher.partyName || "لجنة الجرد والمطابقة") : (isProduction ? "صالة الإنتاج والتجليد" : voucher.partyName || "جهة خارجية")}>
+                    {isShortage ? (voucher.partyName || "لجنة الجرد والمطابقة") : (isProduction ? "صالة الإنتاج والتجليد" : voucher.partyName || "جهة خارجية")}
                   </span>
                 </div>
 

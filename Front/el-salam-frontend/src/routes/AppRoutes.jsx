@@ -7,6 +7,7 @@ import DailyTransactionsPage from "../pages/DailyTransactionsPage";
 import InboundPage from "../pages/InboundPage";
 import OutboundPage from "../pages/OutboundPage";
 import ReturnsPage from "../pages/ReturnsPage";
+import ShortagesPage from "../pages/ShortagesPage";
 import LoginPage from "../pages/LoginPage";
 import UsersPage from "../pages/UsersPage";
 import RolesPage from "../pages/RolesPage";
@@ -42,6 +43,7 @@ export function AppRoutes() {
         <Route path="inbound" element={<InboundPage />} />
         <Route path="outbound" element={<OutboundPage />} />
         <Route path="returns" element={<ReturnsPage />} />
+        <Route path="shortages" element={<ShortagesPage />} />
 
         {/* د. إدارة النظام والمستخدمين (Admin Only) */}
         <Route

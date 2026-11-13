@@ -15,6 +15,7 @@ export function VouchersTable({
 }) {
   const isInbound = type === VOUCHER_TYPE.INBOUND;
   const isReturn = type === VOUCHER_TYPE.RETURN;
+  const isShortage = type === VOUCHER_TYPE.SHORTAGE;
 
   if (loading) {
     return (
@@ -32,14 +33,18 @@ export function VouchersTable({
           <Hash className="w-7 h-7" />
         </div>
         <p className="text-slate-800 font-bold text-base mb-1">
-          {isReturn
+          {isShortage
+            ? "لا توجد أذونات عجز مسجلة"
+            : isReturn
             ? "لا توجد أذونات مرتجع مسجلة"
             : isInbound
             ? "لا توجد أذونات وارد مسجلة"
             : "لا توجد أذونات صرف مسجلة"}
         </p>
         <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-          {isReturn
+          {isShortage
+            ? "لم يتم العثور على أي أذونات عجز مطابقة للفلاتر. يمكنك تسجيل إذن تسوية عجز عند الجرد أو التلف."
+            : isReturn
             ? "لم يتم العثور على أي أذونات مرتجع مطابقة للفلاتر. يمكنك تسجيل إذن مرتجع جديد لضبط حركة المخزون."
             : isInbound
             ? "لم يتم العثور على أي أذونات وارد مطابقة للفلاتر. يمكنك تسجيل إذن استلام إنتاج أو وارد جديد."
@@ -58,16 +63,26 @@ export function VouchersTable({
               <th className="py-3 px-4 whitespace-nowrap">رقم الإذن</th>
               <th className="py-3 px-4 whitespace-nowrap">التاريخ والوقت (توقيت القاهرة)</th>
               {isReturn && <th className="py-3 px-4 whitespace-nowrap">نوع المرتجع</th>}
-              {isReturn && <th className="py-3 px-4 whitespace-nowrap">سبب الإرجاع</th>}
+              {(isReturn || isShortage) && (
+                <th className="py-3 px-4 whitespace-nowrap">
+                  {isShortage ? "سبب وبيان العجز" : "سبب الإرجاع"}
+                </th>
+              )}
               <th className="py-3 px-4 whitespace-nowrap">
-                {isReturn
+                {isShortage
+                  ? "لجنة الجرد والمطابقة"
+                  : isReturn
                   ? "الجهة (العميل / المورّد)"
                   : isInbound
                   ? "المصدر / المورّد"
                   : "الجهة المنصرف إليها"}
               </th>
               <th className="py-3 px-4 whitespace-nowrap">
-                {isInbound || isReturn ? "المستلم (أمين المخزن)" : "المستلم"}
+                {isShortage
+                  ? "أمين المخزن المسؤول"
+                  : isInbound || isReturn
+                  ? "المستلم (أمين المخزن)"
+                  : "المستلم"}
               </th>
               {(isInbound || isReturn) && (
                 <th className="py-3 px-4 whitespace-nowrap">
@@ -98,7 +113,13 @@ export function VouchersTable({
                   <td className="py-3.5 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
                     <span className="inline-flex items-center gap-1.5">
                       <Hash className="w-3.5 h-3.5 text-slate-400" />
-                      <span className={isReturn ? "text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200" : ""}>
+                      <span className={
+                        isShortage
+                          ? "text-purple-800 bg-purple-50 px-2 py-0.5 rounded border border-purple-200"
+                          : isReturn
+                          ? "text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"
+                          : ""
+                      }>
                         {item.voucherNumber || item.id}
                       </span>
                     </span>
@@ -127,11 +148,11 @@ export function VouchersTable({
                     </td>
                   )}
 
-                  {/* في المرتجع: سبب الإرجاع */}
-                  {isReturn && (
+                  {/* في المرتجع أو العجز: سبب الحركة */}
+                  {(isReturn || isShortage) && (
                     <td className="py-3.5 px-4 text-xs font-semibold text-slate-700 whitespace-nowrap">
-                      <span className="inline-block max-w-xs truncate" title={item.returnReason || "غير محدد"}>
-                        {item.returnReason || "غير محدد"}
+                      <span className="inline-block max-w-xs truncate" title={isShortage ? (item.shortageReason || "غير محدد") : (item.returnReason || "غير محدد")}>
+                        {isShortage ? (item.shortageReason || "غير محدد") : (item.returnReason || "غير محدد")}
                       </span>
                     </td>
                   )}
@@ -140,7 +161,9 @@ export function VouchersTable({
                   <td className="py-3.5 px-4 font-bold text-slate-800 whitespace-nowrap">
                     <span className="inline-flex items-center gap-1.5">
                       <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      {isReturn
+                      {isShortage
+                        ? item.partyName || "لجنة الجرد والمطابقة"
+                        : isReturn
                         ? item.partyName || (isOutwardReturn ? "مورد خارجي" : "عميل")
                         : isInbound
                         ? isProduction

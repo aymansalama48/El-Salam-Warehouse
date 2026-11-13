@@ -91,7 +91,8 @@ internal sealed class GetStockVouchersQueryHandler
                 v.Status,
                 v.Items.Count(),
                 v.ReturnDirection,
-                v.ReturnReason))
+                v.ReturnReason,
+                v.ShortageReason))
             .ToListAsync(cancellationToken);
 
         // إنشاء كائن PaginationMetadata و PagedResult

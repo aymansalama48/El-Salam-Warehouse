@@ -17,6 +17,7 @@ export function VouchersFilter({
 }) {
   const isInbound = type === VOUCHER_TYPE.INBOUND;
   const isReturn = type === VOUCHER_TYPE.RETURN;
+  const isShortage = type === VOUCHER_TYPE.SHORTAGE;
 
   const hasActiveFilters = Boolean(
     searchTerm ||
@@ -37,7 +38,9 @@ export function VouchersFilter({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={
-              isReturn
+              isShortage
+                ? "بحث برقم الإذن، المستلم، سبب وبيان العجز أو الصنف..."
+                : isReturn
                 ? "بحث برقم الإذن، المستلم، المندوب، سبب المرتجع أو الصنف..."
                 : "بحث برقم الإذن، المستلم، الجايب، الجهة أو الصنف..."
             }

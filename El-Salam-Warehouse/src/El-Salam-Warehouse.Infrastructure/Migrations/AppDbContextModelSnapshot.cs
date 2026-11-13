@@ -260,6 +260,10 @@ namespace El_Salam_Warehouse.Infrastructure.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
+                    b.Property<string>("ShortageReason")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
                     b.Property<int>("Source")
                         .HasColumnType("int");
 

@@ -20,6 +20,7 @@ public class StockVoucherConfiguration : IEntityTypeConfiguration<StockVoucher>
         builder.Property(v => v.DelivererName).HasMaxLength(150);
         builder.Property(v => v.Notes).HasMaxLength(500);
         builder.Property(v => v.ReturnReason).HasMaxLength(250);
+        builder.Property(v => v.ShortageReason).HasMaxLength(250);
         builder.Property(v => v.CancelReason).HasMaxLength(300);
 
         // فهرس للفلاتر

@@ -14,6 +14,9 @@ namespace El_Salam_Warehouse.Domain.Enums
         Outbound = 2,
 
         // إذن مرتجع (حركات إرجاع البضاعة)
-        Return = 3
+        Return = 3,
+
+        // إذن عجز وتسوية مخزنية (خصم من الرصيد)
+        Shortage = 4
     }
 }

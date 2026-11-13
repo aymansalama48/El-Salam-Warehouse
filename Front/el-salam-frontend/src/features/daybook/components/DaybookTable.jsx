@@ -2,6 +2,7 @@ import {
   ArrowDownToLine, 
   ArrowUpFromLine, 
   RotateCcw,
+  AlertTriangle,
   Calendar, 
   Hash, 
   Package, 
@@ -67,11 +68,14 @@ export function DaybookTable({
             {entries.map((item, idx) => {
               const isInbound = item.type === VOUCHER_TYPE.INBOUND;
               const isReturn = item.type === VOUCHER_TYPE.RETURN;
+              const isShortage = item.type === VOUCHER_TYPE.SHORTAGE;
               const isCancelled = item.status === VOUCHER_STATUS.CANCELLED;
 
-              // كل سطر: وارد أخضر، صرف أحمر، مرتجع برتقالي، ملغي رمادي باهت
+              // كل سطر: وارد أخضر، صرف أحمر، مرتجع برتقالي، عجز بنفسجي، ملغي رمادي باهت
               const rowClass = isCancelled
                 ? "bg-slate-50/80 text-slate-400 opacity-60 hover:bg-slate-100/60"
+                : isShortage
+                ? "hover:bg-purple-50/30 text-slate-800"
                 : isReturn
                 ? "hover:bg-amber-50/30 text-slate-800"
                 : isInbound
@@ -101,11 +105,16 @@ export function DaybookTable({
                     </span>
                   </td>
 
-                  {/* نوع الحركة: وارد أخضر | صرف أحمر | مرتجع برتقالي | ملغي رمادي */}
+                  {/* نوع الحركة: وارد أخضر | صرف أحمر | مرتجع برتقالي | عجز بنفسجي | ملغي رمادي */}
                   <td className="py-3 px-3.5 whitespace-nowrap">
                     {isCancelled ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-extrabold bg-slate-200 text-slate-600">
                         ملغي
+                      </span>
+                    ) : isShortage ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-extrabold bg-purple-100 text-purple-800 border border-purple-200">
+                        <AlertTriangle className="w-3 h-3" />
+                        عجز
                       </span>
                     ) : isReturn ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
@@ -189,6 +198,8 @@ export function DaybookTable({
                             className={`text-xs font-extrabold px-2.5 py-0.5 rounded-md ${
                               isCancelled
                                 ? "text-slate-500 line-through bg-slate-100"
+                                : isShortage
+                                ? "text-purple-700 bg-purple-50 border border-purple-200/50"
                                 : isReturn
                                 ? "text-amber-700 bg-amber-50 border border-amber-200/50"
                                 : isInbound
@@ -269,6 +280,11 @@ export function DaybookTable({
                       {isReturn && item.returnReason && (
                         <span className="text-3xs font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded mt-0.5 max-w-[150px] truncate" title={`سبب المرتجع: ${item.returnReason}`}>
                           سبب: {item.returnReason}
+                        </span>
+                      )}
+                      {isShortage && item.shortageReason && (
+                        <span className="text-3xs font-medium text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded mt-0.5 max-w-[150px] truncate" title={`سبب العجز: ${item.shortageReason}`}>
+                          سبب: {item.shortageReason}
                         </span>
                       )}
                       <span className="text-2xs text-slate-400 flex items-center gap-1">

@@ -78,6 +78,7 @@ export function DaybookFilter({
             <option value={VOUCHER_TYPE.INBOUND}>وارد</option>
             <option value={VOUCHER_TYPE.OUTBOUND}>صرف</option>
             <option value={VOUCHER_TYPE.RETURN}>مرتجع</option>
+            <option value={VOUCHER_TYPE.SHORTAGE}>عجز</option>
           </select>
         </div>
 

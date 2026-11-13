@@ -51,7 +51,11 @@ public record DaybookReportTotals(
     int ReturnVouchers = 0,
     int ReturnNotebooks = 0,
     int ReturnCartons = 0,
-    int ReturnReams = 0);
+    int ReturnReams = 0,
+    int ShortageVouchers = 0,
+    int ShortageNotebooks = 0,
+    int ShortageCartons = 0,
+    int ShortageReams = 0);
 
 // بيانات تقرير الدفتر كاملة
 public record DaybookReportModel(
@@ -128,7 +132,8 @@ public record StockVoucherPdfModel(
     string? CancellationReason,
     List<StockVoucherPdfItem> Items,
     ReturnDirection? ReturnDirection = null,
-    string? ReturnReason = null
+    string? ReturnReason = null,
+    string? ShortageReason = null
 );
 
 // ---------- بطاقة تعريف ومواصفات صنف تام الصنع ----------

@@ -22,6 +22,8 @@ export function useVoucherSummary() {
     cancelledToday: 0,
     returnsToday: 0,
     returnsThisMonth: 0,
+    shortagesToday: 0,
+    shortagesThisMonth: 0,
     lastVoucherNumber: null,
     lastVoucherAtUtc: null,
   });

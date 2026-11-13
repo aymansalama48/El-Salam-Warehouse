@@ -4,6 +4,7 @@ import {
   ArrowDownToLine, 
   ArrowUpFromLine, 
   RotateCcw,
+  AlertTriangle,
   Plus, 
   Trash2, 
   Calendar, 
@@ -26,21 +27,23 @@ export function VoucherFormModal({
   isOpen, 
   onClose, 
   onSave, 
-  type = VOUCHER_TYPE.INBOUND // 1: وارد | 2: صرف | 3: مرتجع
+  type = VOUCHER_TYPE.INBOUND // 1: وارد | 2: صرف | 3: مرتجع | 4: عجز
 }) {
   const isInbound = type === VOUCHER_TYPE.INBOUND;
   const isReturn = type === VOUCHER_TYPE.RETURN;
   const isOutbound = type === VOUCHER_TYPE.OUTBOUND;
+  const isShortage = type === VOUCHER_TYPE.SHORTAGE;
 
   // حقول رأس الإذن
   const [date, setDate] = useState(getTodayDateString());
   const [source, setSource] = useState(isInbound ? VOUCHER_SOURCE.PRODUCTION : VOUCHER_SOURCE.EXTERNAL);
-  const [partyName, setPartyName] = useState("");
+  const [partyName, setPartyName] = useState(isShortage ? "لجنة الجرد والمطابقة" : "");
   const [receiverName, setReceiverName] = useState("");
   const [delivererName, setDelivererName] = useState("");
   const [notes, setNotes] = useState("");
   const [returnDirection, setReturnDirection] = useState(RETURN_DIRECTION.INBOUND);
   const [returnReason, setReturnReason] = useState("");
+  const [shortageReason, setShortageReason] = useState("");
 
   // بنود الأصناف في الإذن: كل بند يحتفظ بكائن الصنف المختار كاملاً والوحدة المحددة
   const [items, setItems] = useState([
@@ -55,8 +58,8 @@ export function VoucherFormModal({
   // صالة الإنتاج في الوارد: تتطلب notebooksOnly=true
   const isProductionSource = isInbound && source === VOUCHER_SOURCE.PRODUCTION;
 
-  // هل الحركة تخصم من رصيد المخزن؟ (صرف أو مرتجع منصرف لمورد)
-  const isStockDeduction = isOutbound || (isReturn && returnDirection === RETURN_DIRECTION.OUTBOUND);
+  // هل الحركة تخصم من رصيد المخزن؟ (صرف أو مرتجع منصرف لمورد أو عجز)
+  const isStockDeduction = isOutbound || isShortage || (isReturn && returnDirection === RETURN_DIRECTION.OUTBOUND);
 
   // عند تغيير المصدر: مسح الأصناف المختارة والبدء من جديد
   const handleSourceChange = (newSource) => {
@@ -193,12 +196,13 @@ export function VoucherFormModal({
       type,
       date: date || null,
       source: isInbound ? source : VOUCHER_SOURCE.EXTERNAL,
-      partyName: isProductionSource ? null : partyName.trim() || null,
+      partyName: isProductionSource ? null : (isShortage ? (partyName.trim() || "لجنة الجرد والمطابقة") : (partyName.trim() || null)),
       receiverName: receiverName.trim(),
-      delivererName: isOutbound ? null : (delivererName.trim() || null),
+      delivererName: (isOutbound || isShortage) ? null : (delivererName.trim() || null),
       notes: notes.trim() || null,
       returnDirection: isReturn ? returnDirection : null,
       returnReason: isReturn ? returnReason.trim() || null : null,
+      shortageReason: isShortage ? shortageReason.trim() || null : null,
       items: items.map((it) => {
         const isCopyPaper = it.product?.unitType === 3 || it.product?.baseUnit === "كرتونة";
         const defaultUnit = isCopyPaper ? 2 : 1;
@@ -236,14 +240,18 @@ export function VoucherFormModal({
           <div className="flex items-center gap-3">
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${
-                isReturn
+                isShortage
+                  ? "bg-purple-100/90 text-purple-800"
+                  : isReturn
                   ? "bg-amber-100/90 text-amber-800"
                   : isInbound
                   ? "bg-emerald-100/80 text-emerald-700"
                   : "bg-rose-100/80 text-rose-700"
               }`}
             >
-              {isReturn ? (
+              {isShortage ? (
+                <AlertTriangle className="w-5 h-5" />
+              ) : isReturn ? (
                 <RotateCcw className="w-5 h-5" />
               ) : isInbound ? (
                 <ArrowDownToLine className="w-5 h-5" />
@@ -253,14 +261,18 @@ export function VoucherFormModal({
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                {isReturn
+                {isShortage
+                  ? "تسجيل إذن تسوية عجز وفاقد مخزني"
+                  : isReturn
                   ? "تسجيل إذن مرتجع جديد"
                   : isInbound
                   ? "تسجيل إذن وارد جديد"
                   : "تسجيل إذن صرف جديد"}
               </h2>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {isReturn
+                {isShortage
+                  ? "توثيق النقص والعجز المخزني وخصم الكميات من رصيد المستودع الفعلي"
+                  : isReturn
                   ? "توثيق استلام بضاعة مرتجعة من عميل أو رد بضاعة لمورد وضبط أرصدة المخزن"
                   : isInbound
                   ? "إضافة بضاعة مستلمة من صالة الإنتاج أو مورد خارجي"
@@ -462,6 +474,128 @@ export function VoucherFormModal({
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-800 focus:bg-white font-medium"
                   />
                 </div>
+              </div>
+            </>
+          ) : isShortage ? (
+            <>
+              {/* 1. سبب وبيان العجز واختصارات شائعة */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
+                    سبب وبيان العجز المخزني <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-2xs text-slate-400">انقر على أحد الأسباب أو اكتب بياناً مفصلاً</span>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                  {[
+                    "عجز جرد دوري",
+                    "تالف أثناء التخزين والرص",
+                    "سوء مناولة ونقل داخلي",
+                    "رطوبة وتلف مياه",
+                    "تمزق وكسر في التغليف",
+                    "هالك صالة إنتاج",
+                    "أخرى"
+                  ].map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => {
+                        setShortageReason(chip);
+                        if (errors.shortageReason) setErrors((prev) => ({ ...prev, shortageReason: null }));
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-2xs font-bold transition-all cursor-pointer ${
+                        shortageReason === chip
+                          ? "bg-purple-600 text-white shadow-2xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-purple-50 hover:text-purple-800"
+                      }`}
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={shortageReason}
+                  onChange={(e) => {
+                    setShortageReason(e.target.value);
+                    if (errors.shortageReason) setErrors((prev) => ({ ...prev, shortageReason: null }));
+                  }}
+                  placeholder="اكتب سبب العجز وتفاصيل محضر المطابقة بالتفصيل..."
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
+                    errors.shortageReason ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                  }`}
+                />
+                {errors.shortageReason && <p className="text-xs text-rose-500 font-bold mt-1">{errors.shortageReason}</p>}
+              </div>
+
+              {/* 2. التاريخ والجهة / اللجنة */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    تاريخ محضر العجز <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={date}
+                    max={getTodayDateString()}
+                    onChange={(e) => {
+                      setDate(e.target.value);
+                      if (errors.date) setErrors((prev) => ({ ...prev, date: null }));
+                    }}
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
+                      errors.date ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                    }`}
+                  />
+                  {errors.date && <p className="text-xs text-rose-500 font-bold mt-1">{errors.date}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                    لجنة الجرد والمطابقة / الجهة المعتمدة
+                  </label>
+                  <input
+                    type="text"
+                    value={partyName}
+                    onChange={(e) => {
+                      setPartyName(e.target.value);
+                      if (errors.partyName) setErrors((prev) => ({ ...prev, partyName: null }));
+                    }}
+                    placeholder="لجنة الجرد والمطابقة"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-slate-800 font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* 3. أمين المخزن المسؤول */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-slate-400" />
+                  أمين المخزن المسؤول / محرر الإذن <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={receiverName}
+                  onChange={(e) => {
+                    setReceiverName(e.target.value);
+                    if (errors.receiverName) setErrors((prev) => ({ ...prev, receiverName: null }));
+                  }}
+                  placeholder="اسم أمين المخزن الذي قام بحصر وتسجيل العجز"
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
+                    errors.receiverName ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                  }`}
+                />
+                {errors.receiverName && <p className="text-xs text-rose-500 font-bold mt-1">{errors.receiverName}</p>}
+              </div>
+
+              {/* تنبيه بالخصم الفوري */}
+              <div className="p-3 bg-purple-50/70 border border-purple-200/70 rounded-xl flex items-center gap-2.5 text-xs font-bold text-purple-900">
+                <AlertTriangle className="w-4 h-4 text-purple-600 shrink-0" />
+                <span>تنبيه: سيتم خصم كميات العجز المسجلة أدناه مباشرة من رصيد المستودع الفعلي فور الحفظ (-).</span>
               </div>
             </>
           ) : isInbound ? (
@@ -958,7 +1092,9 @@ export function VoucherFormModal({
               type="submit"
               disabled={submitting}
               className={`px-5 py-2 text-xs font-bold text-white rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 ${
-                isReturn
+                isShortage
+                  ? "bg-purple-600 hover:bg-purple-700"
+                  : isReturn
                   ? "bg-amber-600 hover:bg-amber-700"
                   : isInbound
                   ? "bg-emerald-600 hover:bg-emerald-700"
@@ -968,6 +1104,8 @@ export function VoucherFormModal({
               {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {submitting
                 ? "جاري التسجيل..."
+                : isShortage
+                ? "تسجيل إذن العجز والتسوية"
                 : isReturn
                 ? "تسجيل إذن المرتجع"
                 : isInbound
