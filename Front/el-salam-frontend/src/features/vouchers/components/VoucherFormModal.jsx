@@ -41,7 +41,7 @@ export function VoucherFormModal({
   const [receiverName, setReceiverName] = useState("");
   const [delivererName, setDelivererName] = useState("");
   const [notes, setNotes] = useState("");
-  const [returnDirection, setReturnDirection] = useState(RETURN_DIRECTION.INBOUND);
+  const returnDirection = RETURN_DIRECTION.INBOUND;
   const [returnReason, setReturnReason] = useState("");
   const [shortageReason, setShortageReason] = useState("");
 
@@ -58,8 +58,8 @@ export function VoucherFormModal({
   // صالة الإنتاج في الوارد: تتطلب notebooksOnly=true
   const isProductionSource = isInbound && source === VOUCHER_SOURCE.PRODUCTION;
 
-  // هل الحركة تخصم من رصيد المخزن؟ (صرف أو مرتجع منصرف لمورد أو عجز)
-  const isStockDeduction = isOutbound || isShortage || (isReturn && returnDirection === RETURN_DIRECTION.OUTBOUND);
+  // هل الحركة تخصم من رصيد المخزن؟ (صرف أو عجز فقط، المرتجع دائماً إضافة للرصيد)
+  const isStockDeduction = isOutbound || isShortage;
 
   // عند تغيير المصدر: مسح الأصناف المختارة والبدء من جديد
   const handleSourceChange = (newSource) => {
@@ -290,108 +290,69 @@ export function VoucherFormModal({
         </div>
 
         {/* Content Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-right">
-          {apiError && (
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-bold flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-              <span>{apiError}</span>
-            </div>
-          )}
-
-          {/* حقول رأس الإذن */}
-          {isReturn ? (
-            <>
-              {/* 1. نوع حركة المرتجع (وارد للمخزن أم منصرف لمورد) */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">
-                  نوع حركة المرتجع <span className="text-rose-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setReturnDirection(RETURN_DIRECTION.INBOUND)}
-                    className={`p-3 rounded-xl border text-right transition-all cursor-pointer ${
-                      returnDirection === RETURN_DIRECTION.INBOUND
-                        ? "border-amber-600 bg-amber-50/70 text-amber-950 font-bold ring-2 ring-amber-600/20"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <p className="text-xs sm:text-sm">مرتجع وارد (إيداع بالمخزن)</p>
-                    </div>
-                    <p className="text-2xs text-slate-400 mt-1">بضاعة مرتجعة من عميل أو صالة وتضاف للرصيد (+)</p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setReturnDirection(RETURN_DIRECTION.OUTBOUND)}
-                    className={`p-3 rounded-xl border text-right transition-all cursor-pointer ${
-                      returnDirection === RETURN_DIRECTION.OUTBOUND
-                        ? "border-amber-600 bg-amber-50/70 text-amber-950 font-bold ring-2 ring-amber-600/20"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-rose-500" />
-                      <p className="text-xs sm:text-sm">مرتجع منصرف (رد لمورّد)</p>
-                    </div>
-                    <p className="text-2xs text-slate-400 mt-1">إرجاع بضاعة من المخزن لمورد خارجي (-)</p>
-                  </button>
-                </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden text-right">
+          <div className="p-6 space-y-4 overflow-y-auto flex-1 text-right">
+            {apiError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{apiError}</span>
               </div>
+            )}
 
-              {/* 2. سبب الإرجاع واختصارات شائعة */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
-                    سبب الإرجاع <span className="text-rose-500">*</span>
-                  </label>
-                  <span className="text-2xs text-slate-400">انقر على أحد الأسباب أو اكتب سبباً مخصصاً</span>
+            {/* حقول رأس الإذن */}
+            {isReturn ? (
+              <>
+                {/* سبب الإرجاع واختصارات شائعة */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+                      سبب الإرجاع <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-2xs text-slate-400">انقر على أحد الأسباب أو اكتب سبباً مخصصاً</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 mb-1.5">
+                    {[
+                      "مرتجع مبيعات / عميل",
+                      "عيوب تصنيع أو طباعة",
+                      "زيادة عن الطلبية المطلوبة",
+                      "تالف أثناء النقل أو التحميل",
+                      "فائض عن تشغيل الصالة",
+                      "خطأ في المقاس أو الوزن"
+                    ].map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => {
+                          setReturnReason(chip);
+                          if (errors.returnReason) setErrors((prev) => ({ ...prev, returnReason: null }));
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-2xs font-bold transition-all cursor-pointer ${
+                          returnReason === chip
+                            ? "bg-amber-600 text-white shadow-2xs"
+                            : "bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-800"
+                        }`}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="text"
+                    value={returnReason}
+                    onChange={(e) => {
+                      setReturnReason(e.target.value);
+                      if (errors.returnReason) setErrors((prev) => ({ ...prev, returnReason: null }));
+                    }}
+                    placeholder="اكتب سبب إرجاع البضاعة بالتفصيل..."
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
+                      errors.returnReason ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                    }`}
+                  />
+                  {errors.returnReason && <p className="text-xs text-rose-500 font-bold mt-1">{errors.returnReason}</p>}
                 </div>
-
-                <div className="flex flex-wrap gap-1.5 mb-1.5">
-                  {[
-                    "مرتجع مبيعات / عميل",
-                    "عيوب تصنيع أو طباعة",
-                    "زيادة عن الطلبية المطلوبة",
-                    "تالف أثناء النقل أو التحميل",
-                    "فائض عن تشغيل الصالة",
-                    "خطأ في المقاس أو الوزن"
-                  ].map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => {
-                        setReturnReason(chip);
-                        if (errors.returnReason) setErrors((prev) => ({ ...prev, returnReason: null }));
-                      }}
-                      className={`px-2.5 py-1 rounded-lg text-2xs font-bold transition-all cursor-pointer ${
-                        returnReason === chip
-                          ? "bg-amber-600 text-white shadow-2xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-800"
-                      }`}
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-
-                <input
-                  type="text"
-                  value={returnReason}
-                  onChange={(e) => {
-                    setReturnReason(e.target.value);
-                    if (errors.returnReason) setErrors((prev) => ({ ...prev, returnReason: null }));
-                  }}
-                  placeholder="اكتب سبب إرجاع البضاعة بالتفصيل..."
-                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
-                    errors.returnReason ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
-                  }`}
-                />
-                {errors.returnReason && <p className="text-xs text-rose-500 font-bold mt-1">{errors.returnReason}</p>}
-              </div>
 
               {/* 3. التاريخ والجهة */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -418,7 +379,7 @@ export function VoucherFormModal({
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                    {returnDirection === RETURN_DIRECTION.OUTBOUND ? "الجهة المرتجع إليها (المورّد)" : "الجهة المرتجع منها (العميل)"} <span className="text-rose-500">*</span>
+                    الجهة المرتجع منها (العميل) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -427,7 +388,7 @@ export function VoucherFormModal({
                       setPartyName(e.target.value);
                       if (errors.partyName) setErrors((prev) => ({ ...prev, partyName: null }));
                     }}
-                    placeholder={returnDirection === RETURN_DIRECTION.OUTBOUND ? "اسم المورد أو المصنع الخارجي" : "اسم العميل أو المكتبة أو المعرض"}
+                    placeholder="اسم العميل أو المكتبة أو المعرض..."
                     className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl focus:outline-none focus:bg-white font-medium ${
                       errors.partyName ? "border-rose-400 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
                     }`}
@@ -890,7 +851,7 @@ export function VoucherFormModal({
                   : (Number(selectedProd?.availableInEntryUnit ?? actualStock));
 
                 const enteredQty = Number(item.quantity) || 0;
-                const isOverStock = !isInbound && selectedProd && enteredQty > availableInCurrentUnit;
+                const isOverStock = isStockDeduction && selectedProd && enteredQty > availableInCurrentUnit;
 
                 const quantityLabel = `عدد ال${unitLabel}`;
                 const quantityBadge = unitLabel;
@@ -914,8 +875,8 @@ export function VoucherFormModal({
                           <label className="block text-2xs font-bold text-slate-500">
                             الصنف #{index + 1}
                           </label>
-                          {/* في إذن الصرف: عرض المتاح جنب الصنف */}
-                          {!isInbound && selectedProd && (
+                          {/* في إذن الصرف أو العجز: عرض المتاح جنب الصنف */}
+                          {isStockDeduction && selectedProd && (
                             <span className="text-2xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
                               {isCopyPaper
                                 ? looseReams > 0
@@ -930,7 +891,7 @@ export function VoucherFormModal({
                           selectedProduct={selectedProd}
                           onSelect={(prod) => handleSelectProduct(index, prod)}
                           notebooksOnly={isProductionSource}
-                          isOutbound={!isInbound}
+                          isOutbound={isStockDeduction}
                           disabledProductIds={disabledProductIds}
                           placeholder="اختر الصنف من القائمة..."
                         />
@@ -972,7 +933,7 @@ export function VoucherFormModal({
                               </div>
                             )}
                           </div>
-                          {!isInbound && selectedProd && (
+                          {isStockDeduction && selectedProd && (
                             <span
                               className={`text-2xs font-bold px-1.5 py-0.5 rounded ${
                                 isOverStock
@@ -988,7 +949,7 @@ export function VoucherFormModal({
                           <input
                             type="number"
                             min="1"
-                            max={!isInbound && selectedProd ? availableInCurrentUnit : undefined}
+                            max={isStockDeduction && selectedProd ? availableInCurrentUnit : undefined}
                             value={item.quantity}
                             onChange={(e) => handleQuantityChange(index, e.target.value)}
                             placeholder="0"
@@ -1078,13 +1039,15 @@ export function VoucherFormModal({
             />
           </div>
 
-          {/* Footer Buttons (Sticky for mobile browsers) */}
-          <div className="pt-3 pb-2 border-t border-slate-100 flex items-center justify-end gap-2.5 shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs z-10 -mx-6 px-6 shadow-xs">
+          </div>
+
+          {/* Footer Buttons (Fixed at the bottom outside the scrollable body, never overlaps content) */}
+          <div className="px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2.5 shrink-0 bg-slate-50/90 shadow-2xs">
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
             >
               إلغاء
             </button>
