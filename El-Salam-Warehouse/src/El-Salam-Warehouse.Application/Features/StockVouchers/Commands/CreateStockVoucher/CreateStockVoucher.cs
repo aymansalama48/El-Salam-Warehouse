@@ -206,7 +206,8 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
             request.Notes?.Trim(),
             request.ReturnDirection,
             request.ReturnReason?.Trim(),
-            request.ShortageReason?.Trim());
+            request.ShortageReason?.Trim(),
+            _dateTime.UtcNow);
 
         // نعدّل الرصيد ونضيف البنود
         foreach (var line in request.Items)

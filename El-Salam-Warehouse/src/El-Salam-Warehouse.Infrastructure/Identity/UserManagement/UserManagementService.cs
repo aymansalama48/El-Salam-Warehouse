@@ -23,6 +23,7 @@ public class UserManagementService(
     RoleManager<ApplicationRole> roleManager,
     AppDbContext context,
     IRefreshTokenService refreshTokenService,
+    IDateTime dateTime,
     ILogger<UserManagementService> logger) : IUserManagementService
 {
     // جلب مستخدم بالمعرف
@@ -393,7 +394,7 @@ public class UserManagementService(
             LastName = lastName.Trim(),
             PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim(),
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = dateTime.UtcNow
         };
 
         var result = await userManager.CreateAsync(user, password);

@@ -118,14 +118,11 @@ internal sealed class GetProductPdfQueryHandler : IQueryHandler<GetProductPdfQue
             ? ub
             : null;
 
-        // توقيت القاهرة
-        var cairoTz = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? "Egypt Standard Time" : "Africa/Cairo");
-        var nowCairo = TimeZoneInfo.ConvertTimeFromUtc(_dateTime.Now.ToUniversalTime(), cairoTz);
-
-        DateTime createdAtCairo = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(rawProduct.CreatedAt, DateTimeKind.Utc), cairoTz);
-
+        // توقيت القاهرة الموحد عبر IDateTime
+        var nowCairo = _dateTime.Now;
+        DateTime createdAtCairo = _dateTime.ToCairoTime(rawProduct.CreatedAt);
         DateTime? updatedAtCairo = rawProduct.UpdatedAt.HasValue
-            ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(rawProduct.UpdatedAt.Value, DateTimeKind.Utc), cairoTz)
+            ? _dateTime.ToCairoTime(rawProduct.UpdatedAt.Value)
             : null;
 
         var model = new ProductCardPdfModel(

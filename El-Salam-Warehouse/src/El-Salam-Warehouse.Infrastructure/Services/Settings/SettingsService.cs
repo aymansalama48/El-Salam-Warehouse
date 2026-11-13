@@ -1,5 +1,6 @@
 namespace El_Salam_Warehouse.Infrastructure.Services.Settings;
 
+using El_Salam_Warehouse.Application.Common.Abstractions.Core;
 using El_Salam_Warehouse.Application.Common.Abstractions.Persistence.Data;
 using El_Salam_Warehouse.Application.Common.Abstractions.Settings;
 using El_Salam_Warehouse.Domain.Entities.Settings;
@@ -18,6 +19,7 @@ public class SettingsService : ISettingsService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IWebHostEnvironment _environment;
+    private readonly IDateTime _dateTime;
     private readonly ILogger<SettingsService> _logger;
     private readonly string _settingsFilePath;
     private readonly string _brandingFolderPath;
@@ -29,10 +31,12 @@ public class SettingsService : ISettingsService
     public SettingsService(
         IServiceScopeFactory scopeFactory,
         IWebHostEnvironment environment,
+        IDateTime dateTime,
         ILogger<SettingsService> logger)
     {
         _scopeFactory = scopeFactory;
         _environment = environment;
+        _dateTime = dateTime;
         _logger = logger;
 
         _settingsFilePath = Path.Combine(_environment.ContentRootPath, "siteSettings.json");
@@ -212,7 +216,7 @@ public class SettingsService : ISettingsService
             ext = ".png";
         }
 
-        var newFileName = $"logo_{DateTime.UtcNow.Ticks}{ext}";
+        var newFileName = $"logo_{_dateTime.UtcNow.Ticks}{ext}";
         var physicalPath = Path.Combine(_brandingFolderPath, newFileName);
 
         using (var output = new FileStream(physicalPath, FileMode.Create, FileAccess.Write))

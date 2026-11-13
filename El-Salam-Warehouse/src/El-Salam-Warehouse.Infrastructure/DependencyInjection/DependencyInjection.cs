@@ -44,7 +44,7 @@ public static partial class DependencyInjection
         services.AddHttpContextAccessor();
 
         // تسجيل خدمة الوقت الموحدة للنظام
-        services.AddTransient<IDateTime, DateTimeProvider>();
+        services.AddSingleton<IDateTime, DateTimeProvider>();
 
         // تسجيل خدمة الوصول لبيانات وهوية المستخدم الحالي من توكن الـ JWT
         services.AddScoped<ICurrentUser, CurrentUserService>();

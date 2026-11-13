@@ -70,7 +70,8 @@ public class StockVoucher : AuditableEntity
         string? notes,
         ReturnDirection? returnDirection = null,
         string? returnReason = null,
-        string? shortageReason = null)
+        string? shortageReason = null,
+        DateTime? occurredAtUtc = null)
     {
         VoucherNumber = voucherNumber;
         Type = type;
@@ -84,7 +85,7 @@ public class StockVoucher : AuditableEntity
         ReturnReason = returnReason;
         ShortageReason = shortageReason;
         Status = StockVoucherStatus.Active;
-        OccurredAtUtc = DateTime.UtcNow;
+        OccurredAtUtc = occurredAtUtc ?? DateTime.UtcNow;
     }
 
     // إضافة بند للإذن
@@ -94,10 +95,10 @@ public class StockVoucher : AuditableEntity
     }
 
     // إلغاء الإذن (عكس الرصيد بيتم في الـ Handler)
-    public void Cancel(string reason)
+    public void Cancel(string reason, DateTime? cancelledAtUtc = null)
     {
         Status = StockVoucherStatus.Cancelled;
         CancelReason = reason;
-        CancelledAtUtc = DateTime.UtcNow;
+        CancelledAtUtc = cancelledAtUtc ?? DateTime.UtcNow;
     }
 }

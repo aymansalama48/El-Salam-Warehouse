@@ -1,3 +1,4 @@
+using El_Salam_Warehouse.Application.Common.Abstractions.Core;
 using El_Salam_Warehouse.Application.Common.Abstractions.Messaging;
 using El_Salam_Warehouse.Application.Common.Abstractions.Persistence.Data;
 using El_Salam_Warehouse.Application.Features.StockVouchers.Shared;
@@ -28,13 +29,15 @@ public class CancelStockVoucherCommandValidator : AbstractValidator<CancelStockV
 // 3. الـ Handler
 internal sealed class CancelStockVoucherCommandHandler : ICommandHandler<CancelStockVoucherCommand>
 {
-    // الاتصال بالداتابيز
+    // الاتصال بالداتابيز وتثبيت التاريخ والوقت
     private readonly IApplicationDbContext _context;
+    private readonly IDateTime _dateTime;
 
     // كونستركتور
-    public CancelStockVoucherCommandHandler(IApplicationDbContext context)
+    public CancelStockVoucherCommandHandler(IApplicationDbContext context, IDateTime dateTime)
     {
         _context = context;
+        _dateTime = dateTime;
     }
 
     // تنفيذ الإلغاء (بيعكس الرصيد)
@@ -83,7 +86,7 @@ internal sealed class CancelStockVoucherCommandHandler : ICommandHandler<CancelS
             }
         }
 
-        voucher.Cancel(request.Reason.Trim());
+        voucher.Cancel(request.Reason.Trim(), _dateTime.UtcNow);
 
         try
         {
