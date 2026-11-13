@@ -1,0 +1,5 @@
+namespace El_Salam_Warehouse.UnitTests.Features.Accounts.PermissionManagement.Commands.AssignPermissionToRole;
+
+public class AssignPermissionToRoleCommandHandlerTests
+{
+}

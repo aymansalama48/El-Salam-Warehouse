@@ -1,0 +1,80 @@
+/**
+ * ثوابت مسارات الـ API المركزية لمشروع مستودع السلام
+ */
+export const ENDPOINTS = {
+  CATEGORIES: {
+    BASE: "/categories",
+    GET_ALL: "/categories",
+    GET_BY_ID: (id) => `/categories/${id}`,
+    GET_PRODUCTS: (id) => `/categories/${id}/products`,
+    LOOKUP: "/categories/lookup",
+    CREATE: "/categories",
+    UPDATE: (id) => `/categories/${id}`,
+    DELETE: (id) => `/categories/${id}`,
+    REORDER: "/categories/reorder",
+  },
+  PRODUCTS: {
+    BASE: "/products",
+    GET_ALL: "/products",
+    GET_BY_ID: (id) => `/products/${id}`,
+    LOOKUP: "/products/lookup",
+    SUMMARY: "/products/summary",
+    UNIT_TYPES: "/products/unit-types",
+    CREATE: "/products",
+    UPDATE: (id) => `/products/${id}`,
+    DELETE: (id) => `/products/${id}`,
+    REORDER: "/products/reorder",
+    REPORT: "/products/report",
+    STOCK_ALERT_THRESHOLDS: "/products/stock-alerts/thresholds",
+    PDF: (id) => `/products/${id}/pdf`,
+  },
+  STOCK_VOUCHERS: {
+    BASE: "/stock-vouchers",
+    GET_ALL: "/stock-vouchers",
+    GET_BY_ID: (id) => `/stock-vouchers/${id}`,
+    CREATE: "/stock-vouchers",
+    CANCEL: (id) => `/stock-vouchers/${id}/cancel`,
+    SUMMARY: "/stock-vouchers/summary",
+    PDF: (id) => `/stock-vouchers/${id}/pdf`,
+  },
+  DAYBOOK: {
+    BASE: "/daybook",
+    GET_ALL: "/daybook",
+    REPORT: "/daybook/report",
+  },
+  ACCOUNTS: {
+    LOGIN: "/accounts/login",
+    REFRESH: "/accounts/refresh-token",
+    LOGOUT: "/accounts/logout",
+    CHANGE_PASSWORD: "/accounts/change-password",
+    ME: "/accounts/me",
+    ME_PICTURE: "/accounts/me/picture",
+    USERS: "/accounts",
+    ACTIVATE: (id) => `/accounts/${id}/activate`,
+    DEACTIVATE: (id) => `/accounts/${id}/deactivate`,
+    ASSIGN_ROLE: (id) => `/accounts/${id}/roles`,
+    REMOVE_ROLE: (id, roleName) => `/accounts/${id}/roles/${roleName}`,
+  },
+  PERMISSIONS: {
+    BASE: "/permissions",
+    ROLES: "/permissions/roles",
+    ROLE_BY_ID: (id) => `/permissions/roles/${id}`,
+    ROLE_PERMISSIONS: (id) => `/permissions/roles/${id}/permissions`,
+    ASSIGN_ROLE_PERMISSION: (roleId, permissionId) => `/permissions/roles/${roleId}/permissions/${permissionId}`,
+    REMOVE_ROLE_PERMISSION: (roleId, permissionId) => `/permissions/roles/${roleId}/permissions/${permissionId}`,
+  },
+  DASHBOARD: {
+    STATS: "/dashboard/stats",
+  },
+  NOTIFICATIONS: {
+    BASE: "/notifications",
+    GET_ALL: "/notifications",
+  },
+  SETTINGS: {
+    BASE: "/settings",
+    GET: "/settings",
+    UPDATE: "/settings",
+    UPLOAD_LOGO: "/settings/logo",
+  },
+};
+ 

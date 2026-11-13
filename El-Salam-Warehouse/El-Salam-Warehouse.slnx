@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/El-Salam-Warehouse.Api/El-Salam-Warehouse.Api.csproj" />
+    <Project Path="src/El-Salam-Warehouse.Application/El-Salam-Warehouse.Application.csproj" />
+    <Project Path="src/El-Salam-Warehouse.Domain/El-Salam-Warehouse.Domain.csproj" />
+    <Project Path="src/El-Salam-Warehouse.Infrastructure/El-Salam-Warehouse.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/El-Salam-Warehouse.UnitTests/El-Salam-Warehouse.UnitTests.csproj" />
+  </Folder>
+</Solution>

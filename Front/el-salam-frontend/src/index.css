@@ -1,0 +1,106 @@
+@import "@fontsource/cairo";
+@import "@fontsource/cairo/500.css";
+@import "@fontsource/cairo/600.css";
+@import "@fontsource/cairo/700.css";
+@import "@fontsource/cairo/800.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f8fafc; /* bg-slate-50 */
+  color: #1e293b; /* text-slate-800 */
+  direction: rtl;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* SweetAlert2 Theme Customization for El-Salam Warehouse */
+.swal2-popup.salam-swal-popup {
+  font-family: 'Cairo', system-ui, sans-serif !important;
+  border-radius: 1rem !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05) !important;
+  border: 1px solid #e2e8f0 !important;
+  direction: rtl !important;
+}
+
+.swal2-title.salam-swal-title {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  padding: 0.5rem 0 0.25rem !important;
+}
+
+.swal2-html-container.salam-swal-content {
+  font-size: 0.875rem !important;
+  color: #64748b !important;
+  line-height: 1.6 !important;
+  margin: 0.5rem 0 1.25rem !important;
+}
+
+.swal2-actions.salam-swal-actions {
+  gap: 0.75rem !important;
+  width: 100% !important;
+  justify-content: center !important;
+  margin-top: 1rem !important;
+}
+
+.swal2-confirm.salam-swal-btn-primary {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  padding: 0.55rem 1.25rem !important;
+  border-radius: 0.5rem !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+.swal2-confirm.salam-swal-btn-primary:hover {
+  background-color: #1e293b !important;
+}
+
+.swal2-cancel.salam-swal-btn-secondary {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  padding: 0.55rem 1.25rem !important;
+  border-radius: 0.5rem !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+.swal2-cancel.salam-swal-btn-secondary:hover {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}

@@ -1,0 +1,4 @@
+{
+  "packetThreshold": 10000,
+  "cartonThreshold": 1000
+}

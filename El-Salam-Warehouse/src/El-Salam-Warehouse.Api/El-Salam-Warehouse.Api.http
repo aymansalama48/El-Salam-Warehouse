@@ -1,0 +1,6 @@
+@El_Salam_Warehouse.Api_HostAddress = http://localhost:5271
+
+GET {{El_Salam_Warehouse.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
