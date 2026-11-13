@@ -1,0 +1,1 @@
+sqlcmd -S "AYMAN\MSSQLSERVER01" -E -Q "BACKUP DATABASE [El_Salam_Warehouse] TO DISK = 'D:\كل المشاريع البرمجيه c\El-Salam-Warehouse\Backup Sql\El_Salam_Warehouse.bak' WITH FORMAT, INIT"
