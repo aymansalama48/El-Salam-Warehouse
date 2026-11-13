@@ -148,15 +148,45 @@ export function VoucherFormModal({
     setErrors({});
     setApiError(null);
 
-    // التحقق من تحديد صنف لكل بند
-    const missingProduct = items.some((it) => !it.product || !it.product.id);
-    if (missingProduct) {
-      setErrors({ items: "يجب اختيار الصنف لكل بند مضاف في الإذن" });
-      return;
+    // 1. تجهيز كائن الطلب للتحقق الشامل
+    const payload = {
+      type,
+      date: date || null,
+      source: isInbound ? source : VOUCHER_SOURCE.EXTERNAL,
+      partyName: isProductionSource ? null : (isShortage ? (partyName.trim() || "لجنة الجرد والمطابقة") : (partyName.trim() || null)),
+      receiverName: receiverName.trim(),
+      delivererName: (isOutbound || isShortage) ? null : (delivererName.trim() || null),
+      notes: notes.trim() || null,
+      returnDirection: isReturn ? returnDirection : null,
+      returnReason: isReturn ? returnReason.trim() || null : null,
+      shortageReason: isShortage ? shortageReason.trim() || null : null,
+      items: items.map((it) => {
+        const isCopyPaper = it.product?.unitType === 3 || it.product?.baseUnit === "كرتونة";
+        const defaultUnit = isCopyPaper ? 2 : 1;
+        return {
+          productId: it.product?.id || "",
+          quantity: Number(it.quantity) || 0,
+          entryUnit: it.entryUnit ?? defaultUnit,
+        };
+      }),
+    };
+
+    // 2. التحقق الشامل عبر Zod لجميع الحقول
+    const validation = validateVoucher(payload);
+    const formErrors = validation.success ? {} : { ...validation.errors };
+
+    // 3. التحقق من بنود الأصناف (تحديد الصنف والكمية)
+    const hasMissingProduct = items.some((it) => !it.product || !it.product.id);
+    const hasMissingQuantity = items.some((it) => !it.quantity || Number(it.quantity) <= 0);
+
+    if (hasMissingProduct) {
+      formErrors.items = "يجب اختيار الصنف لكل بند مضاف في الإذن";
+    } else if (hasMissingQuantity && !formErrors.items) {
+      formErrors.items = "يرجى تحديد كمية صحيحة أكبر من صفر لكل بند";
     }
 
-    // التحقق من الرصيد المتاح في الحركات التي تخصم من المخزون (صرف أو مرتجع لمورد)
-    if (isStockDeduction) {
+    // 4. التحقق من الرصيد المتاح في الحركات التي تخصم من المخزون
+    if (isStockDeduction && !formErrors.items) {
       for (let i = 0; i < items.length; i++) {
         const it = items[i];
         const prod = it.product;
@@ -183,40 +213,15 @@ export function VoucherFormModal({
         }
 
         if (enteredQty > availableInUnit) {
-          setErrors({
-            items: `الكمية المطلوبة للصنف "${prod.name}" (${enteredQty} ${unitName}) تتجاوز الرصيد المتاح بالمخزن (${availableInUnit.toLocaleString()} ${unitName})`,
-          });
-          return;
+          formErrors.items = `الكمية المطلوبة للصنف "${prod.name}" (${enteredQty} ${unitName}) تتجاوز الرصيد المتاح بالمخزن (${availableInUnit.toLocaleString()} ${unitName})`;
+          break;
         }
       }
     }
 
-    // تجهيز كائن الطلب
-    const payload = {
-      type,
-      date: date || null,
-      source: isInbound ? source : VOUCHER_SOURCE.EXTERNAL,
-      partyName: isProductionSource ? null : (isShortage ? (partyName.trim() || "لجنة الجرد والمطابقة") : (partyName.trim() || null)),
-      receiverName: receiverName.trim(),
-      delivererName: (isOutbound || isShortage) ? null : (delivererName.trim() || null),
-      notes: notes.trim() || null,
-      returnDirection: isReturn ? returnDirection : null,
-      returnReason: isReturn ? returnReason.trim() || null : null,
-      shortageReason: isShortage ? shortageReason.trim() || null : null,
-      items: items.map((it) => {
-        const isCopyPaper = it.product?.unitType === 3 || it.product?.baseUnit === "كرتونة";
-        const defaultUnit = isCopyPaper ? 2 : 1;
-        return {
-          productId: it.product?.id || "",
-          quantity: Number(it.quantity) || 0,
-          entryUnit: it.entryUnit ?? defaultUnit,
-        };
-      }),
-    };
-
-    const validation = validateVoucher(payload);
-    if (!validation.success) {
-      setErrors(validation.errors);
+    // 5. إذا وُجدت أي أخطاء في أي حقل يتم عرضها دفعة واحدة
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
       return;
     }
 
@@ -852,6 +857,7 @@ export function VoucherFormModal({
 
                 const enteredQty = Number(item.quantity) || 0;
                 const isOverStock = isStockDeduction && selectedProd && enteredQty > availableInCurrentUnit;
+                const hasItemError = (!selectedProd || !item.quantity || Number(item.quantity) <= 0) && errors.items;
 
                 const quantityLabel = `عدد ال${unitLabel}`;
                 const quantityBadge = unitLabel;
@@ -865,7 +871,9 @@ export function VoucherFormModal({
                   <div
                     key={index}
                     className={`p-3.5 rounded-xl space-y-2.5 border transition-colors ${
-                      isOverStock ? "bg-rose-50/50 border-rose-200" : "bg-slate-50/80 border-slate-200/80"
+                      isOverStock || hasItemError
+                        ? "bg-rose-50/40 border-rose-300 ring-1 ring-rose-200"
+                        : "bg-slate-50/80 border-slate-200/80"
                     }`}
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
@@ -954,8 +962,8 @@ export function VoucherFormModal({
                             onChange={(e) => handleQuantityChange(index, e.target.value)}
                             placeholder="0"
                             className={`w-full px-3 py-2 pl-16 text-xs sm:text-sm font-bold bg-white border rounded-lg focus:outline-none ${
-                              isOverStock
-                                ? "border-rose-400 focus:border-rose-600 text-rose-700"
+                              isOverStock || (hasItemError && (!item.quantity || Number(item.quantity) <= 0))
+                                ? "border-rose-400 focus:border-rose-600 text-rose-700 bg-rose-50/20 ring-1 ring-rose-200"
                                 : "border-slate-200 focus:border-slate-800"
                             }`}
                           />
