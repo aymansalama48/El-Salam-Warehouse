@@ -42,6 +42,8 @@ export default function DashboardHome() {
   // حالات النوافذ المنبثقة للإجراءات السريعة
   const [isInboundModalOpen, setIsInboundModalOpen] = useState(false);
   const [isOutboundModalOpen, setIsOutboundModalOpen] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [isShortageModalOpen, setIsShortageModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // تفاصيل الإذن عند النقر على أي سطر في آخر الحركات
@@ -216,6 +218,16 @@ export default function DashboardHome() {
     setIsOutboundModalOpen(true);
   };
 
+  // فتح نافذة إذن المرتجع مباشرة
+  const handleNewReturn = () => {
+    setIsReturnModalOpen(true);
+  };
+
+  // فتح نافذة إذن العجز مباشرة
+  const handleNewShortage = () => {
+    setIsShortageModalOpen(true);
+  };
+
   // فتح نافذة تصدير تقرير الجرد مباشرة
   const handleExport = () => {
     setIsReportModalOpen(true);
@@ -237,6 +249,22 @@ export default function DashboardHome() {
     fetchDashboardData(true);
   };
 
+  // حفظ إذن مرتجع من لوحة التحكم
+  const handleSaveReturn = async (formData) => {
+    await createStockVoucher(formData);
+    showSuccess("تم تسجيل إذن المرتجع بنجاح", "تم توثيق استلام المرتجع وضبط رصيد المستودع فوراً");
+    notifyVoucherChanged();
+    fetchDashboardData(true);
+  };
+
+  // حفظ إذن عجز من لوحة التحكم
+  const handleSaveShortage = async (formData) => {
+    await createStockVoucher(formData);
+    showSuccess("تم تسجيل إذن العجز والتسوية بنجاح", "تم توثيق محضر العجز وخصم الكميات من الرصيد فوراً");
+    notifyVoucherChanged();
+    fetchDashboardData(true);
+  };
+
   return (
     <div className="space-y-6 select-none" dir="rtl">
       {/* 1. ترويسة لوحة التحكم وشريط الإجراءات السريعة */}
@@ -244,6 +272,8 @@ export default function DashboardHome() {
         onRefresh={handleRefresh}
         onNewSupply={handleNewSupply}
         onNewDispatch={handleNewDispatch}
+        onNewReturn={handleNewReturn}
+        onNewShortage={handleNewShortage}
         onExport={handleExport}
         refreshing={refreshing}
       />
@@ -332,6 +362,24 @@ export default function DashboardHome() {
           onClose={() => setIsOutboundModalOpen(false)}
           onSave={handleSaveOutbound}
           type={VOUCHER_TYPE.OUTBOUND}
+        />
+      )}
+
+      {isReturnModalOpen && (
+        <VoucherFormModal
+          isOpen={isReturnModalOpen}
+          onClose={() => setIsReturnModalOpen(false)}
+          onSave={handleSaveReturn}
+          type={VOUCHER_TYPE.RETURN}
+        />
+      )}
+
+      {isShortageModalOpen && (
+        <VoucherFormModal
+          isOpen={isShortageModalOpen}
+          onClose={() => setIsShortageModalOpen(false)}
+          onSave={handleSaveShortage}
+          type={VOUCHER_TYPE.SHORTAGE}
         />
       )}
 

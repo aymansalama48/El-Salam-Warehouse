@@ -1,11 +1,19 @@
-import { PlusCircle, FileText, DownloadCloud, RefreshCw } from "lucide-react";
+import { PlusCircle, FileText, DownloadCloud, RefreshCw, RotateCcw, AlertTriangle } from "lucide-react";
 
-export function QuickActions({ onRefresh, onNewSupply, onNewDispatch, onExport, refreshing }) {
+export function QuickActions({ 
+  onRefresh, 
+  onNewSupply, 
+  onNewDispatch, 
+  onNewReturn,
+  onNewShortage,
+  onExport, 
+  refreshing 
+}) {
   return (
     <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-2xs flex flex-wrap items-center justify-between gap-3">
       <div>
         <h3 className="font-bold text-slate-800 text-sm">إجراءات سريعة</h3>
-        <p className="text-2xs text-slate-400 font-medium">الوصول السريع للمهام اليومية الأكثر تكراراً بالمستودع</p>
+        <p className="text-2xs text-slate-400 font-medium">الوصول السريع للمهام اليومية وتسجيل الأذونات بالمستودع</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -34,6 +42,26 @@ export function QuickActions({ onRefresh, onNewSupply, onNewDispatch, onExport, 
           <FileText className="w-3.5 h-3.5" />
           <span>إذن صرف بضاعة</span>
         </button>
+
+        {onNewReturn && (
+          <button
+            onClick={onNewReturn}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>إذن مرتجع جديد</span>
+          </button>
+        )}
+
+        {onNewShortage && (
+          <button
+            onClick={onNewShortage}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors cursor-pointer"
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>إذن تسوية عجز</span>
+          </button>
+        )}
 
         <button
           onClick={onExport}
