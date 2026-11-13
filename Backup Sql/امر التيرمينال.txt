@@ -1,1 +1,3 @@
-sqlcmd -S "AYMAN\MSSQLSERVER01" -E -Q "BACKUP DATABASE [El_Salam_Warehouse] TO DISK = 'D:\كل المشاريع البرمجيه c\El-Salam-Warehouse\Backup Sql\El_Salam_Warehouse.bak' WITH FORMAT, INIT"
+$date = Get-Date -Format "yyyy-MM-dd"; $backupDir = "D:\كل المشاريع البرمجيه c\El-Salam-Warehouse\Backup Sql\$date"; New-Item -ItemType Directory -Force -Path $backupDir | Out-Null; sqlcmd -S "AYMAN\MSSQLSERVER01" -E -Q "BACKUP DATABASE [El_Salam_Warehouse] TO DISK = '$backupDir\El_Salam_Warehouse.bak' WITH FORMAT, INIT"
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

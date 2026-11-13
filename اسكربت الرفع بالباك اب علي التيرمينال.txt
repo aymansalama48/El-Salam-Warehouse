@@ -1,0 +1,16 @@
+$basePath = "D:\كل المشاريع البرمجيه c\El-Salam-Warehouse"
+$date = Get-Date -Format "yyyy-MM-dd"
+$backupDir = "$basePath\Backup Sql\$date"
+$backupFile = "$backupDir\El_Salam_Warehouse.bak"
+
+# 1. إنشاء فولدر بتاريخ اليوم داخل مجلد Backup Sql
+New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
+
+# 2. أخذ نسخة احتياطية من قاعدة البيانات وحفظها داخل فولدر اليوم
+sqlcmd -S "AYMAN\MSSQLSERVER01" -E -Q "BACKUP DATABASE [El_Salam_Warehouse] TO DISK = '$backupFile' WITH FORMAT, INIT"
+
+# 3. الانتقال لمسار المشروع ورفع التعديلات إلى GitHub
+Set-Location $basePath
+git add .
+git commit -m "Auto Backup & Code Update: $date"
+git push origin main
