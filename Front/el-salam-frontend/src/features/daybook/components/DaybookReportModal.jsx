@@ -136,6 +136,7 @@ export function DaybookReportModal({ isOpen, onClose, categories = [] }) {
       const parts = ["دفتر_اليومية"];
       if (voucherType === 1) parts.push("وارد");
       if (voucherType === 2) parts.push("منصرف");
+      if (voucherType === 3) parts.push("مرتجع");
       if (voucherSource === 2) parts.push("إنتاج");
       if (voucherSource === 1) parts.push("خارجي");
       if (categoryMode === "paper") parts.push("ورق_تصوير");
@@ -168,7 +169,8 @@ export function DaybookReportModal({ isOpen, onClose, categories = [] }) {
     // نوع الحركة
     if (voucherType === 1) list.push("إذونات الوارد فقط");
     else if (voucherType === 2) list.push("إذونات الصرف فقط");
-    else list.push("الوارد والصرف معاً");
+    else if (voucherType === 3) list.push("إذونات المرتجع فقط");
+    else list.push("الوارد والصرف والمرتجع معاً");
 
     // المصدر
     if (voucherSource === 2) list.push("صالة الإنتاج والتجليد فقط");
@@ -230,11 +232,12 @@ export function DaybookReportModal({ isOpen, onClose, categories = [] }) {
               <Filter className="w-3.5 h-3.5 text-blue-600" />
               1. نوع الحركة في التقرير:
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
-                { value: null, label: "الكل (الوارد والصرف)", activeClass: "border-blue-600 bg-blue-600 text-white shadow-xs" },
+                { value: null, label: "الكل (شامل)", activeClass: "border-blue-600 bg-blue-600 text-white shadow-xs" },
                 { value: 1, label: "📥 وارد فقط", activeClass: "border-emerald-600 bg-emerald-600 text-white shadow-xs" },
-                { value: 2, label: "📤 منصرف فقط", activeClass: "border-amber-600 bg-amber-600 text-white shadow-xs" },
+                { value: 2, label: "📤 منصرف فقط", activeClass: "border-rose-600 bg-rose-600 text-white shadow-xs" },
+                { value: 3, label: "🔄 مرتجع فقط", activeClass: "border-amber-600 bg-amber-600 text-white shadow-xs" },
               ].map((opt) => {
                 const isActive = voucherType === opt.value;
                 return (

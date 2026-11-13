@@ -1,6 +1,7 @@
 import { 
   ArrowDownToLine, 
   ArrowUpFromLine, 
+  RotateCcw,
   Calendar, 
   Hash, 
   Package, 
@@ -65,11 +66,14 @@ export function DaybookTable({
           <tbody className="divide-y divide-slate-100">
             {entries.map((item, idx) => {
               const isInbound = item.type === VOUCHER_TYPE.INBOUND;
+              const isReturn = item.type === VOUCHER_TYPE.RETURN;
               const isCancelled = item.status === VOUCHER_STATUS.CANCELLED;
 
-              // كل سطر: وارد أخضر، صرف أحمر، ملغي رمادي باهت
+              // كل سطر: وارد أخضر، صرف أحمر، مرتجع برتقالي، ملغي رمادي باهت
               const rowClass = isCancelled
                 ? "bg-slate-50/80 text-slate-400 opacity-60 hover:bg-slate-100/60"
+                : isReturn
+                ? "hover:bg-amber-50/30 text-slate-800"
                 : isInbound
                 ? "hover:bg-emerald-50/30 text-slate-800"
                 : "hover:bg-rose-50/30 text-slate-800";
@@ -97,11 +101,17 @@ export function DaybookTable({
                     </span>
                   </td>
 
-                  {/* نوع الحركة: وارد أخضر | صرف أحمر | ملغي رمادي */}
+                  {/* نوع الحركة: وارد أخضر | صرف أحمر | مرتجع برتقالي | ملغي رمادي */}
                   <td className="py-3 px-3.5 whitespace-nowrap">
                     {isCancelled ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-extrabold bg-slate-200 text-slate-600">
                         ملغي
+                      </span>
+                    ) : isReturn ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
+                        <RotateCcw className="w-3 h-3" />
+                        مرتجع
+                        {item.returnDirection === 1 ? " (وارد)" : item.returnDirection === 2 ? " (صرف)" : ""}
                       </span>
                     ) : isInbound ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
@@ -171,18 +181,22 @@ export function DaybookTable({
                         }
                       }
 
+                      const isAddition = isInbound || (isReturn && item.returnDirection === 1);
+
                       return (
                         <div className="flex flex-col items-center gap-0.5">
                           <span
                             className={`text-xs font-extrabold px-2.5 py-0.5 rounded-md ${
                               isCancelled
                                 ? "text-slate-500 line-through bg-slate-100"
+                                : isReturn
+                                ? "text-amber-700 bg-amber-50 border border-amber-200/50"
                                 : isInbound
                                 ? "text-emerald-700 bg-emerald-50 border border-emerald-200/50"
                                 : "text-rose-700 bg-rose-50 border border-rose-200/50"
                             }`}
                           >
-                            {isInbound ? "+" : "-"}
+                            {isAddition ? "+" : "-"}
                             {qty.toLocaleString()} {item.unitLabel}
                           </span>
                           {eqText && (
@@ -252,6 +266,11 @@ export function DaybookTable({
                         <Building2 className="w-3 h-3 text-slate-400" />
                         {item.partyName || (item.source === 2 ? "صالة الإنتاج" : "جهة خارجية")}
                       </span>
+                      {isReturn && item.returnReason && (
+                        <span className="text-3xs font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded mt-0.5 max-w-[150px] truncate" title={`سبب المرتجع: ${item.returnReason}`}>
+                          سبب: {item.returnReason}
+                        </span>
+                      )}
                       <span className="text-2xs text-slate-400 flex items-center gap-1">
                         <User className="w-3 h-3 text-slate-400" />
                         المستلم: {item.receiverName}

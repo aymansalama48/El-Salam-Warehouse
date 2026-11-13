@@ -31,7 +31,9 @@ public record DaybookEntryDto(
     ProductUnitType UnitType = ProductUnitType.Notebook,
     int UnitsPerBaseUnit = 1,
     string BaseUnit = "",
-    string SubUnit = "");
+    string SubUnit = "",
+    ReturnDirection? ReturnDirection = null,
+    string? ReturnReason = null);
 
 // إجماليات الفترة (من غير الإذونات الملغية)
 public record DaybookTotalsDto(
@@ -42,7 +44,11 @@ public record DaybookTotalsDto(
     int InboundCartons,           // ورق تصوير وارد (بالكرتونة)
     int OutboundCartons,
     int InboundReams = 0,
-    int OutboundReams = 0);
+    int OutboundReams = 0,
+    int ReturnVouchers = 0,
+    int ReturnNotebooks = 0,
+    int ReturnCartons = 0,
+    int ReturnReams = 0);
 
 // الرد الكامل باستخدام PagedResult
 public record DaybookResponse(DaybookTotalsDto Totals, PagedResult<DaybookEntryDto> Entries);
@@ -146,7 +152,11 @@ internal sealed class GetDaybookQueryHandler : IQueryHandler<GetDaybookQuery, Da
             QtyCartons(StockVoucherType.Inbound),
             QtyCartons(StockVoucherType.Outbound),
             QtyReams(StockVoucherType.Inbound),
-            QtyReams(StockVoucherType.Outbound));
+            QtyReams(StockVoucherType.Outbound),
+            Vouchers(StockVoucherType.Return),
+            QtyNotebooks(StockVoucherType.Return),
+            QtyCartons(StockVoucherType.Return),
+            QtyReams(StockVoucherType.Return));
 
         // السطور بالصفحات
         var totalCount = await query.CountAsync(cancellationToken);
@@ -177,7 +187,9 @@ internal sealed class GetDaybookQueryHandler : IQueryHandler<GetDaybookQuery, Da
                 x.Item.Product.UnitType,
                 x.Item.Product.UnitsPerBaseUnit,
                 x.Item.Product.BaseUnit,
-                x.Item.Product.SubUnit))
+                x.Item.Product.SubUnit,
+                x.Voucher.ReturnDirection,
+                x.Voucher.ReturnReason))
             .ToListAsync(cancellationToken);
 
         // إنشاء كائن PaginationMetadata و PagedResult

@@ -140,9 +140,10 @@ export function AuthProvider({ children }) {
 
   const isAdmin = hasRole("Admin");
 
-  // فحص امتلاك صلاحية معينة (يتحقق بدقة من الصلاحيات الممنوحة فعلياً في قاعدة البيانات)
+  // فحص امتلاك صلاحية معينة (المدير يملك كافة الصلاحيات تلقائياً)
   const hasPermission = (permissionName) => {
     if (!user) return false;
+    if (isAdmin) return true;
     if (!user.permissions || !Array.isArray(user.permissions)) return false;
     return user.permissions.includes(permissionName);
   };
@@ -150,6 +151,7 @@ export function AuthProvider({ children }) {
   // فحص امتلاك أي من الصلاحيات المحددة
   const hasAnyPermission = (permissionNames = []) => {
     if (!user) return false;
+    if (isAdmin) return true;
     if (!user.permissions || !Array.isArray(user.permissions)) return false;
     return permissionNames.some((p) => user.permissions.includes(p));
   };

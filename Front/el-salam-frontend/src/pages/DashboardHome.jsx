@@ -289,7 +289,7 @@ export default function DashboardHome() {
               <div className="flex items-center justify-between">
                 <span>أذونات هذا الشهر:</span>
                 <span className="font-bold text-slate-800">
-                  {(stats?.inboundThisMonth ?? 0) + (stats?.outboundThisMonth ?? 0)} إذن
+                  {(stats?.inboundThisMonth ?? 0) + (stats?.outboundThisMonth ?? 0) + (stats?.returnsThisMonth ?? 0)} إذن
                 </span>
               </div>
               {stats?.lastVoucherNumber && (

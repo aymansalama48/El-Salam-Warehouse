@@ -68,24 +68,24 @@ export function Sidebar({
     {
       title: "الحركات والعمليات",
       items: [
-        hasPermission("Daybook.View") && {
+        (isAdmin || hasPermission("Daybook.View")) && {
           to: "/stock-ledger",
           label: "دفتر اليومية",
           icon: BookOpen,
         },
-        hasPermission("Vouchers.View") && {
+        (isAdmin || hasPermission("Vouchers.View")) && {
           to: "/inbound",
           label: "أذونات الوارد",
           icon: ArrowDownToLine,
           badge: `${summary.inboundToday} اليوم`,
         },
-        hasPermission("Vouchers.View") && {
+        (isAdmin || hasPermission("Vouchers.View")) && {
           to: "/outbound",
           label: "أذونات المنصرف",
           icon: ArrowUpFromLine,
           badge: `${summary.outboundToday} اليوم`,
         },
-        hasPermission("Vouchers.View") && {
+        (isAdmin || hasPermission("Vouchers.View")) && {
           to: "/returns",
           label: "أذونات المرتجع",
           icon: RotateCcw,

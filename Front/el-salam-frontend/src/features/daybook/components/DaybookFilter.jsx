@@ -67,7 +67,7 @@ export function DaybookFilter({
           />
         </div>
 
-        {/* نوع الحركة (وارد / صرف) */}
+        {/* نوع الحركة (وارد / صرف / مرتجع) */}
         <div className="lg:col-span-1">
           <select
             value={type}
@@ -77,6 +77,7 @@ export function DaybookFilter({
             <option value="all">الكل</option>
             <option value={VOUCHER_TYPE.INBOUND}>وارد</option>
             <option value={VOUCHER_TYPE.OUTBOUND}>صرف</option>
+            <option value={VOUCHER_TYPE.RETURN}>مرتجع</option>
           </select>
         </div>
 

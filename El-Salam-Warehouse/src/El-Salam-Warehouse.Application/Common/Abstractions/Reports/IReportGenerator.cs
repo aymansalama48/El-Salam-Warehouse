@@ -47,7 +47,11 @@ public record DaybookReportTotals(
     int InboundCartons,
     int OutboundCartons,
     int InboundReams = 0,
-    int OutboundReams = 0);
+    int OutboundReams = 0,
+    int ReturnVouchers = 0,
+    int ReturnNotebooks = 0,
+    int ReturnCartons = 0,
+    int ReturnReams = 0);
 
 // بيانات تقرير الدفتر كاملة
 public record DaybookReportModel(

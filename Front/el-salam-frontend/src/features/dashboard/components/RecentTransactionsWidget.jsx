@@ -1,4 +1,4 @@
-import { ArrowDownLeft, ArrowUpRight, Clock, FileText, ArrowLeft } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, RotateCcw, Clock, FileText, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCairoDateTime } from "../../../utils/dateUtils";
 
@@ -47,12 +47,15 @@ export function RecentTransactionsWidget({ activities = [], loading, onSelectVou
       ) : (
         <div className="divide-y divide-slate-100">
           {activities.map((item, idx) => {
-            const isInbound = item.type === 1 || item.type === "in";
-            const badgeIcon = isInbound ? ArrowDownLeft : ArrowUpRight;
-            const badgeBg = isInbound
+            const isReturn = item.type === 3 || item.type === "return";
+            const isInbound = !isReturn && (item.type === 1 || item.type === "in");
+            const badgeIcon = isReturn ? RotateCcw : (isInbound ? ArrowDownLeft : ArrowUpRight);
+            const badgeBg = isReturn
+              ? "bg-amber-50 text-amber-700 border-amber-200/60"
+              : isInbound
               ? "bg-emerald-50 text-emerald-700 border-emerald-200/60"
               : "bg-blue-50 text-blue-700 border-blue-200/60";
-            const typeLabel = isInbound ? "إذن استلام وارد" : "إذن صرف بضاعة";
+            const typeLabel = isReturn ? "إذن مرتجع مخزني" : (isInbound ? "إذن استلام وارد" : "إذن صرف بضاعة");
             const Icon = badgeIcon;
 
             const timeStr = item.time || formatCairoDateTime(item.occurredAtUtc || item.voucherDate);

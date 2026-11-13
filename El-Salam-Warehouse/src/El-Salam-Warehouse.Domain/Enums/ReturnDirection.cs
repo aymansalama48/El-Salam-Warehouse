@@ -9,3 +9,4 @@ public enum ReturnDirection
     // رد مرتجع (منصرف من المخزن إلى مورد أو جهة - خصم الرصيد)
     Outbound = 2
 }
+
