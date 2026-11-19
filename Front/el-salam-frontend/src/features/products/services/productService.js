@@ -313,13 +313,13 @@ export const reorderProducts = async (orderedIds) => {
 /**
  * 8. تحميل تقرير جرد المنتجات التامة بصيغة PDF
  * GET /api/products/report
- * GET /api/products/report?categoryId={guid}&productIds={guid1}&productIds={guid2}&unitType={1|2|3}
+ * GET /api/products/report?categoryId={guid}&productIds={guid1}&productIds={guid2}&type={notebooks|paper}
  * @param {string|null} [categoryId] - فئة محددة أو null لكل الفئات
  * @param {string[]|null} [productIds] - مصفوفة معرفات الأصناف المحددة
- * @param {number|string|null} [unitType] - تصفية بنوع المنتج (1: كشكول، 2: كراس، 3: ورق تصوير) أو null للكل
+ * @param {number|string|null} [type] - تصفية بنوع المنتجات ("notebooks": كشاكيل وكراريس، "paper": ورق تصوير) أو null للكل
  * @returns {Promise<Blob>}
  */
-export const getProductsReportPdf = async (categoryId = null, productIds = null, unitType = null) => {
+export const getProductsReportPdf = async (categoryId = null, productIds = null, type = null) => {
   const params = new URLSearchParams();
   if (categoryId && categoryId !== "all") {
     params.append("categoryId", categoryId);
@@ -329,8 +329,12 @@ export const getProductsReportPdf = async (categoryId = null, productIds = null,
       if (id) params.append("productIds", id);
     });
   }
-  if (unitType && unitType !== "all") {
-    params.append("unitType", unitType);
+  if (type && type !== "all") {
+    if (typeof type === "number" || !isNaN(Number(type))) {
+      params.append("unitType", type);
+    } else {
+      params.append("type", type);
+    }
   }
 
   return await apiClient.get(ENDPOINTS.PRODUCTS.REPORT, {

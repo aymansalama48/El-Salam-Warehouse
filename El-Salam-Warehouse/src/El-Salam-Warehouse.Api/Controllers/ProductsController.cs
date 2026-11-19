@@ -199,9 +199,10 @@ public class ProductsController : BaseApiController
     public async Task<IResult> Report(
         [FromQuery] Guid? categoryId,
         [FromQuery] List<Guid>? productIds,
-        [FromQuery] ProductUnitType? unitType)
+        [FromQuery] ProductUnitType? unitType,
+        [FromQuery] string? type)
     {
-        var query = new GetProductsReportQuery(categoryId, productIds, unitType);
+        var query = new GetProductsReportQuery(categoryId, productIds, unitType, type);
         var result = await Sender.Send(query);
 
         if (!result.IsSuccess) return HandleResult(result);

@@ -26,7 +26,7 @@ export function ProductsReportModal({
 }) {
   const [fetchedCategories, setFetchedCategories] = useState([]);
   const [fetchedProducts, setFetchedProducts] = useState([]);
-  const [selectedUnitType, setSelectedUnitType] = useState("all"); // "all" | 1 | 2 | 3
+  const [selectedType, setSelectedType] = useState("all"); // "all" | "notebooks" | "paper"
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectionMode, setSelectionMode] = useState("all"); // "all" | "custom"
   const [selectedProductIds, setSelectedProductIds] = useState([]);
@@ -78,16 +78,20 @@ export function ProductsReportModal({
   const allProducts = propProducts.length > 0 ? propProducts : fetchedProducts;
   const isLoadingProducts = isOpen && propProducts.length === 0 && fetchedProducts.length === 0;
 
-  // تصفية الأصناف المتاحة حسب نوع المنتج (كشكول / كراس / ورق تصوير) والفئة المختارة
+  // تصفية الأصناف المتاحة حسب نوع المنتج (كشاكيل وكراريس معاً / ورق تصوير) والفئة المختارة
   const filteredProducts = useMemo(() => {
     let list = allProducts;
 
     // فلترة بنوع المنتج
-    if (selectedUnitType !== "all") {
-      const targetType = Number(selectedUnitType);
+    if (selectedType === "notebooks") {
       list = list.filter((p) => {
         const uType = Number(p.unitType ?? (p.baseUnit === "كرتونة" ? 3 : p.subUnit === "كراس" ? 2 : 1));
-        return uType === targetType;
+        return uType === 1 || uType === 2;
+      });
+    } else if (selectedType === "paper") {
+      list = list.filter((p) => {
+        const uType = Number(p.unitType ?? (p.baseUnit === "كرتونة" ? 3 : p.subUnit === "كراس" ? 2 : 1));
+        return uType === 3;
       });
     }
 
@@ -97,7 +101,7 @@ export function ProductsReportModal({
     }
 
     return list;
-  }, [allProducts, selectedUnitType, selectedCategoryId]);
+  }, [allProducts, selectedType, selectedCategoryId]);
 
   // تصفية الأصناف المعروضة حسب نص البحث
   const displayedProducts = useMemo(() => {
@@ -112,20 +116,20 @@ export function ProductsReportModal({
 
   if (!isOpen) return null;
 
-  const handleUnitTypeChange = (newType) => {
-    setSelectedUnitType(newType);
+  const handleTypeChange = (newType) => {
+    setSelectedType(newType);
     setError(null);
 
     // إذا كان المستخدم محدد أصناف، نبقي فقط على الأصناف المتوافقة مع النوع الجديد
     if (newType !== "all") {
-      const targetType = Number(newType);
       setSelectedProductIds((prev) => {
         const validIds = new Set(
           allProducts
             .filter((p) => {
               const uType = Number(p.unitType ?? (p.baseUnit === "كرتونة" ? 3 : p.subUnit === "كراس" ? 2 : 1));
+              const typeMatch = newType === "notebooks" ? (uType === 1 || uType === 2) : uType === 3;
               const catMatch = selectedCategoryId === "all" || p.categoryId === selectedCategoryId;
-              return uType === targetType && catMatch;
+              return typeMatch && catMatch;
             })
             .map((p) => p.id)
         );
@@ -145,10 +149,10 @@ export function ProductsReportModal({
           allProducts
             .filter((p) => {
               const catMatch = p.categoryId === newCatId;
+              const uType = Number(p.unitType ?? (p.baseUnit === "كرتونة" ? 3 : p.subUnit === "كراس" ? 2 : 1));
               const typeMatch =
-                selectedUnitType === "all" ||
-                Number(p.unitType ?? (p.baseUnit === "كرتونة" ? 3 : p.subUnit === "كراس" ? 2 : 1)) ===
-                  Number(selectedUnitType);
+                selectedType === "all" ||
+                (selectedType === "notebooks" ? (uType === 1 || uType === 2) : uType === 3);
               return catMatch && typeMatch;
             })
             .map((p) => p.id)
@@ -191,20 +195,19 @@ export function ProductsReportModal({
     const categoryIdParam = isAllCategories ? null : selectedCategoryId;
     const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
     const productIdsParam = selectionMode === "custom" ? selectedProductIds : null;
-    const unitTypeParam = selectedUnitType === "all" ? null : Number(selectedUnitType);
+    const typeParam = selectedType === "all" ? null : selectedType;
 
     // فتح نافذة المعاينة مسبقاً بشكل متزامن مع نقرة المستخدم لتفادي حظر النوافذ المنبثقة
     const printWindow = createPendingPdfWindow("جاري تجهيز تقرير جرد المنتجات...");
 
     try {
       setLoading(true);
-      const blob = await getProductsReportPdf(categoryIdParam, productIdsParam, unitTypeParam);
+      const blob = await getProductsReportPdf(categoryIdParam, productIdsParam, typeParam);
 
       const today = new Date().toISOString().split("T")[0];
       const typeLabel = 
-        selectedUnitType === 1 ? "كشاكيل" :
-        selectedUnitType === 2 ? "كراريس" :
-        selectedUnitType === 3 ? "ورق تصوير" : "";
+        selectedType === "notebooks" ? "كشاكيل وكراريس" :
+        selectedType === "paper" ? "ورق تصوير" : "";
 
       let fileName = `جرد المنتجات ${today}.pdf`;
 
@@ -280,25 +283,24 @@ export function ProductsReportModal({
             </div>
           )}
 
-          {/* 1) نوع المنتجات المطلوب جردها (الكل / كشكول / كراس / ورق تصوير) */}
+          {/* 1) نوع المنتجات المطلوب جردها (الكل / كشاكيل وكراريس / ورق تصوير) */}
           <div className="space-y-1.5">
             <label className="block text-2xs font-extrabold text-slate-700 flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-indigo-600" />
               نوع المنتجات المطلوب جردها:
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
                 { value: "all", label: "كل الأصناف" },
-                { value: 1, label: "كشاكيل فقط", icon: "📘" },
-                { value: 2, label: "كراريس فقط", icon: "📙" },
-                { value: 3, label: "ورق تصوير فقط", icon: "📄" },
+                { value: "notebooks", label: "كشاكيل وكراريس", icon: "📒" },
+                { value: "paper", label: "ورق تصوير فقط", icon: "📄" },
               ].map((m) => {
-                const isActive = selectedUnitType === m.value;
+                const isActive = selectedType === m.value;
                 return (
                   <button
-                    key={String(m.value)}
+                    key={m.value}
                     type="button"
-                    onClick={() => handleUnitTypeChange(m.value)}
+                    onClick={() => handleTypeChange(m.value)}
                     className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
                       isActive
                         ? "border-indigo-600 bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-600/20 scale-[1.01]"
@@ -488,9 +490,9 @@ export function ProductsReportModal({
               {selectionMode === "custom"
                 ? `سيتم استخراج ملف تقرير جرد رسمي معتمد لـ (${selectedProductIds.length}) أصناف محددة بالتفصيل.`
                 : selectedCategoryId !== "all"
-                ? `يحتوي التقرير على تفاصيل رصيد أصناف فئة (${categories.find((c) => c.id === selectedCategoryId)?.name || ""}) ${selectedUnitType !== "all" ? `(${selectedUnitType === 1 ? "كشاكيل فقط" : selectedUnitType === 2 ? "كراريس فقط" : "ورق تصوير فقط"})` : ""} بالوحدات المعتمدة.`
-                : selectedUnitType !== "all"
-                ? `يحتوي التقرير على جرد شامل لجميع أصناف (${selectedUnitType === 1 ? "الكشاكيل فقط" : selectedUnitType === 2 ? "الكراريس فقط" : "ورق التصوير فقط"}) بالوحدات المعتمدة.`
+                ? `يحتوي التقرير على تفاصيل رصيد أصناف فئة (${categories.find((c) => c.id === selectedCategoryId)?.name || ""}) ${selectedType !== "all" ? `(${selectedType === "notebooks" ? "كشاكيل وكراريس" : "ورق تصوير فقط"})` : ""} بالوحدات المعتمدة.`
+                : selectedType !== "all"
+                ? `يحتوي التقرير على جرد شامل لجميع أصناف (${selectedType === "notebooks" ? "الكشاكيل والكراريس" : "ورق التصوير فقط"}) بالوحدات المعتمدة.`
                 : "يحتوي التقرير على تفاصيل رصيد كل صنف بالوحدة الكبيرة (باكو / كرتونة) وبالوحدة الصغيرة (كشكول / رزمة) مع إجمالي الرصيد الفعلي لجميع الأصناف."}
             </p>
           </div>
