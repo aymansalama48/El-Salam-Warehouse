@@ -211,7 +211,7 @@ export function AdvancedProductPickerModal({
                   ? looseReams > 0
                     ? `${fullCartons.toLocaleString()} كرتونة و ${looseReams.toLocaleString()} رزمة`
                     : `${fullCartons.toLocaleString()} كرتونة (${actualStock.toLocaleString()} رزمة)`
-                  : `${actualStock.toLocaleString()} ${p.entryUnitLabel || "قطعة"}`;
+                  : `${actualStock.toLocaleString()} ${p.subUnit || p.entryUnitLabel || "كشكول"}`;
 
                 return (
                   <div

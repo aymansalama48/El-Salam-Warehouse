@@ -838,7 +838,7 @@ export function VoucherFormModal({
                 const currentUnit = item.entryUnit ?? (isCopyPaper ? 2 : 1);
                 const unitLabel = isCopyPaper
                   ? (currentUnit === 2 ? "كرتونة" : "رزمة")
-                  : (selectedProd?.entryUnitLabel || "قطعة");
+                  : (selectedProd?.subUnit || selectedProd?.entryUnitLabel || "كشكول");
 
                 const actualStock = selectedProd
                   ? (selectedProd.totalSubUnitStock !== undefined ? selectedProd.totalSubUnitStock : selectedProd.availableInEntryUnit)
@@ -974,32 +974,23 @@ export function VoucherFormModal({
                           )}
                         </div>
 
-                        {/* معادلة التحويل التلقائية بالمستودع */}
-                        {enteredQty > 0 && selectedProd && (
+                        {/* معادلة التحويل التلقائية بالمستودع لورق التصوير فقط */}
+                        {enteredQty > 0 && selectedProd && isCopyPaper && (
                           <div className="mt-1.5 text-2xs font-bold">
-                            {isCopyPaper ? (
-                              currentUnit === 1 ? (
-                                <div className="flex flex-wrap items-center justify-between gap-1 text-blue-900 bg-blue-50 border border-blue-200/80 px-2 py-1 rounded-md">
-                                  <span>المسجل: {enteredQty.toLocaleString()} رزمة</span>
-                                  <span className="text-blue-700 bg-white px-1.5 py-0.5 rounded border border-blue-200 font-extrabold">
-                                    = {(enteredQty / (selectedProd.unitsPerBaseUnit || 5)).toFixed(2).replace(/\.00$/, "")} كرتونة
-                                    {enteredQty % (selectedProd.unitsPerBaseUnit || 5) !== 0 &&
-                                      ` (${Math.floor(enteredQty / (selectedProd.unitsPerBaseUnit || 5))} ك و ${enteredQty % (selectedProd.unitsPerBaseUnit || 5)} ر)`}
-                                  </span>
-                                </div>
-                              ) : (
-                                <div className="flex flex-wrap items-center justify-between gap-1 text-emerald-900 bg-emerald-50 border border-emerald-200/80 px-2 py-1 rounded-md">
-                                  <span>المسجل: {enteredQty.toLocaleString()} كرتونة</span>
-                                  <span className="text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200 font-extrabold">
-                                    = {(enteredQty * (selectedProd.unitsPerBaseUnit || 5)).toLocaleString()} رزمة
-                                  </span>
-                                </div>
-                              )
+                            {currentUnit === 1 ? (
+                              <div className="flex flex-wrap items-center justify-between gap-1 text-blue-900 bg-blue-50 border border-blue-200/80 px-2 py-1 rounded-md">
+                                <span>المسجل: {enteredQty.toLocaleString()} رزمة</span>
+                                <span className="text-blue-700 bg-white px-1.5 py-0.5 rounded border border-blue-200 font-extrabold">
+                                  = {(enteredQty / (selectedProd.unitsPerBaseUnit || 5)).toFixed(2).replace(/\.00$/, "")} كرتونة
+                                  {enteredQty % (selectedProd.unitsPerBaseUnit || 5) !== 0 &&
+                                    ` (${Math.floor(enteredQty / (selectedProd.unitsPerBaseUnit || 5))} ك و ${enteredQty % (selectedProd.unitsPerBaseUnit || 5)} ر)`}
+                                </span>
+                              </div>
                             ) : (
-                              <div className="flex flex-wrap items-center justify-between gap-1 text-slate-800 bg-slate-100 border border-slate-200/80 px-2 py-1 rounded-md">
-                                <span>المسجل: {enteredQty.toLocaleString()} باكو</span>
-                                <span className="text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200 font-extrabold">
-                                  = {(enteredQty * (selectedProd.unitsPerBaseUnit || 1)).toLocaleString()} قطعة
+                              <div className="flex flex-wrap items-center justify-between gap-1 text-emerald-900 bg-emerald-50 border border-emerald-200/80 px-2 py-1 rounded-md">
+                                <span>المسجل: {enteredQty.toLocaleString()} كرتونة</span>
+                                <span className="text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200 font-extrabold">
+                                  = {(enteredQty * (selectedProd.unitsPerBaseUnit || 5)).toLocaleString()} رزمة
                                 </span>
                               </div>
                             )}

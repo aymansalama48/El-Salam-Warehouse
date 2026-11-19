@@ -339,7 +339,7 @@ export function VoucherDetailsModal({
                             actualContentText = `${Number(it.quantity).toLocaleString()} رزمة`;
                           }
                         } else {
-                          actualContentText = `${Number(it.quantitySubUnits).toLocaleString()} قطعة`;
+                          actualContentText = `${Number(it.quantitySubUnits || it.quantity).toLocaleString()} ${it.unitLabel || "كشكول"}`;
                         }
 
                         return (
