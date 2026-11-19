@@ -73,7 +73,7 @@ export function ProductsTable({
               <th className="py-3 px-4 whitespace-nowrap">اسم المنتج أو الصنف</th>
               <th className="py-3 px-4 whitespace-nowrap">فئة المنتج</th>
               <th className="py-3 px-4 whitespace-nowrap">محتوى الباكو / الكرتونة</th>
-              <th className="py-3 px-4 whitespace-nowrap">الرصيد بالباكو / الكرتونة</th>
+              <th className="py-3 px-4 whitespace-nowrap">الرصيد الإجمالي</th>
               <th className="py-3 px-4 whitespace-nowrap">حد النفاذ (الرصيد الحرج)</th>
               <th className="py-3 px-4 whitespace-nowrap">مكان التخزين</th>
               <th className="py-3 px-4 whitespace-nowrap">الحالة</th>
@@ -146,15 +146,36 @@ export function ProductsTable({
                     </span>
                   </td>
 
-                  {/* الرصيد بالوحدة الكبيرة */}
+                  {/* الرصيد الإجمالي */}
                   <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-sm font-bold">
-                        {item.fullBaseUnits} {baseUnit}
-                        {item.remainingSubUnits > 0 && ` و ${item.remainingSubUnits} ${subUnit}`}
-                      </span>
-                    </span>
+                    {(() => {
+                      const isPaper = item.unitType === 3 || baseUnit === "كرتونة" || subUnit === "رزمة";
+                      const totalStock = item.totalSubUnitStock ?? (item.fullBaseUnits * content + (item.remainingSubUnits || 0));
+
+                      if (isPaper) {
+                        return (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Layers className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="text-sm font-bold">
+                              {Number(item.fullBaseUnits ?? 0).toLocaleString()} كرتونة
+                              {item.remainingSubUnits > 0 && ` و ${Number(item.remainingSubUnits).toLocaleString()} رزمة`}
+                            </span>
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <span
+                          className="inline-flex items-center gap-1.5"
+                          title={item.fullBaseUnits > 0 ? `${Number(item.fullBaseUnits).toLocaleString()} باكو${item.remainingSubUnits > 0 ? ` و ${Number(item.remainingSubUnits).toLocaleString()} ${subUnit}` : ""}` : undefined}
+                        >
+                          <Layers className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="text-sm font-bold">
+                            {Number(totalStock).toLocaleString()} {subUnit}
+                          </span>
+                        </span>
+                      );
+                    })()}
                   </td>
 
                   {/* حد النفاذ والتنبيه */}
