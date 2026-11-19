@@ -11,9 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace El_Salam_Warehouse.Application.Features.Products.Queries.GetProductsReport;
 
-// 1. الـ Query (تم إضافة ProductIds لاستقبال منتج أو أكتر)
+// 1. الـ Query (تم إضافة ProductIds لاستقبال منتج أو أكتر، و UnitType لتصفية الكشاكيل / الكراريس / ورق التصوير)
 [El_Salam_Warehouse.Application.Common.Abstractions.Identity.Authorization.Permission(El_Salam_Warehouse.Domain.Constants.Permissions.Products.Export)]
-public record GetProductsReportQuery(Guid? CategoryId, List<Guid>? ProductIds) : IQuery<ReportFileDto>;
+public record GetProductsReportQuery(Guid? CategoryId, List<Guid>? ProductIds, ProductUnitType? UnitType = null) : IQuery<ReportFileDto>;
 
 // 2. الـ Handler
 internal sealed class GetProductsReportQueryHandler : IQueryHandler<GetProductsReportQuery, ReportFileDto>
@@ -59,6 +59,28 @@ internal sealed class GetProductsReportQueryHandler : IQueryHandler<GetProductsR
 
             categoryTitle = categoryName;
             query = query.Where(p => p.CategoryId == request.CategoryId.Value);
+        }
+
+        // فلترة بنوع الصنف (كشكول / كراس / ورق تصوير)
+        if (request.UnitType.HasValue)
+        {
+            query = query.Where(p => p.UnitType == request.UnitType.Value);
+
+            var typeName = request.UnitType.Value switch
+            {
+                ProductUnitType.Notebook => "كشاكيل فقط",
+                ProductUnitType.Booklet => "كراريس فقط",
+                ProductUnitType.CopyPaper => "ورق تصوير فقط",
+                _ => null
+            };
+
+            if (!string.IsNullOrEmpty(typeName))
+            {
+                if (categoryTitle == "جميع الفئات")
+                    categoryTitle = typeName;
+                else
+                    categoryTitle = $"{categoryTitle} ({typeName})";
+            }
         }
 
         // فلترة بمنتجات محددة (لو المستخدم اختار منتج أو أكتر)

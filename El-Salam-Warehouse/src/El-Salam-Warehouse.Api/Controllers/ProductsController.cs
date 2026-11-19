@@ -7,6 +7,7 @@ using El_Salam_Warehouse.Api.Controllers.Base;
 using El_Salam_Warehouse.Application.Common.Abstractions.Identity.Authorization;
 using El_Salam_Warehouse.Application.Common.Abstractions.Persistence.Data;
 using El_Salam_Warehouse.Domain.Constants;
+using El_Salam_Warehouse.Domain.Entities.Products;
 using El_Salam_Warehouse.Domain.Enums;
 using El_Salam_Warehouse.Application.Features.Products.Commands.CreateProduct;
 using El_Salam_Warehouse.Application.Features.Products.Commands.DeleteProduct;
@@ -192,14 +193,15 @@ public class ProductsController : BaseApiController
         return HandleResult(result);
     }
 
-    // 10. تقرير جرد المنتجات PDF (فئة محددة أو الكل)
+    // 10. تقرير جرد المنتجات PDF (فئة محددة أو الكل أو نوع محدد)
     [HttpGet("report")]
     [Permission(Permissions.Products.Export)]
     public async Task<IResult> Report(
         [FromQuery] Guid? categoryId,
-        [FromQuery] List<Guid>? productIds)
+        [FromQuery] List<Guid>? productIds,
+        [FromQuery] ProductUnitType? unitType)
     {
-        var query = new GetProductsReportQuery(categoryId, productIds);
+        var query = new GetProductsReportQuery(categoryId, productIds, unitType);
         var result = await Sender.Send(query);
 
         if (!result.IsSuccess) return HandleResult(result);

@@ -125,7 +125,7 @@ export function normalizeProductLookup(dto) {
   const entryUnitLabel = dto.entryUnitLabel || dto.EntryUnitLabel || (entryUnit === 2 ? baseUnit : subUnit);
   const unitsPerBaseUnit = Number(dto.unitsPerBaseUnit ?? dto.UnitsPerBaseUnit ?? 10);
   const totalSubUnitStock = Number(dto.totalSubUnitStock ?? dto.TotalSubUnitStock ?? 0);
-  const unitType = Number(dto.unitType ?? dto.UnitType ?? (baseUnit === "كرتونة" ? 3 : 1));
+  const unitType = Number(dto.unitType ?? dto.UnitType ?? (baseUnit === "كرتونة" ? 3 : subUnit === "كراس" ? 2 : 1));
 
   return {
     id: dto.id || dto.Id || "",
@@ -313,12 +313,13 @@ export const reorderProducts = async (orderedIds) => {
 /**
  * 8. تحميل تقرير جرد المنتجات التامة بصيغة PDF
  * GET /api/products/report
- * GET /api/products/report?categoryId={guid}&productIds={guid1}&productIds={guid2}
+ * GET /api/products/report?categoryId={guid}&productIds={guid1}&productIds={guid2}&unitType={1|2|3}
  * @param {string|null} [categoryId] - فئة محددة أو null لكل الفئات
  * @param {string[]|null} [productIds] - مصفوفة معرفات الأصناف المحددة
+ * @param {number|string|null} [unitType] - تصفية بنوع المنتج (1: كشكول، 2: كراس، 3: ورق تصوير) أو null للكل
  * @returns {Promise<Blob>}
  */
-export const getProductsReportPdf = async (categoryId = null, productIds = null) => {
+export const getProductsReportPdf = async (categoryId = null, productIds = null, unitType = null) => {
   const params = new URLSearchParams();
   if (categoryId && categoryId !== "all") {
     params.append("categoryId", categoryId);
@@ -327,6 +328,9 @@ export const getProductsReportPdf = async (categoryId = null, productIds = null)
     productIds.forEach((id) => {
       if (id) params.append("productIds", id);
     });
+  }
+  if (unitType && unitType !== "all") {
+    params.append("unitType", unitType);
   }
 
   return await apiClient.get(ENDPOINTS.PRODUCTS.REPORT, {

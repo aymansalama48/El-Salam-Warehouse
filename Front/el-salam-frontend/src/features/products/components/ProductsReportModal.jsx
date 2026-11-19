@@ -26,6 +26,7 @@ export function ProductsReportModal({
 }) {
   const [fetchedCategories, setFetchedCategories] = useState([]);
   const [fetchedProducts, setFetchedProducts] = useState([]);
+  const [selectedUnitType, setSelectedUnitType] = useState("all"); // "all" | 1 | 2 | 3
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectionMode, setSelectionMode] = useState("all"); // "all" | "custom"
   const [selectedProductIds, setSelectedProductIds] = useState([]);
@@ -77,36 +78,80 @@ export function ProductsReportModal({
   const allProducts = propProducts.length > 0 ? propProducts : fetchedProducts;
   const isLoadingProducts = isOpen && propProducts.length === 0 && fetchedProducts.length === 0;
 
-  // تصفية الأصناف المتاحة حسب الفئة المختارة
-  const categoryFilteredProducts = useMemo(() => {
-    if (!selectedCategoryId || selectedCategoryId === "all") {
-      return allProducts;
+  // تصفية الأصناف المتاحة حسب نوع المنتج (كشكول / كراس / ورق تصوير) والفئة المختارة
+  const filteredProducts = useMemo(() => {
+    let list = allProducts;
+
+    // فلترة بنوع المنتج
+    if (selectedUnitType !== "all") {
+      const targetType = Number(selectedUnitType);
+      list = list.filter((p) => {
+        const uType = Number(p.unitType ?? (p.baseUnit === "كرتونة" ? 3 : p.subUnit === "كراس" ? 2 : 1));
+        return uType === targetType;
+      });
     }
-    return allProducts.filter((p) => p.categoryId === selectedCategoryId);
-  }, [allProducts, selectedCategoryId]);
+
+    // فلترة بالفئة
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      list = list.filter((p) => p.categoryId === selectedCategoryId);
+    }
+
+    return list;
+  }, [allProducts, selectedUnitType, selectedCategoryId]);
 
   // تصفية الأصناف المعروضة حسب نص البحث
   const displayedProducts = useMemo(() => {
-    if (!productSearch.trim()) return categoryFilteredProducts;
+    if (!productSearch.trim()) return filteredProducts;
     const query = productSearch.trim().toLowerCase();
-    return categoryFilteredProducts.filter(
+    return filteredProducts.filter(
       (p) =>
         p.name?.toLowerCase().includes(query) ||
         p.categoryName?.toLowerCase().includes(query)
     );
-  }, [categoryFilteredProducts, productSearch]);
+  }, [filteredProducts, productSearch]);
 
   if (!isOpen) return null;
+
+  const handleUnitTypeChange = (newType) => {
+    setSelectedUnitType(newType);
+    setError(null);
+
+    // إذا كان المستخدم محدد أصناف، نبقي فقط على الأصناف المتوافقة مع النوع الجديد
+    if (newType !== "all") {
+      const targetType = Number(newType);
+      setSelectedProductIds((prev) => {
+        const validIds = new Set(
+          allProducts
+            .filter((p) => {
+              const uType = Number(p.unitType ?? (p.baseUnit === "كرتونة" ? 3 : p.subUnit === "كراس" ? 2 : 1));
+              const catMatch = selectedCategoryId === "all" || p.categoryId === selectedCategoryId;
+              return uType === targetType && catMatch;
+            })
+            .map((p) => p.id)
+        );
+        return prev.filter((id) => validIds.has(id));
+      });
+    }
+  };
 
   const handleCategoryChange = (newCatId) => {
     setSelectedCategoryId(newCatId);
     setError(null);
 
-    // إذا كان المستخدم محدد أصناف، نبقي فقط على الأصناف التي تنتمي للفئة الجديدة
+    // إذا كان المستخدم محدد أصناف، نبقي فقط على الأصناف التي تنتمي للفئة الجديدة والنوع المختار
     if (newCatId !== "all") {
       setSelectedProductIds((prev) => {
         const validIds = new Set(
-          allProducts.filter((p) => p.categoryId === newCatId).map((p) => p.id)
+          allProducts
+            .filter((p) => {
+              const catMatch = p.categoryId === newCatId;
+              const typeMatch =
+                selectedUnitType === "all" ||
+                Number(p.unitType ?? (p.baseUnit === "كرتونة" ? 3 : p.subUnit === "كراس" ? 2 : 1)) ===
+                  Number(selectedUnitType);
+              return catMatch && typeMatch;
+            })
+            .map((p) => p.id)
         );
         return prev.filter((id) => validIds.has(id));
       });
@@ -146,15 +191,21 @@ export function ProductsReportModal({
     const categoryIdParam = isAllCategories ? null : selectedCategoryId;
     const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
     const productIdsParam = selectionMode === "custom" ? selectedProductIds : null;
+    const unitTypeParam = selectedUnitType === "all" ? null : Number(selectedUnitType);
 
     // فتح نافذة المعاينة مسبقاً بشكل متزامن مع نقرة المستخدم لتفادي حظر النوافذ المنبثقة
     const printWindow = createPendingPdfWindow("جاري تجهيز تقرير جرد المنتجات...");
 
     try {
       setLoading(true);
-      const blob = await getProductsReportPdf(categoryIdParam, productIdsParam);
+      const blob = await getProductsReportPdf(categoryIdParam, productIdsParam, unitTypeParam);
 
       const today = new Date().toISOString().split("T")[0];
+      const typeLabel = 
+        selectedUnitType === 1 ? "كشاكيل" :
+        selectedUnitType === 2 ? "كراريس" :
+        selectedUnitType === 3 ? "ورق تصوير" : "";
+
       let fileName = `جرد المنتجات ${today}.pdf`;
 
       if (selectionMode === "custom") {
@@ -162,10 +213,12 @@ export function ProductsReportModal({
           const singleProd = allProducts.find((p) => p.id === selectedProductIds[0]);
           fileName = `جرد - ${singleProd?.name || "صنف محدد"} ${today}.pdf`;
         } else {
-          fileName = `جرد (${selectedProductIds.length} أصناف) ${today}.pdf`;
+          fileName = `جرد (${selectedProductIds.length} أصناف) ${typeLabel ? `(${typeLabel}) ` : ""}${today}.pdf`;
         }
       } else if (selectedCategory) {
-        fileName = `جرد المنتجات - ${selectedCategory.name} ${today}.pdf`;
+        fileName = `جرد المنتجات - ${selectedCategory.name} ${typeLabel ? `(${typeLabel}) ` : ""}${today}.pdf`;
+      } else if (typeLabel) {
+        fileName = `جرد ${typeLabel} ${today}.pdf`;
       }
 
       handlePdfDownloadAndPreview(blob, fileName, printWindow);
@@ -173,7 +226,7 @@ export function ProductsReportModal({
       const successDetails =
         selectionMode === "custom"
           ? `تم تنزيل وفتح تقرير جرد لـ (${selectedProductIds.length}) أصناف محددة`
-          : `تم تنزيل وفتح تقرير جرد ${selectedCategory ? selectedCategory.name : "جميع الأصناف"} بالكامل`;
+          : `تم تنزيل وفتح تقرير جرد ${selectedCategory ? selectedCategory.name : "جميع الأصناف"} ${typeLabel ? `(${typeLabel})` : ""} بالكامل`;
 
       showSuccess("تم إنشاء تقرير الجرد بنجاح", successDetails);
       onClose();
@@ -227,11 +280,44 @@ export function ProductsReportModal({
             </div>
           )}
 
-          {/* 1) اختيار الفئة */}
+          {/* 1) نوع المنتجات المطلوب جردها (الكل / كشكول / كراس / ورق تصوير) */}
+          <div className="space-y-1.5">
+            <label className="block text-2xs font-extrabold text-slate-700 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-indigo-600" />
+              نوع المنتجات المطلوب جردها:
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { value: "all", label: "كل الأصناف" },
+                { value: 1, label: "كشاكيل فقط", icon: "📘" },
+                { value: 2, label: "كراريس فقط", icon: "📙" },
+                { value: 3, label: "ورق تصوير فقط", icon: "📄" },
+              ].map((m) => {
+                const isActive = selectedUnitType === m.value;
+                return (
+                  <button
+                    key={String(m.value)}
+                    type="button"
+                    onClick={() => handleUnitTypeChange(m.value)}
+                    className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
+                      isActive
+                        ? "border-indigo-600 bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-600/20 scale-[1.01]"
+                        : "border-slate-200 bg-slate-50/70 hover:bg-white text-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    {m.icon && <span>{m.icon}</span>}
+                    <span>{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2) اختيار الفئة */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-slate-400" />
-              فئة المنتجات المطلوب جردها:
+              فئة المنتجات:
             </label>
             <select
               value={selectedCategoryId}
@@ -247,7 +333,7 @@ export function ProductsReportModal({
             </select>
           </div>
 
-          {/* 2) نطاق تحديد الأصناف (الكل أو أصناف محددة) */}
+          {/* 3) نطاق تحديد الأصناف (الكل أو أصناف محددة) */}
           <div>
             <label className="block text-2xs font-bold text-slate-500 mb-1.5 flex items-center gap-1">
               <ListFilter className="w-3.5 h-3.5 text-indigo-600" />
@@ -388,8 +474,8 @@ export function ProductsReportModal({
               {/* ملخص الاختيار */}
               <div className="text-2xs text-slate-500 font-semibold flex items-center justify-between px-1 pt-0.5">
                 <span>تم تحديد: <strong className="text-indigo-700 font-bold">{selectedProductIds.length}</strong> صنف</span>
-                {categoryFilteredProducts.length > 0 && (
-                  <span>إجمالي أصناف الفئة: {categoryFilteredProducts.length}</span>
+                {filteredProducts.length > 0 && (
+                  <span>إجمالي الأصناف المتاحة: {filteredProducts.length}</span>
                 )}
               </div>
             </div>
@@ -402,7 +488,9 @@ export function ProductsReportModal({
               {selectionMode === "custom"
                 ? `سيتم استخراج ملف تقرير جرد رسمي معتمد لـ (${selectedProductIds.length}) أصناف محددة بالتفصيل.`
                 : selectedCategoryId !== "all"
-                ? `يحتوي التقرير على تفاصيل رصيد أصناف فئة (${categories.find((c) => c.id === selectedCategoryId)?.name || ""}) بالوحدات الكبيرة والصغيرة.`
+                ? `يحتوي التقرير على تفاصيل رصيد أصناف فئة (${categories.find((c) => c.id === selectedCategoryId)?.name || ""}) ${selectedUnitType !== "all" ? `(${selectedUnitType === 1 ? "كشاكيل فقط" : selectedUnitType === 2 ? "كراريس فقط" : "ورق تصوير فقط"})` : ""} بالوحدات المعتمدة.`
+                : selectedUnitType !== "all"
+                ? `يحتوي التقرير على جرد شامل لجميع أصناف (${selectedUnitType === 1 ? "الكشاكيل فقط" : selectedUnitType === 2 ? "الكراريس فقط" : "ورق التصوير فقط"}) بالوحدات المعتمدة.`
                 : "يحتوي التقرير على تفاصيل رصيد كل صنف بالوحدة الكبيرة (باكو / كرتونة) وبالوحدة الصغيرة (كشكول / رزمة) مع إجمالي الرصيد الفعلي لجميع الأصناف."}
             </p>
           </div>

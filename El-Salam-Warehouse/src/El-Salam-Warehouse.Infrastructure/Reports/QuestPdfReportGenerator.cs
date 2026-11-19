@@ -140,7 +140,7 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
     {
         var allRows = model.Groups.SelectMany(g => g.Rows).ToList();
 
-        return Build("تقرير جرد المنتجات التامة", $"الفئة: {model.CategoryTitle}", model.PrintedAtCairo,
+        return Build("تقرير جرد المنتجات التامة", $"التصنيف: {model.CategoryTitle}", model.PrintedAtCairo,
             landscape: false, content =>
             {
                 content.Column(col =>
