@@ -15,7 +15,7 @@ import {
 import { getProductsReportPdf, getProducts } from "../services/productService";
 import { validateProductsReport } from "../schemas/productSchema";
 import { getCategoriesLookup } from "../../categories/services/categoryService";
-import { handlePdfDownloadAndPreview } from "../../../utils/reportUtils";
+import { handlePdfDownloadAndPreview, createPendingPdfWindow } from "../../../utils/reportUtils";
 import { showSuccess, showError } from "../../../utils/alertUtils";
 
 export function ProductsReportModal({ 
@@ -147,6 +147,9 @@ export function ProductsReportModal({
     const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
     const productIdsParam = selectionMode === "custom" ? selectedProductIds : null;
 
+    // فتح نافذة المعاينة مسبقاً بشكل متزامن مع نقرة المستخدم لتفادي حظر النوافذ المنبثقة
+    const printWindow = createPendingPdfWindow("جاري تجهيز تقرير جرد المنتجات...");
+
     try {
       setLoading(true);
       const blob = await getProductsReportPdf(categoryIdParam, productIdsParam);
@@ -165,7 +168,7 @@ export function ProductsReportModal({
         fileName = `جرد المنتجات - ${selectedCategory.name} ${today}.pdf`;
       }
 
-      handlePdfDownloadAndPreview(blob, fileName);
+      handlePdfDownloadAndPreview(blob, fileName, printWindow);
 
       const successDetails =
         selectionMode === "custom"
@@ -175,6 +178,9 @@ export function ProductsReportModal({
       showSuccess("تم إنشاء تقرير الجرد بنجاح", successDetails);
       onClose();
     } catch (err) {
+      if (printWindow && !printWindow.closed) {
+        printWindow.close();
+      }
       console.error("خطأ أثناء تحميل تقرير جرد المنتجات:", err);
       const msg = err.message || "تعذر إنشاء ملف تقرير الجرد من الخادم.";
       setError(msg);

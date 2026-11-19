@@ -18,7 +18,8 @@ import { validateDaybookReport } from "../schemas/daybookReportSchema";
 import { getCategoriesLookup } from "../../categories/services/categoryService";
 import { 
   getReportDateShortcuts, 
-  handlePdfDownloadAndPreview 
+  handlePdfDownloadAndPreview,
+  createPendingPdfWindow
 } from "../../../utils/reportUtils";
 import { showSuccess, showError } from "../../../utils/alertUtils";
 
@@ -120,6 +121,8 @@ export function DaybookReportModal({ isOpen, onClose, categories = [] }) {
       return;
     }
 
+    const printWindow = createPendingPdfWindow("جاري تجهيز تقرير دفتر اليومية...");
+
     try {
       setLoading(true);
 
@@ -149,11 +152,14 @@ export function DaybookReportModal({ isOpen, onClose, categories = [] }) {
       parts.push(`${fromDate}_إلى_${toDate}`);
       const fileName = `${parts.join("_")}.pdf`;
 
-      handlePdfDownloadAndPreview(blob, fileName);
+      handlePdfDownloadAndPreview(blob, fileName, printWindow);
 
       showSuccess("تم إنشاء التقرير بنجاح", `تم تنزيل ومعاينة تقرير دفتر اليومية المخصص للفترة من ${fromDate} إلى ${toDate}`);
       onClose();
     } catch (err) {
+      if (printWindow && !printWindow.closed) {
+        printWindow.close();
+      }
       console.error("خطأ أثناء استخراج تقرير دفتر اليومية:", err);
       const msg = err.message || "تعذر إنشاء ملف التقرير من الخادم.";
       setError(msg);

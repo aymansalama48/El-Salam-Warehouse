@@ -20,7 +20,7 @@ import { StockAlertSettingsModal } from "../features/products/components/StockAl
 import { DetailsModal } from "../components/common/DetailsModal";
 import { showSuccess, showError, showConfirm } from "../utils/alertUtils";
 import { formatCairoDateTime } from "../utils/dateUtils";
-import { handlePdfDownloadAndPreview } from "../utils/reportUtils";
+import { handlePdfDownloadAndPreview, createPendingPdfWindow } from "../utils/reportUtils";
 import { Package, Layers, MapPin, FileText, Box, BookOpen, ShieldCheck, AlertCircle, RefreshCw, UserCheck, Calendar } from "lucide-react";
 
 export default function ProductsPage() {
@@ -379,11 +379,15 @@ export default function ProductsPage() {
         onPrint={async () => {
           if (!viewingProduct?.id || printingProduct) return;
           setPrintingProduct(true);
+          const printWindow = createPendingPdfWindow(`جاري تجهيز بطاقة صنف ${viewingProduct.name || ""}...`);
           try {
             const blob = await getProductPdf(viewingProduct.id);
             const safeName = viewingProduct.name ? `بطاقة_صنف_${viewingProduct.name}.pdf` : `بطاقة_صنف_${viewingProduct.id}.pdf`;
-            handlePdfDownloadAndPreview(blob, safeName);
+            handlePdfDownloadAndPreview(blob, safeName, printWindow);
           } catch (err) {
+            if (printWindow && !printWindow.closed) {
+              printWindow.close();
+            }
             console.error("فشل في طباعة بطاقة الصنف:", err);
             showError("تعذر طباعة بطاقة الصنف", err.message || "حدث خطأ أثناء تحميل ملف الـ PDF من الخادم");
           } finally {

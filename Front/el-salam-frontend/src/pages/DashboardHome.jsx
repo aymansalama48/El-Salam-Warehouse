@@ -14,7 +14,7 @@ import { getProductById, getProductPdf, formatBaseUnitStock } from "../features/
 import { notifyVoucherChanged } from "../features/vouchers/hooks/useVoucherSummary";
 import { showToast, showSuccess, showError } from "../utils/alertUtils";
 import { formatCairoDateTime } from "../utils/dateUtils";
-import { handlePdfDownloadAndPreview } from "../utils/reportUtils";
+import { handlePdfDownloadAndPreview, createPendingPdfWindow } from "../utils/reportUtils";
 import {
   ShieldCheck,
   Warehouse,
@@ -425,11 +425,15 @@ export default function DashboardHome() {
         onPrint={async () => {
           if (!selectedProduct?.id || printingProduct) return;
           setPrintingProduct(true);
+          const printWindow = createPendingPdfWindow(`جاري تجهيز بطاقة صنف ${selectedProduct.name || ""}...`);
           try {
             const blob = await getProductPdf(selectedProduct.id);
             const safeName = selectedProduct.name ? `بطاقة_صنف_${selectedProduct.name}.pdf` : `بطاقة_صنف_${selectedProduct.id}.pdf`;
-            handlePdfDownloadAndPreview(blob, safeName);
+            handlePdfDownloadAndPreview(blob, safeName, printWindow);
           } catch (err) {
+            if (printWindow && !printWindow.closed) {
+              printWindow.close();
+            }
             console.error("فشل في طباعة بطاقة الصنف:", err);
             showError("تعذر طباعة بطاقة الصنف", err.message || "حدث خطأ أثناء تحميل ملف الـ PDF من الخادم");
           } finally {
