@@ -10,11 +10,19 @@ const defaultCustomClass = {
   cancelButton: "salam-swal-btn-secondary",
 };
 
+const baseSwalConfig = {
+  customClass: defaultCustomClass,
+  buttonsStyling: false,
+  heightAuto: false,
+  scrollbarPadding: false,
+};
+
 /**
  * رسالة نجاح
  */
 export const showSuccess = (title = "تمت العملية بنجاح", text = "", timer = 2200) => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: "success",
     title,
     text,
@@ -22,8 +30,6 @@ export const showSuccess = (title = "تمت العملية بنجاح", text = "
     timerProgressBar: true,
     showConfirmButton: !timer,
     confirmButtonText: "حسناً",
-    customClass: defaultCustomClass,
-    buttonsStyling: false,
   });
 };
 
@@ -32,12 +38,11 @@ export const showSuccess = (title = "تمت العملية بنجاح", text = "
  */
 export const showError = (title = "حدث خطأ ما", text = "يرجى المحاولة مرة أخرى لاحقاً") => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: "error",
     title,
     text,
     confirmButtonText: "إغلاق",
-    customClass: defaultCustomClass,
-    buttonsStyling: false,
   });
 };
 
@@ -46,12 +51,11 @@ export const showError = (title = "حدث خطأ ما", text = "يرجى الم�
  */
 export const showWarning = (title = "تنبيه", text = "") => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: "warning",
     title,
     text,
     confirmButtonText: "متابعة",
-    customClass: defaultCustomClass,
-    buttonsStyling: false,
   });
 };
 
@@ -60,12 +64,11 @@ export const showWarning = (title = "تنبيه", text = "") => {
  */
 export const showInfo = (title = "معلومة", text = "") => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: "info",
     title,
     text,
     confirmButtonText: "فهمت ذلك",
-    customClass: defaultCustomClass,
-    buttonsStyling: false,
   });
 };
 
@@ -80,6 +83,7 @@ export const showConfirm = async ({
   icon = "warning",
 } = {}) => {
   const result = await Swal.fire({
+    ...baseSwalConfig,
     title,
     text,
     icon,
@@ -87,8 +91,6 @@ export const showConfirm = async ({
     confirmButtonText,
     cancelButtonText,
     reverseButtons: true, // في RTL الأفضل وضع زر التأكيد والإلغاء بترتيب طبيعي
-    customClass: defaultCustomClass,
-    buttonsStyling: false,
   });
 
   return result.isConfirmed;

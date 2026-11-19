@@ -21,7 +21,7 @@ import { DetailsModal } from "../components/common/DetailsModal";
 import { showSuccess, showError, showConfirm } from "../utils/alertUtils";
 import { formatCairoDateTime } from "../utils/dateUtils";
 import { handlePdfDownloadAndPreview, createPendingPdfWindow } from "../utils/reportUtils";
-import { Package, Layers, MapPin, FileText, Box, BookOpen, ShieldCheck, AlertCircle, RefreshCw, UserCheck, Calendar } from "lucide-react";
+import { Package, Layers, MapPin, FileText, Box, BookOpen, ShieldCheck, AlertCircle, RefreshCw, UserCheck, Calendar, Plus } from "lucide-react";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -33,6 +33,7 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [showFloatingAdd, setShowFloatingAdd] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isAlertSettingsOpen, setIsAlertSettingsOpen] = useState(false);
@@ -75,9 +76,28 @@ export default function ProductsPage() {
     };
   }, []);
 
+  // الاستماع للتمرير لإظهار الزر العائم لإضافة منتج عند اختفاء زر الهيدر
+  useEffect(() => {
+    const mainEl = document.querySelector("main");
+    const handleScroll = () => {
+      const scrollY = mainEl ? mainEl.scrollTop : window.scrollY;
+      setShowFloatingAdd(scrollY > 160);
+    };
+
+    if (mainEl) {
+      mainEl.addEventListener("scroll", handleScroll, { passive: true });
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      if (mainEl) mainEl.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   // جلب المنتجات والملخص من الخادم بناءً على الفلاتر
-  const refetchProducts = useCallback(async () => {
-    setLoading(true);
+  const refetchProducts = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setApiError(null);
     try {
       const [data, sum] = await Promise.all([
@@ -95,9 +115,9 @@ export default function ProductsPage() {
     } catch (err) {
       console.error("فشل في تحميل المنتجات من الخادم:", err);
       setApiError(err.message || "تعذر الاتصال بخادم الـ Backend");
-      setProducts([]);
+      if (!isSilent) setProducts([]);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [searchTerm, selectedCategory]);
 
@@ -145,6 +165,8 @@ export default function ProductsPage() {
   };
 
   const handleSaveProduct = async (formData) => {
+    const mainEl = document.querySelector("main");
+    const savedScrollTop = mainEl ? mainEl.scrollTop : window.scrollY;
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, formData);
@@ -154,7 +176,11 @@ export default function ProductsPage() {
         showSuccess("تم إضافة المنتج بنجاح", `تم تسجيل مواصفات "${formData.name}" في دليل الأصناف`);
       }
       setIsModalOpen(false);
-      await refetchProducts();
+      await refetchProducts(true);
+      setTimeout(() => {
+        if (mainEl) mainEl.scrollTop = savedScrollTop;
+        window.scrollTo({ top: savedScrollTop, behavior: "instant" });
+      }, 50);
     } catch (error) {
       console.error("خطأ في حفظ المنتج:", error);
       showError("تعذر حفظ المنتج", error.message || "حدث خطأ غير متوقع أثناء الحفظ في الخادم.");
@@ -162,6 +188,8 @@ export default function ProductsPage() {
   };
 
   const handleDeleteProduct = async (product) => {
+    const mainEl = document.querySelector("main");
+    const savedScrollTop = mainEl ? mainEl.scrollTop : window.scrollY;
     const confirmed = await showConfirm({
       title: "حذف الصنف",
       text: `هل أنت متأكد من حذف "${product.name}" نهائياً من قاعدة البيانات؟`,
@@ -174,7 +202,11 @@ export default function ProductsPage() {
       try {
         await deleteProduct(product.id);
         showSuccess("تم الحذف بنجاح", "تم إزالة الصنف من قاعدة البيانات");
-        await refetchProducts();
+        await refetchProducts(true);
+        setTimeout(() => {
+          if (mainEl) mainEl.scrollTop = savedScrollTop;
+          window.scrollTo({ top: savedScrollTop, behavior: "instant" });
+        }, 50);
       } catch (error) {
         console.error("خطأ أثناء الحذف:", error);
         showError("تعذر حذف الصنف", error.message || "حدث خطأ أثناء محاولة حذف المنتج من الخادم.");
@@ -467,6 +499,21 @@ export default function ProductsPage() {
         onClose={() => setIsAlertSettingsOpen(false)}
         onSaved={refetchProducts}
       />
+
+      {/* Floating Add Product Button when scrolled down */}
+      {showFloatingAdd && (
+        <button
+          type="button"
+          onClick={handleOpenAdd}
+          className="fixed bottom-6 left-6 z-40 inline-flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-2xl hover:shadow-blue-500/30 border border-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ring-4 ring-blue-500/20 animate-in fade-in slide-in-from-bottom-5 duration-200"
+          title="إضافة منتج جديد"
+        >
+          <div className="w-6 h-6 rounded-lg bg-white/20 text-white flex items-center justify-center">
+            <Plus className="w-4 h-4 stroke-[3]" />
+          </div>
+          <span>إضافة منتج جديد</span>
+        </button>
+      )}
     </div>
   );
 }
