@@ -14,8 +14,8 @@ namespace El_Salam_Warehouse.Infrastructure.Reports;
 // بيرسم التقارير كـ PDF بمكتبة QuestPDF (عربي RTL)
 public sealed class QuestPdfReportGenerator : IReportGenerator
 {
-    // اسم الخط
-    private const string FontFamily = "Cairo";
+    // أسماء الخطوط بترتيب الأولوية مع خطوط احتياطية تدعم كل رموز اليونيكود والعربية
+    private static readonly string[] FontFamilies = { "Cairo", "Segoe UI", "Tahoma", "Arial" };
 
     // أسماء الأيام بالعربي (الأحد = 0)
     private static readonly string[] ArabicDays =
@@ -28,6 +28,8 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
     static QuestPdfReportGenerator()
     {
         QuestPDF.Settings.License = LicenseType.Community;
+        QuestPDF.Settings.ThrowOnMissingTextGlyphs = false;
+        QuestPDF.Settings.UseSystemFonts = true;
 
         var fontsDir = Path.Combine(AppContext.BaseDirectory, "Reports", "Fonts");
         if (!Directory.Exists(fontsDir)) return;
@@ -120,9 +122,9 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
 
                     table.Cell().Element(BodyCell).Text(index++.ToString());
                     table.Cell().Element(BodyCell).Text(r.VoucherNumber).FontSize(8);
-                    table.Cell().Element(TextCell).Text(r.ProductName);
-                    table.Cell().Element(TextCell).Text(string.IsNullOrWhiteSpace(r.Party) ? "-" : r.Party);
-                    table.Cell().Element(BodyCell).Text(qtyDisplay);
+                    table.Cell().Element(TextCell).Text(Clean(r.ProductName));
+                    table.Cell().Element(TextCell).Text(string.IsNullOrWhiteSpace(r.Party) ? "-" : Clean(r.Party));
+                    table.Cell().Element(BodyCell).Text(Clean(qtyDisplay));
                     table.Cell().Element(BodyCell)
                         .Text(isShortage ? "عجز" : (isReturn ? "مرتجع" : (isInbound ? "وارد" : "صرف")))
                         .Bold()
@@ -199,9 +201,9 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                                 }
 
                                 table.Cell().Element(BodyCell).Text(index++.ToString());
-                                table.Cell().Element(TextCell).Text(r.Name);
-                                table.Cell().Element(BodyCell).Text(stockDisplay);
-                                table.Cell().Element(BodyCell).Text(r.StatusLabel).Bold().FontColor(statusColor);
+                                table.Cell().Element(TextCell).Text(Clean(r.Name));
+                                table.Cell().Element(BodyCell).Text(Clean(stockDisplay));
+                                table.Cell().Element(BodyCell).Text(Clean(r.StatusLabel)).Bold().FontColor(statusColor);
                             }
                         });
                     }
@@ -230,13 +232,13 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     r.RelativeItem().Column(c =>
                     {
                         c.Item().Text("اسم المنتج أو الصنف التام:").FontSize(9).FontColor(Colors.Grey.Darken2);
-                        c.Item().Text(model.Name).FontSize(16).Bold().FontColor(Colors.Blue.Darken3);
+                        c.Item().Text(Clean(model.Name)).FontSize(16).Bold().FontColor(Colors.Blue.Darken3);
                     });
 
                     r.ConstantItem(140).AlignLeft().Column(c =>
                     {
                         c.Item().Text("فئة وتصنيف المنتج:").FontSize(9).FontColor(Colors.Grey.Darken2);
-                        c.Item().Text(model.CategoryName).FontSize(12).Bold().FontColor(Colors.Grey.Darken3);
+                        c.Item().Text(Clean(model.CategoryName)).FontSize(12).Bold().FontColor(Colors.Grey.Darken3);
                     });
                 });
 
@@ -394,7 +396,7 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                             ? (model.ReturnDirection == ReturnDirection.Outbound ? "الجهة المرتجع إليها (المورّد)" : "الجهة المرتجع منها (العميل)")
                             : (isInbound ? "جهة التوريد / المصدر" : "الجهة المستلمة (العميل)");
                         c.Item().Text(partyLabel).FontSize(8).FontColor(Colors.Grey.Darken2);
-                        c.Item().Text(model.PartyName).Bold().FontSize(10);
+                        c.Item().Text(Clean(model.PartyName)).Bold().FontSize(10);
                     });
 
                     // الطرف الثاني (المستلم والمورّد)
@@ -404,12 +406,12 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                             ? (model.ReturnDirection == ReturnDirection.Outbound ? "القائم بالصرف (أمين المخزن)" : "المستلم (أمين المخزن)")
                             : (isInbound ? "المستلم (أمين المخزن)" : "المستلم الفعلي");
                         c.Item().Text(receiverLabel).FontSize(8).FontColor(Colors.Grey.Darken2);
-                        c.Item().Text(model.ReceiverName).Bold().FontSize(10);
+                        c.Item().Text(Clean(model.ReceiverName)).Bold().FontSize(10);
 
                         if (!string.IsNullOrWhiteSpace(model.DelivererName))
                         {
                             var delivererLabel = isReturn ? "مندوب الإرجاع / السائق: " : "المسلّم: ";
-                            c.Item().PaddingTop(2).Text($"{delivererLabel}{model.DelivererName}").FontSize(8).FontColor(Colors.Grey.Darken3);
+                            c.Item().PaddingTop(2).Text(Clean($"{delivererLabel}{model.DelivererName}")).FontSize(8).FontColor(Colors.Grey.Darken3);
                         }
                     });
 
@@ -458,19 +460,19 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     foreach (var it in model.Items)
                     {
                         table.Cell().Element(BodyCell).Text(it.Index.ToString());
-                        table.Cell().Element(TextCell).Text(it.ProductName).Bold();
-                        table.Cell().Element(BodyCell).Text(it.CategoryName);
-                        table.Cell().Element(BodyCell).Text($"{Num(it.Quantity)} {it.UnitLabel}").Bold();
+                        table.Cell().Element(TextCell).Text(Clean(it.ProductName)).Bold();
+                        table.Cell().Element(BodyCell).Text(Clean(it.CategoryName));
+                        table.Cell().Element(BodyCell).Text(Clean($"{Num(it.Quantity)} {it.UnitLabel}")).Bold();
 
                         var baseStockText = it.RemainingSubUnits > 0
                             ? $"{Num(it.FullBaseUnits)} {it.BaseUnit} و {it.RemainingSubUnits} {it.SubUnit}"
                             : $"{Num(it.FullBaseUnits)} {it.BaseUnit}";
-                        table.Cell().Element(BodyCell).Text(baseStockText);
+                        table.Cell().Element(BodyCell).Text(Clean(baseStockText));
 
                         var totalSubText = it.SubUnit == "رزمة" || it.BaseUnit == "كرتونة"
                             ? $"{Num(it.TotalSubUnits)} رزمة ({Num(it.FullBaseUnits)} كرتونة)"
                             : $"{Num(it.TotalSubUnits)} {it.SubUnit}";
-                        table.Cell().Element(BodyCell).Text(totalSubText);
+                        table.Cell().Element(BodyCell).Text(Clean(totalSubText));
                     }
                 });
 
@@ -516,9 +518,9 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                 page.Size(landscape ? PageSizes.A4.Landscape() : PageSizes.A4);
                 page.Margin(28);
                 page.ContentFromRightToLeft();
-                page.DefaultTextStyle(x => x.FontFamily(FontFamily).FontSize(10));
+                page.DefaultTextStyle(x => x.FontFamily(FontFamilies).FontSize(10));
 
-                page.Header().Element(h => ComposeHeader(h, title, subtitle, printedAt));
+                page.Header().Element(h => ComposeHeader(h, Clean(title), Clean(subtitle), printedAt));
                 page.Content().PaddingVertical(10).Element(content);
 
                 page.Footer().AlignCenter().Text(t =>
@@ -627,4 +629,7 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
 
     // تاريخ بصيغة 2026/11/02
     private static string FormatDate(DateOnly date) => date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture);
+
+    // تطبيع النصوص لتجنب حروف التوافق اليونيكود (مثل أشكال الهمزة المعزولة U+FE80) وتحويلها للحروف العربية القياسية
+    private static string Clean(string? text) => string.IsNullOrEmpty(text) ? string.Empty : text.Normalize(System.Text.NormalizationForm.FormKC);
 }

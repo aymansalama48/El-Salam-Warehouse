@@ -49,7 +49,8 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.LowStockThresholdUnit)
             .IsRequired()
-            .HasDefaultValue(StockEntryUnit.SubUnit);
+            .HasDefaultValue(StockEntryUnit.SubUnit)
+            .HasSentinel((StockEntryUnit)0);
 
         builder.Property(p => p.DisplayOrder)
             .IsRequired()
