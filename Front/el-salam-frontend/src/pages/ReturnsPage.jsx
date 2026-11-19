@@ -37,7 +37,7 @@ export default function ReturnsPage() {
 
   // الصفحات
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -231,7 +231,12 @@ export default function ReturnsPage() {
         page={page}
         totalCount={totalCount}
         totalPages={totalPages}
+        pageSize={pageSize}
         onPageChange={(p) => setPage(p)}
+        onPageSizeChange={(s) => {
+          setPageSize(s);
+          setPage(1);
+        }}
         onView={(item) => setViewingVoucherId(item.id)}
         onCancel={(item) => setCancellingVoucher(item)}
       />

@@ -34,7 +34,7 @@ export default function DailyTransactionsPage() {
 
   // الصفحات
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(50);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -233,7 +233,12 @@ export default function DailyTransactionsPage() {
         page={page}
         totalCount={totalCount}
         totalPages={totalPages}
+        pageSize={pageSize}
         onPageChange={(p) => setPage(p)}
+        onPageSizeChange={(s) => {
+          setPageSize(s);
+          setPage(1);
+        }}
       />
 
       {/* نافذة تفاصيل وطباعة الإذن عند النقر على السطر */}

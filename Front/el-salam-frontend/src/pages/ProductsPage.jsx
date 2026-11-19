@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getProducts,
   getProductById,
@@ -31,6 +31,8 @@ export default function ProductsPage() {
   const [apiError, setApiError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isAlertSettingsOpen, setIsAlertSettingsOpen] = useState(false);
@@ -180,35 +182,75 @@ export default function ProductsPage() {
     }
   };
 
-  const handleReorderProducts = async (newProducts) => {
-    const previous = [...products];
-    setProducts(newProducts);
-    try {
-      await reorderProducts(newProducts.map((p) => p.id));
-      showSuccess("تم حفظ الترتيب", "تم تحديث وحفظ ترتيب عرض الأصناف بنجاح");
-    } catch (err) {
-      console.error("فشل في إعادة ترتيب المنتجات:", err);
-      setProducts(previous);
-      showError("تعذر حفظ الترتيب", err.message || "حدث خطأ أثناء حفظ الترتيب الجديد في السيرفر");
+  const handleReorderProducts = async (reorderedItems) => {
+    if (pageSize === "all") {
+      const previous = [...products];
+      setProducts(reorderedItems);
+      try {
+        await reorderProducts(reorderedItems.map((p) => p.id));
+        showSuccess("تم حفظ الترتيب", "تم تحديث وحفظ ترتيب عرض الأصناف بنجاح");
+      } catch (err) {
+        console.error("فشل في إعادة ترتيب المنتجات:", err);
+        setProducts(previous);
+        showError("تعذر حفظ الترتيب", err.message || "حدث خطأ أثناء حفظ الترتيب الجديد في السيرفر");
+      }
+    } else {
+      const start = (page - 1) * pageSize;
+      const updatedMaster = [...products];
+      updatedMaster.splice(start, reorderedItems.length, ...reorderedItems);
+      const previous = [...products];
+      setProducts(updatedMaster);
+      try {
+        await reorderProducts(updatedMaster.map((p) => p.id));
+        showSuccess("تم حفظ الترتيب", "تم تحديث وحفظ ترتيب عرض الأصناف بنجاح");
+      } catch (err) {
+        console.error("فشل في إعادة ترتيب المنتجات:", err);
+        setProducts(previous);
+        showError("تعذر حفظ الترتيب", err.message || "حدث خطأ أثناء حفظ الترتيب الجديد في السيرفر");
+      }
     }
   };
 
+  // إعادة الصفحة إلى الأولى عند تغيير معايير البحث أو الفئة
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedCategory]);
+
   // فلترة إضافية في الواجهة لضمان سرعة الاستجابة اللحظية
-  const filteredProducts = products.filter((item) => {
-    const term = searchTerm.toLowerCase();
-    const matchSearch =
-      item.name.toLowerCase().includes(term) ||
-      (item.baseUnit && item.baseUnit.toLowerCase().includes(term)) ||
-      (item.categoryName && item.categoryName.toLowerCase().includes(term)) ||
-      (item.storageLocation && item.storageLocation.toLowerCase().includes(term));
+  const filteredProducts = useMemo(() => {
+    return products.filter((item) => {
+      const term = searchTerm.toLowerCase();
+      const matchSearch =
+        item.name.toLowerCase().includes(term) ||
+        (item.baseUnit && item.baseUnit.toLowerCase().includes(term)) ||
+        (item.categoryName && item.categoryName.toLowerCase().includes(term)) ||
+        (item.storageLocation && item.storageLocation.toLowerCase().includes(term));
 
-    const matchCategory =
-      selectedCategory === "all" ||
-      item.categoryId === selectedCategory ||
-      item.categoryName === selectedCategory;
+      const matchCategory =
+        selectedCategory === "all" ||
+        item.categoryId === selectedCategory ||
+        item.categoryName === selectedCategory;
 
-    return matchSearch && matchCategory;
-  });
+      return matchSearch && matchCategory;
+    });
+  }, [products, searchTerm, selectedCategory]);
+
+  const totalCount = filteredProducts.length;
+  const totalPages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(totalCount / pageSize));
+
+  // ضمان عدم بقاء الصفحة خارج النطاق بعد الحذف أو الفلترة
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  // الأصناف المعروضة في الصفحة الحالية
+  const displayedProducts = useMemo(() => {
+    if (pageSize === "all") return filteredProducts;
+    const start = (page - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, page, pageSize]);
 
   const getProductFields = (prod) => {
     if (!prod) return [];
@@ -340,13 +382,22 @@ export default function ProductsPage() {
       />
 
       <ProductsTable
-        products={filteredProducts}
+        products={displayedProducts}
         loading={loading}
         onView={handleViewProduct}
         onEdit={handleOpenEdit}
         onDelete={handleDeleteProduct}
         onReorder={handleReorderProducts}
         canReorder={!searchTerm.trim() && selectedCategory === "all"}
+        page={page}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        onPageChange={(p) => setPage(p)}
+        onPageSizeChange={(s) => {
+          setPageSize(s);
+          setPage(1);
+        }}
       />
 
       {isModalOpen && (

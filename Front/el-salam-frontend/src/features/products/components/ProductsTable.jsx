@@ -1,5 +1,6 @@
 import { Edit2, Trash2, Eye, Box, MapPin, Layers, AlertTriangle, GripVertical } from "lucide-react";
 import { useTableReorder } from "../../../hooks/useTableReorder";
+import { Pagination } from "../../../components/common/Pagination";
 
 export function ProductsTable({
   products = [],
@@ -9,6 +10,12 @@ export function ProductsTable({
   onView,
   onReorder,
   canReorder = true,
+  page = 1,
+  totalPages = 1,
+  totalCount = 0,
+  pageSize = 20,
+  onPageChange,
+  onPageSizeChange,
 }) {
   const { draggedIndex, dropTargetIndex, isLongPressing, getRowProps } = useTableReorder({
     items: products,
@@ -72,7 +79,6 @@ export function ProductsTable({
               </th>
               <th className="py-3 px-4 whitespace-nowrap">اسم المنتج أو الصنف</th>
               <th className="py-3 px-4 whitespace-nowrap">فئة المنتج</th>
-              <th className="py-3 px-4 whitespace-nowrap">محتوى الكرتونة</th>
               <th className="py-3 px-4 whitespace-nowrap">الرصيد الإجمالي</th>
               <th className="py-3 px-4 whitespace-nowrap">حد النفاذ (الرصيد الحرج)</th>
               <th className="py-3 px-4 whitespace-nowrap">مكان التخزين</th>
@@ -136,18 +142,6 @@ export function ProductsTable({
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: hex }}></span>
                       {item.categoryName || "عام"}
                     </span>
-                  </td>
-
-                  {/* محتوى الكرتونة: يظهر لورق التصوير فقط */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
-                    {item.unitType === 3 || baseUnit === "كرتونة" || subUnit === "رزمة" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
-                        <Box className="w-3.5 h-3.5 text-slate-500" />
-                        {content.toLocaleString()} رزمة بالكرتونة
-                      </span>
-                    ) : (
-                      <span className="text-slate-300 font-bold px-2">-</span>
-                    )}
                   </td>
 
                   {/* الرصيد الإجمالي */}
@@ -257,6 +251,19 @@ export function ProductsTable({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {Boolean(onPageChange) && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount !== undefined ? totalCount : products.length}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          itemLabel="صنف"
+        />
+      )}
     </div>
   );
 }

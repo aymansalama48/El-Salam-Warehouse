@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatCairoDateTime } from "../../../utils/dateUtils";
 import { VOUCHER_TYPE, VOUCHER_STATUS } from "../../vouchers/schemas/voucherSchema";
+import { Pagination } from "../../../components/common/Pagination";
 
 export function DaybookTable({
   entries = [],
@@ -22,7 +23,9 @@ export function DaybookTable({
   page = 1,
   totalCount = 0,
   totalPages = 1,
+  pageSize = 50,
   onPageChange,
+  onPageSizeChange,
 }) {
   if (loading) {
     return (
@@ -314,37 +317,17 @@ export function DaybookTable({
       </div>
 
       {/* Pagination Footer */}
-      {totalPages > 1 && (
-        <div className="px-4 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs font-medium text-slate-500">
-          <div>
-            إجمالي <span className="font-bold text-slate-800">{totalCount}</span> حركة (صفحة {page} من {totalPages})
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={(e) => {
-                e.stopPropagation();
-                onPageChange && onPageChange(page - 1);
-              }}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <span className="px-2 font-bold text-slate-800">{page}</span>
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={(e) => {
-                e.stopPropagation();
-                onPageChange && onPageChange(page + 1);
-              }}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+      {Boolean(onPageChange) && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          pageSizeOptions={[20, 50, 100, 200]}
+          itemLabel="حركة"
+        />
       )}
     </div>
   );
