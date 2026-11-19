@@ -233,23 +233,29 @@ export default function ProductsPage() {
       }
     }
 
+    const isPaper = prod.unitType === 3 || baseUnit === "كرتونة";
+
     return [
       { label: "اسم المنتج أو الصنف", value: prod.name, icon: Package, fullWidth: true },
       { label: "فئة وتصنيف المنتج", value: prod.categoryName || "عام", icon: FileText },
+      ...(isPaper
+        ? [
+            {
+              label: "محتوى الكرتونة",
+              value: `${content.toLocaleString()} رزمة لكل كرتونة`,
+              icon: Box,
+            },
+            {
+              label: "الرصيد الفعلي بالكرتونة",
+              value: formattedStock,
+              icon: Layers,
+            },
+          ]
+        : []),
       {
-        label: `محتوى التعبئة (${baseUnit})`,
-        value: `${content.toLocaleString()} ${subUnit} لكل ${baseUnit}`,
-        icon: Box,
-      },
-      {
-        label: `الرصيد الفعلي بال${baseUnit}`,
-        value: formattedStock,
-        icon: Layers,
-      },
-      {
-        label: `إجمالي الرصيد بال${subUnit}`,
+        label: isPaper ? "إجمالي الرصيد بالرزمة" : "الرصيد الإجمالي",
         value: `${Number(prod.totalSubUnitStock ?? 0).toLocaleString()} ${subUnit}`,
-        icon: BookOpen,
+        icon: isPaper ? BookOpen : Layers,
       },
       {
         label: "حد النفاذ (الرصيد الحرج)",

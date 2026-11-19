@@ -110,23 +110,17 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
       setInitialStockUnit(2);
       setLowStockThresholdUnit(2);
       if (!lowStockThreshold || lowStockThreshold === "1000") setLowStockThreshold("50");
-      if (unitsPerBaseUnit === "10" || unitsPerBaseUnit === "20" || !unitsPerBaseUnit) {
-        setUnitsPerBaseUnit("5");
-      }
+      setUnitsPerBaseUnit("5");
     } else if (newType === 2) {
       setInitialStockUnit(1);
       setLowStockThresholdUnit(1);
       if (!lowStockThreshold || lowStockThreshold === "50") setLowStockThreshold("1000");
-      if (unitsPerBaseUnit === "5" || !unitsPerBaseUnit) {
-        setUnitsPerBaseUnit("20");
-      }
+      setUnitsPerBaseUnit("1");
     } else {
       setInitialStockUnit(1);
       setLowStockThresholdUnit(1);
       if (!lowStockThreshold || lowStockThreshold === "50") setLowStockThreshold("1000");
-      if (unitsPerBaseUnit === "5" || !unitsPerBaseUnit) {
-        setUnitsPerBaseUnit("10");
-      }
+      setUnitsPerBaseUnit("1");
     }
   };
 
@@ -196,12 +190,14 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
     e.preventDefault();
     setErrors({});
 
+    const finalUnitsPer = isBoxUnit ? (parsedUnitsPer || 5) : 1;
+
     const formData = isEdit
       ? {
           name: name.trim(),
           categoryId: categoryId || (categoriesList[0]?.id ?? ""),
           unitType: Number(unitType),
-          unitsPerBaseUnit: parsedUnitsPer,
+          unitsPerBaseUnit: finalUnitsPer,
           storageLocation: storageLocation.trim() || null,
           lowStockThreshold: parsedThreshold,
           lowStockThresholdUnit: thresholdUnit,
@@ -210,7 +206,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
           name: name.trim(),
           categoryId: categoryId || (categoriesList[0]?.id ?? ""),
           unitType: Number(unitType),
-          unitsPerBaseUnit: parsedUnitsPer,
+          unitsPerBaseUnit: finalUnitsPer,
           initialStock: parsedInitialStock,
           initialStockUnit: isBoxUnit ? initialStockUnit : 1,
           storageLocation: storageLocation.trim() || null,
@@ -367,37 +363,39 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
           </div>
 
           {/* محتوى الوحدة والرصيد الافتتاحي */}
-          <div className={`grid ${isEdit ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"} gap-4`}>
-            {/* محتوى الباكو أو الكرتونة */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-blue-600" />
-                {getContentLabel()} <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min="1"
-                  value={unitsPerBaseUnit}
-                  onChange={(e) => {
-                    setUnitsPerBaseUnit(e.target.value);
-                    if (errors.unitsPerBaseUnit) setErrors((prev) => ({ ...prev, unitsPerBaseUnit: null }));
-                  }}
-                  placeholder={isBoxUnit ? "5" : activeProfile.unitType === 2 ? "20" : "10"}
-                  className={`w-full px-3.5 py-2.5 pl-20 text-xs sm:text-sm font-bold bg-slate-50 border rounded-xl focus:outline-none focus:bg-white transition-colors ${
-                    errors.unitsPerBaseUnit ? "border-rose-400 focus:border-rose-500 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
-                  }`}
-                />
-                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400 pointer-events-none">
-                  {subUnit}
-                </span>
+          <div className={`grid ${isBoxUnit && !isEdit ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-4`}>
+            {/* محتوى الكرتونة: يظهر فقط لورق التصوير */}
+            {isBoxUnit && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-blue-600" />
+                  عدد الرزم في الكرتونة <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    value={unitsPerBaseUnit}
+                    onChange={(e) => {
+                      setUnitsPerBaseUnit(e.target.value);
+                      if (errors.unitsPerBaseUnit) setErrors((prev) => ({ ...prev, unitsPerBaseUnit: null }));
+                    }}
+                    placeholder="5"
+                    className={`w-full px-3.5 py-2.5 pl-20 text-xs sm:text-sm font-bold bg-slate-50 border rounded-xl focus:outline-none focus:bg-white transition-colors ${
+                      errors.unitsPerBaseUnit ? "border-rose-400 focus:border-rose-500 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
+                    }`}
+                  />
+                  <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400 pointer-events-none">
+                    رزمة
+                  </span>
+                </div>
+                {errors.unitsPerBaseUnit ? (
+                  <p className="text-xs text-rose-500 font-bold mt-1">{errors.unitsPerBaseUnit}</p>
+                ) : (
+                  <p className="text-2xs text-slate-400 mt-1">مثال: 5 رزم في الكرتونة</p>
+                )}
               </div>
-              {errors.unitsPerBaseUnit ? (
-                <p className="text-xs text-rose-500 font-bold mt-1">{errors.unitsPerBaseUnit}</p>
-              ) : (
-                <p className="text-2xs text-slate-400 mt-1">{getContentExample()}</p>
-              )}
-            </div>
+            )}
 
             {/* خانة الرصيد الافتتاحي: تظهر فقط عند إضافة منتج جديد (في التعديل لا يوجد رصيد) */}
             {!isEdit && (
@@ -461,8 +459,8 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
             )}
           </div>
 
-          {/* المربع الأخضر وشريط المعادلة: عرض فوري في الإضافة فقط */}
-          {!isEdit && (
+          {/* المربع الأخضر وشريط المعادلة: عرض فوري لورق التصوير في الإضافة فقط */}
+          {!isEdit && isBoxUnit && (
             <>
               {/* المربع الأخضر */}
               <div className="px-3.5 py-2.5 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200/80 flex items-center justify-between text-xs font-bold shadow-2xs">

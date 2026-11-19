@@ -72,7 +72,7 @@ export function ProductsTable({
               </th>
               <th className="py-3 px-4 whitespace-nowrap">اسم المنتج أو الصنف</th>
               <th className="py-3 px-4 whitespace-nowrap">فئة المنتج</th>
-              <th className="py-3 px-4 whitespace-nowrap">محتوى الباكو / الكرتونة</th>
+              <th className="py-3 px-4 whitespace-nowrap">محتوى الكرتونة</th>
               <th className="py-3 px-4 whitespace-nowrap">الرصيد الإجمالي</th>
               <th className="py-3 px-4 whitespace-nowrap">حد النفاذ (الرصيد الحرج)</th>
               <th className="py-3 px-4 whitespace-nowrap">مكان التخزين</th>
@@ -138,12 +138,16 @@ export function ProductsTable({
                     </span>
                   </td>
 
-                  {/* محتوى الباكو / الكرتونة */}
+                  {/* محتوى الكرتونة: يظهر لورق التصوير فقط */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
-                      <Box className="w-3.5 h-3.5 text-slate-500" />
-                      {content.toLocaleString()} {subUnit} بال{baseUnit}
-                    </span>
+                    {item.unitType === 3 || baseUnit === "كرتونة" || subUnit === "رزمة" ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
+                        <Box className="w-3.5 h-3.5 text-slate-500" />
+                        {content.toLocaleString()} رزمة بالكرتونة
+                      </span>
+                    ) : (
+                      <span className="text-slate-300 font-bold px-2">-</span>
+                    )}
                   </td>
 
                   {/* الرصيد الإجمالي */}

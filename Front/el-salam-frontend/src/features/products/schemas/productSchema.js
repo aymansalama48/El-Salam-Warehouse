@@ -101,7 +101,8 @@ export const createProductSchema = z.object({
     .coerce
     .number({ invalid_type_error: "يجب إدخال رقم صحيح لمحتوى الوحدة." })
     .int("محتوى الوحدة يجب أن يكون رقماً صحيحاً.")
-    .positive("يجب أن يكون محتوى الوحدة أكبر من صفر."),
+    .positive("يجب أن يكون محتوى الوحدة أكبر من صفر.")
+    .default(1),
   initialStock: z
     .coerce
     .number({ invalid_type_error: "يجب إدخال رقم صحيح للرصيد." })
@@ -151,7 +152,8 @@ export const updateProductSchema = z.object({
     .coerce
     .number({ invalid_type_error: "يجب إدخال رقم صحيح لمحتوى الوحدة." })
     .int("محتوى الوحدة يجب أن يكون رقماً صحيحاً.")
-    .positive("يجب أن يكون محتوى الوحدة أكبر من صفر."),
+    .positive("يجب أن يكون محتوى الوحدة أكبر من صفر.")
+    .default(1),
   lowStockThreshold: z
     .coerce
     .number({ invalid_type_error: "يجب إدخال رقم صحيح لحد التنبيه." })
