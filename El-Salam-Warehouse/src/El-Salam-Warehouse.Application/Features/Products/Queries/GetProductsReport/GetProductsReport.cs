@@ -71,10 +71,11 @@ internal sealed class GetProductsReportQueryHandler : IQueryHandler<GetProductsR
         }
 
         var raw = await query
-            .OrderBy(p => p.Category != null ? p.Category.Name : "")
-            .ThenBy(p => p.Name)
+            .OrderBy(p => p.DisplayOrder)
+            .ThenBy(p => p.CreatedAt)
             .Select(p => new
             {
+                p.Id,
                 p.Name,
                 CategoryName = p.Category != null ? p.Category.Name : "عام",
                 p.BaseUnit,
@@ -86,6 +87,7 @@ internal sealed class GetProductsReportQueryHandler : IQueryHandler<GetProductsR
                 p.StorageLocation,
                 p.LowStockThreshold,
                 p.LowStockThresholdUnit,
+                p.DisplayOrder,
                 LowStockThresholdSubUnits = (p.LowStockThresholdUnit == StockEntryUnit.BaseUnit && p.UnitsPerBaseUnit > 0)
                     ? p.LowStockThreshold * p.UnitsPerBaseUnit
                     : p.LowStockThreshold
@@ -117,21 +119,23 @@ internal sealed class GetProductsReportQueryHandler : IQueryHandler<GetProductsR
             copyPaper.Sum(p => Full(p.TotalSubUnitStock, p.UnitsPerBaseUnit)),
             copyPaper.Sum(p => p.TotalSubUnitStock));
 
-        var groups = raw
-            .GroupBy(p => p.CategoryName)
-            .Select(g => new ProductsReportGroup(
-                g.Key,
-                g.Select(p => new ProductsReportRow(
-                    p.Name,
-                    p.BaseUnit,
-                    p.SubUnit,
-                    p.UnitsPerBaseUnit,
-                    Full(p.TotalSubUnitStock, p.UnitsPerBaseUnit),
-                    p.UnitsPerBaseUnit > 0 ? p.TotalSubUnitStock % p.UnitsPerBaseUnit : 0,
-                    p.TotalSubUnitStock,
-                    string.IsNullOrWhiteSpace(p.StorageLocation) ? "-" : p.StorageLocation!,
-                    Status(p.UnitType, p.TotalSubUnitStock, p.UnitsPerBaseUnit, p.LowStockThresholdSubUnits))).ToList()))
+        var rows = raw
+            .Select(p => new ProductsReportRow(
+                p.Name,
+                p.BaseUnit,
+                p.SubUnit,
+                p.UnitsPerBaseUnit,
+                Full(p.TotalSubUnitStock, p.UnitsPerBaseUnit),
+                p.UnitsPerBaseUnit > 0 ? p.TotalSubUnitStock % p.UnitsPerBaseUnit : 0,
+                p.TotalSubUnitStock,
+                string.IsNullOrWhiteSpace(p.StorageLocation) ? "-" : p.StorageLocation!,
+                Status(p.UnitType, p.TotalSubUnitStock, p.UnitsPerBaseUnit, p.LowStockThresholdSubUnits)))
             .ToList();
+
+        var groups = new List<ProductsReportGroup>
+        {
+            new ProductsReportGroup(categoryTitle, rows)
+        };
 
         // استخدام IDateTime بدلاً من CairoTime للوقت والتاريخ
         var now = _dateTime.Now;
