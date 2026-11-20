@@ -412,7 +412,7 @@ public class UserManagementService(
             if (targetRole == null)
             {
                 var allRoles = await roleManager.Roles.ToListAsync(cancellationToken);
-                targetRole = allRoles.FirstOrDefault(r => r.Name.Equals(cleanRole, StringComparison.OrdinalIgnoreCase));
+                targetRole = allRoles.FirstOrDefault(r => r.Name != null && r.Name.Equals(cleanRole, StringComparison.OrdinalIgnoreCase));
             }
 
             if (targetRole != null)

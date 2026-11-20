@@ -17,7 +17,6 @@ namespace El_Salam_Warehouse.Infrastructure.Identity.Authorization;
 /// مزودة بكاش ذاكرة ذكي فائق السرعة لمنع استنزاف الاتصالات بقاعدة البيانات السحابية مع السريان الفوري للتعديلات.
 /// </summary>
 public class PermissionService(
-    UserManager<ApplicationUser> userManager,
     AppDbContext context,
     ICacheService cacheService) : IPermissionService
 {

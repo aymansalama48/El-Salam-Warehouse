@@ -48,7 +48,7 @@ internal sealed class GetAllProductsQueryHandler : IQueryHandler<GetAllProductsQ
         {
             var searchTerm = request.SearchTerm.Trim().ToLower();
             query = query.Where(p => p.Name.ToLower().Contains(searchTerm) ||
-                                     p.StorageLocation.ToLower().Contains(searchTerm));
+                                     (p.StorageLocation != null && p.StorageLocation.ToLower().Contains(searchTerm)));
         }
 
         // فلترة بتحديد الفئة (Category)

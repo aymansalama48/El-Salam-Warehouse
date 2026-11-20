@@ -50,7 +50,7 @@ public class DaybookController : BaseApiController
     {
         var result = await Sender.Send(new GetDaybookReportQuery(fromDate, toDate, type, source, unitType, categoryId));
 
-        if (!result.IsSuccess) return HandleResult(result);
+        if (!result.IsSuccess || result.Data == null) return HandleResult(result);
 
         var file = result.Data;
         return Results.File(file.Content, file.ContentType, file.FileName);

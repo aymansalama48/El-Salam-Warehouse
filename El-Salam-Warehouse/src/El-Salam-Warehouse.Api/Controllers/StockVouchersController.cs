@@ -121,7 +121,7 @@ public class StockVouchersController : BaseApiController
     public async Task<IResult> GetPdf(Guid id)
     {
         var result = await Sender.Send(new El_Salam_Warehouse.Application.Features.StockVouchers.Queries.GetStockVoucherPdf.GetStockVoucherPdfQuery(id));
-        if (!result.IsSuccess) return HandleResult(result);
+        if (!result.IsSuccess || result.Data == null) return HandleResult(result);
         var file = result.Data;
         return Results.File(file.Content, file.ContentType, file.FileName);
     }

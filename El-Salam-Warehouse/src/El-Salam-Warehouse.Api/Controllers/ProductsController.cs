@@ -68,7 +68,7 @@ public class ProductsController : BaseApiController
     public async Task<IResult> GetPdf(Guid id)
     {
         var result = await Sender.Send(new El_Salam_Warehouse.Application.Features.Products.Queries.GetProductPdf.GetProductPdfQuery(id));
-        if (!result.IsSuccess) return HandleResult(result);
+        if (!result.IsSuccess || result.Data == null) return HandleResult(result);
         var file = result.Data;
         return Results.File(file.Content, file.ContentType, file.FileName);
     }
@@ -209,7 +209,7 @@ public class ProductsController : BaseApiController
         var query = new GetProductsReportQuery(categoryId, productIds, unitType, type);
         var result = await Sender.Send(query);
 
-        if (!result.IsSuccess) return HandleResult(result);
+        if (!result.IsSuccess || result.Data == null) return HandleResult(result);
 
         var file = result.Data;
         return Results.File(file.Content, file.ContentType, file.FileName);
