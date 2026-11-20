@@ -881,17 +881,21 @@ export function VoucherFormModal({
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                       {/* اختيار الصنف عبر Combobox المخصص */}
                       <div className="sm:col-span-7">
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-2xs font-bold text-slate-500">
+                        <div className="flex items-center justify-between mb-1.5 min-h-[1.5rem]">
+                          <label className="block text-xs font-bold text-slate-600">
                             الصنف #{index + 1}
                           </label>
                           {/* في إذن الصرف أو العجز: عرض المتاح جنب الصنف */}
                           {isStockDeduction && selectedProd && (
-                            <span className="text-2xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
+                            <span className="text-2xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60 truncate max-w-[240px]" title={
+                              isCopyPaper
+                                ? `المتاح: ${fullCartons.toLocaleString()} كرتونة و ${looseReams.toLocaleString()} رزمة (${actualStock.toLocaleString()} رزمة)`
+                                : `المتاح: ${availableInCurrentUnit.toLocaleString()} ${unitLabel}`
+                            }>
                               {isCopyPaper
                                 ? looseReams > 0
-                                  ? `المتاح: ${fullCartons.toLocaleString()} كرتونة و ${looseReams.toLocaleString()} رزمة (${actualStock.toLocaleString()} رزمة)`
-                                  : `المتاح: ${fullCartons.toLocaleString()} كرتونة (${actualStock.toLocaleString()} رزمة)`
+                                  ? `المتاح: ${fullCartons.toLocaleString()} كرتونة و ${looseReams.toLocaleString()} رزمة`
+                                  : `المتاح: ${fullCartons.toLocaleString()} كرتونة`
                                 : `المتاح: ${availableInCurrentUnit.toLocaleString()} ${unitLabel}`}
                             </span>
                           )}
@@ -909,20 +913,25 @@ export function VoucherFormModal({
 
                       {/* الكمية */}
                       <div className="sm:col-span-4">
-                        <div className="flex items-center justify-between mb-1 h-4">
-                          <label className="text-2xs font-bold text-slate-500">
-                            {isCopyPaper ? "الكمية المطلوبة" : quantityLabel}
+                        <div className="flex items-center justify-between mb-1.5 min-h-[1.5rem]">
+                          <label className="text-xs font-bold text-slate-600">
+                            الكمية
                           </label>
                           {isStockDeduction && selectedProd && (
-                            <span
-                              className={`text-2xs font-bold px-1.5 py-0.5 rounded ${
-                                isOverStock
-                                  ? "text-rose-700 bg-rose-100"
-                                  : "text-slate-500 bg-slate-100"
-                              }`}
-                            >
-                              أقصى كمية: {availableInCurrentUnit.toLocaleString()}
-                            </span>
+                            isOverStock ? (
+                              <span className="text-3xs font-extrabold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded border border-rose-200 animate-pulse">
+                                تجاوزت المتاح!
+                              </span>
+                            ) : availableInCurrentUnit > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => handleQuantityChange(index, availableInCurrentUnit)}
+                                className="text-3xs font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200/80 transition-colors cursor-pointer"
+                                title="إدراج أقصى كمية متاحة بالمستودع"
+                              >
+                                صرف الكل
+                              </button>
+                            ) : null
                           )}
                         </div>
                         <div className="relative flex items-center">
@@ -959,6 +968,13 @@ export function VoucherFormModal({
                             )
                           )}
                         </div>
+
+                        {/* تنبيه تجاوز الرصيد المتاح */}
+                        {isOverStock && (
+                          <p className="text-2xs text-rose-600 font-bold mt-1">
+                            الرصيد المتاح بالمستودع فقط {availableInCurrentUnit.toLocaleString()} {unitLabel}
+                          </p>
+                        )}
 
                         {/* معادلة التحويل التلقائية بالمستودع لورق التصوير فقط */}
                         {enteredQty > 0 && selectedProd && isCopyPaper && (
