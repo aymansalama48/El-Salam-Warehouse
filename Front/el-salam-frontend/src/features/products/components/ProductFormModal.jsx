@@ -521,12 +521,12 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
               {activeTab === "paper" ? (
                 /* في ورق التصوير: الفئة محددة تلقائياً كـ ورق تصوير */
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between mb-1.5 h-5">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                       <Tag className="w-3.5 h-3.5 text-emerald-600" />
                       فئة المنتج <span className="text-rose-500">*</span>
                     </label>
-                    <span className="text-2xs font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                    <span className="text-2xs font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1 shrink-0">
                       <Check className="w-3 h-3" />
                       تلقائي
                     </span>
@@ -535,7 +535,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                     <select
                       value={categoryId}
                       onChange={(e) => setCategoryId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-emerald-50/50 border border-emerald-300 rounded-xl text-emerald-950 focus:outline-none focus:border-emerald-600 cursor-pointer font-bold"
+                      className="w-full h-10 px-3.5 text-xs sm:text-sm bg-emerald-50/50 border border-emerald-300 rounded-xl text-emerald-950 focus:outline-none focus:border-emerald-600 cursor-pointer font-bold"
                     >
                       {displayedCategories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -544,12 +544,12 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                       ))}
                     </select>
                   ) : (
-                    <div className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-emerald-50/70 border border-emerald-200 rounded-xl text-emerald-900 font-extrabold flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-emerald-600" />
-                        {paperCategoryObject?.name || "ورق تصوير"}
+                    <div className="w-full h-10 px-3.5 text-xs sm:text-sm bg-emerald-50/70 border border-emerald-200 rounded-xl text-emerald-900 font-extrabold flex items-center justify-between whitespace-nowrap">
+                      <span className="flex items-center gap-2 truncate">
+                        <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="truncate">{paperCategoryObject?.name || "ورق تصوير"}</span>
                       </span>
-                      <span className="text-2xs text-emerald-600 font-medium">فئة ورق التصوير</span>
+                      <span className="text-2xs text-emerald-600 font-medium shrink-0">فئة ورق التصوير</span>
                     </div>
                   )}
                   {errors.categoryId && <p className="text-xs text-rose-500 font-bold mt-1">{errors.categoryId}</p>}
@@ -557,13 +557,13 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
               ) : (
                 /* في الكشاكيل والكراريس: إظهار الفئات المرتبطة بالكشاكيل والكراريس فقط بدون ورق التصوير */
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between mb-1.5 h-5">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                       <Tag className="w-3.5 h-3.5 text-slate-400" />
                       فئة المنتج <span className="text-rose-500">*</span>
                     </label>
                     {loadingCategories && (
-                      <span className="text-2xs text-blue-600 font-bold flex items-center gap-1">
+                      <span className="text-2xs text-blue-600 font-bold flex items-center gap-1 shrink-0">
                         <Loader2 className="w-3 h-3 animate-spin" />
                         تحميل...
                       </span>
@@ -573,7 +573,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                     value={categoryId}
                     disabled={loadingCategories || hasNoCategories}
                     onChange={(e) => handleCategorySelect(e.target.value)}
-                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border rounded-xl text-slate-800 focus:outline-none focus:border-slate-800 cursor-pointer font-bold ${
+                    className={`w-full h-10 px-3.5 text-xs sm:text-sm bg-slate-50 border rounded-xl text-slate-800 focus:outline-none focus:border-slate-800 cursor-pointer font-bold ${
                       errors.categoryId ? "border-rose-400 bg-rose-50/30" : "border-slate-200"
                     }`}
                   >
@@ -595,38 +595,40 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
 
               {/* نوع المنتج ووحدة القياس */}
               {activeTab === "paper" ? (
-                /* في ورق التصوير: نوع الصنف مثبت بالكرتونة والرزمة بدون الحاجة للاختيار */
+                /* في ورق التصوير: نوع الصنف مثبت بالكرتونة والرزمة بدون الحاجة للاختيار وبنفس حجم الفئة تماماً */
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between mb-1.5 h-5">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                       <Layers className="w-3.5 h-3.5 text-emerald-600" />
-                      نوع المنتج ووحدة القياس <span className="text-rose-500">*</span>
+                      نوع المنتج <span className="text-rose-500">*</span>
                     </label>
-                    <span className="text-2xs font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <span className="text-2xs font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200 shrink-0">
                       ثابت
                     </span>
                   </div>
-                  <div className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-emerald-50/70 border border-emerald-200 rounded-xl text-emerald-900 font-extrabold flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <Box className="w-4 h-4 text-emerald-600" />
-                      ورق تصوير (بالكرتونة)
+                  <div className="w-full h-10 px-3.5 text-xs sm:text-sm bg-emerald-50/70 border border-emerald-200 rounded-xl text-emerald-900 font-extrabold flex items-center justify-between whitespace-nowrap">
+                    <span className="flex items-center gap-2 shrink-0">
+                      <Box className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>ورق تصوير</span>
                     </span>
-                    <span className="text-2xs font-bold text-emerald-700 bg-white/90 px-2 py-0.5 rounded border border-emerald-200/80 shadow-2xs">
-                      رزم / كرتونة
+                    <span className="text-2xs font-bold text-emerald-700 bg-white/90 px-2 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs shrink-0">
+                      كرتونة (5 رزم)
                     </span>
                   </div>
                 </div>
               ) : (
                 /* في الكشاكيل والكراريس: اختيار بين كشكول أو كراس */
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-blue-600" />
-                    نوع المنتج <span className="text-rose-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5 h-5">
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-blue-600" />
+                      نوع المنتج <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
                   <select
                     value={unitType}
                     onChange={(e) => handleNotebookUnitChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-slate-800 cursor-pointer font-bold"
+                    className="w-full h-10 px-3.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-slate-800 cursor-pointer font-bold"
                   >
                     {notebookUnitTypes.map((opt) => (
                       <option key={opt.unitType} value={opt.unitType}>
