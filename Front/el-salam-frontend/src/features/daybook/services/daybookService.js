@@ -49,7 +49,9 @@ export const getDaybook = async (params = {}) => {
     entryPage = Number(pagination.currentPage ?? data.entries.page ?? entryPage);
     entryPageSize = Number(pagination.pageSize ?? data.entries.pageSize ?? entryPageSize);
     entryTotalCount = Number(pagination.totalCount ?? data.entries.totalCount ?? entryItems.length);
-    entryTotalPages = Number(pagination.totalPages ?? data.entries.totalPages ?? 1);
+    const calculatedPages = entryPageSize > 0 && entryTotalCount > 0 ? Math.ceil(entryTotalCount / entryPageSize) : 1;
+    const rawPages = Number(pagination.totalPages ?? data.entries.totalPages);
+    entryTotalPages = !isNaN(rawPages) && rawPages > 1 ? rawPages : calculatedPages;
     entryHasPrev = Boolean(pagination.hasPreviousPage);
     entryHasNext = Boolean(pagination.hasNextPage);
     entryPagination = pagination;

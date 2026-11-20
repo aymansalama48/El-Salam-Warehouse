@@ -11,23 +11,30 @@ export function Pagination({
   pageSizeOptions = [10, 20, 50, 100],
   itemLabel = "عنصر",
 }) {
-  if (totalCount === 0 && totalPages <= 1) return null;
+  const numericPageSize = pageSize === "all" ? 0 : Number(pageSize) || 20;
+  const computedTotalPages =
+    numericPageSize > 0 && totalCount > 0
+      ? Math.max(1, Math.ceil(totalCount / numericPageSize))
+      : 1;
+  const effectiveTotalPages = Math.max(Number(totalPages) || 1, computedTotalPages);
+
+  if (totalCount === 0 && effectiveTotalPages <= 1) return null;
 
   // توليد أرقام الصفحات المعروضة بشكل ذكي
   const getPageNumbers = () => {
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (effectiveTotalPages <= 7) {
+      return Array.from({ length: effectiveTotalPages }, (_, i) => i + 1);
     }
 
     const pages = [];
     if (page <= 4) {
       for (let i = 1; i <= 5; i++) pages.push(i);
       pages.push("...");
-      pages.push(totalPages);
-    } else if (page >= totalPages - 3) {
+      pages.push(effectiveTotalPages);
+    } else if (page >= effectiveTotalPages - 3) {
       pages.push(1);
       pages.push("...");
-      for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+      for (let i = effectiveTotalPages - 4; i <= effectiveTotalPages; i++) pages.push(i);
     } else {
       pages.push(1);
       pages.push("...");
@@ -35,7 +42,7 @@ export function Pagination({
       pages.push(page);
       pages.push(page + 1);
       pages.push("...");
-      pages.push(totalPages);
+      pages.push(effectiveTotalPages);
     }
     return pages;
   };
@@ -49,7 +56,7 @@ export function Pagination({
         <div>
           إجمالي <span className="font-extrabold text-slate-900">{totalCount.toLocaleString()}</span> {itemLabel}
           <span className="text-slate-400 mx-1.5">•</span>
-          صفحة <span className="font-bold text-slate-800">{page}</span> من <span className="font-bold text-slate-800">{totalPages}</span>
+          صفحة <span className="font-bold text-slate-800">{page}</span> من <span className="font-bold text-slate-800">{effectiveTotalPages}</span>
         </div>
 
         {onPageSizeChange && (
@@ -117,7 +124,7 @@ export function Pagination({
         {/* زر التالي */}
         <button
           type="button"
-          disabled={page >= totalPages}
+          disabled={page >= effectiveTotalPages}
           onClick={() => onPageChange && onPageChange(page + 1)}
           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer text-xs font-semibold"
           title="الصفحة التالية"

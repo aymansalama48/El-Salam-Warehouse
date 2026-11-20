@@ -164,12 +164,18 @@ export const getProducts = async ({ search = "", categoryId = null, page = 1, pa
   // إذا كانت الاستجابة مقسمة على صفحات PagedResult من الـ Backend
   if (data && Array.isArray(data.items)) {
     const pagination = data.pagination || {};
+    const totalCount = Number(pagination.totalCount ?? data.totalCount ?? data.items.length);
+    const size = Number(pagination.pageSize ?? data.pageSize ?? params.pageSize ?? 20);
+    const calculatedPages = size > 0 && totalCount > 0 ? Math.ceil(totalCount / size) : 1;
+    const rawPages = Number(pagination.totalPages ?? data.totalPages);
+    const totalPages = !isNaN(rawPages) && rawPages > 1 ? rawPages : calculatedPages;
+
     return {
       items: data.items.map(normalizeProduct),
       page: Number(pagination.currentPage ?? data.page ?? params.page ?? 1),
-      pageSize: Number(pagination.pageSize ?? data.pageSize ?? params.pageSize ?? 20),
-      totalCount: Number(pagination.totalCount ?? data.totalCount ?? data.items.length),
-      totalPages: Number(pagination.totalPages ?? data.totalPages ?? 1),
+      pageSize: size,
+      totalCount,
+      totalPages,
       hasPreviousPage: Boolean(pagination.hasPreviousPage),
       hasNextPage: Boolean(pagination.hasNextPage),
       pagination,

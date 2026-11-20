@@ -20,6 +20,7 @@ import {
 import { validateProduct } from "../schemas/productSchema";
 import { getCategoriesLookup } from "../../categories/services/categoryService";
 import { getProductUnitTypes, DEFAULT_PRODUCT_UNIT_TYPES } from "../services/productService";
+import { UnitSelect } from "../../../components/common/UnitSelect";
 
 export function ProductFormModal({ isOpen, onClose, onSave, initialData, categories = [] }) {
   const isEdit = Boolean(initialData);
@@ -365,7 +366,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
   const paperCategoryObject = categoriesList.find((c) => c.id === categoryId) || categoriesList.find(isPaperCategory);
 
   const modalContent = (
-    <div className="fixed inset-0 w-screen h-screen z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xl w-full max-w-xl max-h-[calc(100dvh-2rem)] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
@@ -693,14 +694,15 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                     />
                     {isBoxUnit ? (
                       <div className="absolute left-1.5 inset-y-1.5 flex items-center">
-                        <select
+                        <UnitSelect
                           value={initialStockUnit}
-                          onChange={(e) => setInitialStockUnit(Number(e.target.value))}
-                          className="h-full px-2.5 py-0.5 text-xs font-bold text-emerald-900 bg-emerald-100/90 hover:bg-emerald-200/90 border border-emerald-300/80 rounded-lg cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
-                        >
-                          <option value={2}>كرتونة</option>
-                          <option value={1}>رزمة</option>
-                        </select>
+                          onChange={(val) => setInitialStockUnit(val)}
+                          theme="emerald"
+                          options={[
+                            { value: 2, label: "كرتونة" },
+                            { value: 1, label: "رزمة" },
+                          ]}
+                        />
                       </div>
                     ) : (
                       <span className="absolute left-3 text-xs font-bold text-slate-400 pointer-events-none">
@@ -791,14 +793,15 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                 />
                 {isBoxUnit ? (
                   <div className="absolute left-1.5 inset-y-1.5 flex items-center">
-                    <select
+                    <UnitSelect
                       value={lowStockThresholdUnit}
-                      onChange={(e) => setLowStockThresholdUnit(Number(e.target.value))}
-                      className="h-full px-2.5 py-0.5 text-xs font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200/90 border border-amber-300/80 rounded-lg cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors"
-                    >
-                      <option value={2}>كرتونة</option>
-                      <option value={1}>رزمة</option>
-                    </select>
+                      onChange={(val) => setLowStockThresholdUnit(val)}
+                      theme="amber"
+                      options={[
+                        { value: 2, label: "كرتونة" },
+                        { value: 1, label: "رزمة" },
+                      ]}
+                    />
                   </div>
                 ) : (
                   <span className="absolute left-3 text-xs font-bold text-slate-500 pointer-events-none">

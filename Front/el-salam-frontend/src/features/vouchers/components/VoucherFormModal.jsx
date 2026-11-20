@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { ProductCombobox } from "./ProductCombobox";
 import { AdvancedProductPickerModal } from "./AdvancedProductPickerModal";
+import { UnitSelect } from "../../../components/common/UnitSelect";
 import { validateVoucher, VOUCHER_TYPE, VOUCHER_SOURCE, RETURN_DIRECTION } from "../schemas/voucherSchema";
 import { getTodayDateString } from "../../../utils/dateUtils";
 
@@ -239,7 +240,7 @@ export function VoucherFormModal({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 w-screen h-screen z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 text-right">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
@@ -908,40 +909,10 @@ export function VoucherFormModal({
 
                       {/* الكمية */}
                       <div className="sm:col-span-4">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-1.5">
-                            <label className="text-2xs font-bold text-slate-500">
-                              {quantityLabel}
-                            </label>
-                            {isCopyPaper && (
-                              <div className="flex items-center gap-0.5 bg-slate-200/90 p-0.5 rounded-md border border-slate-300">
-                                <button
-                                  type="button"
-                                  onClick={() => handleUnitChange(index, 2)}
-                                  className={`px-1.5 py-0.5 text-3xs font-extrabold rounded transition-all cursor-pointer ${
-                                    currentUnit === 2
-                                      ? "bg-emerald-600 text-white shadow-2xs"
-                                      : "text-slate-600 hover:text-slate-900"
-                                  }`}
-                                  title="إدخال الكمية بعدد الكراتين"
-                                >
-                                  📦 كرتونة
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleUnitChange(index, 1)}
-                                  className={`px-1.5 py-0.5 text-3xs font-extrabold rounded transition-all cursor-pointer ${
-                                    currentUnit === 1
-                                      ? "bg-blue-600 text-white shadow-2xs"
-                                      : "text-slate-600 hover:text-slate-900"
-                                  }`}
-                                  title="إدخال الكمية بعدد الرزم"
-                                >
-                                  📄 رزمة
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                        <div className="flex items-center justify-between mb-1 h-4">
+                          <label className="text-2xs font-bold text-slate-500">
+                            {isCopyPaper ? "الكمية المطلوبة" : quantityLabel}
+                          </label>
                           {isStockDeduction && selectedProd && (
                             <span
                               className={`text-2xs font-bold px-1.5 py-0.5 rounded ${
@@ -954,7 +925,7 @@ export function VoucherFormModal({
                             </span>
                           )}
                         </div>
-                        <div className="relative">
+                        <div className="relative flex items-center">
                           <input
                             type="number"
                             min="1"
@@ -962,16 +933,30 @@ export function VoucherFormModal({
                             value={item.quantity}
                             onChange={(e) => handleQuantityChange(index, e.target.value)}
                             placeholder="0"
-                            className={`w-full px-3 py-2 pl-16 text-xs sm:text-sm font-bold bg-white border rounded-lg focus:outline-none ${
+                            className={`w-full px-3 py-2 ${isCopyPaper ? "pl-28" : "pl-16"} text-xs sm:text-sm font-bold bg-white border rounded-lg focus:outline-none ${
                               isOverStock || (hasItemError && (!item.quantity || Number(item.quantity) <= 0))
                                 ? "border-rose-400 focus:border-rose-600 text-rose-700 bg-rose-50/20 ring-1 ring-rose-200"
                                 : "border-slate-200 focus:border-slate-800"
                             }`}
                           />
-                          {quantityBadge && (
-                            <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400 pointer-events-none">
-                              {quantityBadge}
-                            </span>
+                          {isCopyPaper ? (
+                            <div className="absolute left-1.5 inset-y-1 flex items-center">
+                              <UnitSelect
+                                value={currentUnit}
+                                onChange={(val) => handleUnitChange(index, val)}
+                                theme="emerald"
+                                options={[
+                                  { value: 2, label: "كرتونة" },
+                                  { value: 1, label: "رزمة" },
+                                ]}
+                              />
+                            </div>
+                          ) : (
+                            quantityBadge && (
+                              <span className="absolute left-2.5 text-xs font-bold text-slate-400 pointer-events-none">
+                                {quantityBadge}
+                              </span>
+                            )
                           )}
                         </div>
 
