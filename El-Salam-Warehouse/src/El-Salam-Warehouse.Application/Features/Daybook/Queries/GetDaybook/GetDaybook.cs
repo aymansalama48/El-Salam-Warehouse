@@ -202,20 +202,7 @@ internal sealed class GetDaybookQueryHandler : IQueryHandler<GetDaybookQuery, Da
                 x.Voucher.ShortageReason))
             .ToListAsync(cancellationToken);
 
-        // إنشاء كائن PaginationMetadata و PagedResult
-        var paginationMetadata = new PaginationMetadata
-        {
-            CurrentPage = page,
-            PageSize = pageSize,
-            TotalCount = totalCount
-        };
-
-        var pagedEntries = new PagedResult<DaybookEntryDto>
-        {
-            Items = entries,
-            Pagination = paginationMetadata
-        };
-
+        var pagedEntries = PagedResult<DaybookEntryDto>.Create(entries, page, pageSize, totalCount);
         return Result<DaybookResponse>.Success(new DaybookResponse(totals, pagedEntries));
     }
 }

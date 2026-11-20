@@ -95,20 +95,7 @@ internal sealed class GetStockVouchersQueryHandler
                 v.ShortageReason))
             .ToListAsync(cancellationToken);
 
-        // إنشاء كائن PaginationMetadata و PagedResult
-        var paginationMetadata = new PaginationMetadata
-        {
-            CurrentPage = page,
-            PageSize = pageSize,
-            TotalCount = totalCount
-        };
-
-        var pagedResult = new PagedResult<StockVoucherListItemDto>
-        {
-            Items = items,
-            Pagination = paginationMetadata
-        };
-
+        var pagedResult = PagedResult<StockVoucherListItemDto>.Create(items, page, pageSize, totalCount);
         return Result<PagedResult<StockVoucherListItemDto>>.Success(pagedResult);
     }
 }
