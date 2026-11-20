@@ -176,15 +176,22 @@ export const getProducts = async ({ search = "", categoryId = null, page = 1, pa
     };
   }
 
-  // إذا كانت الاستجابة مصفوفة مباشرة (توافق عكسي)
+  // إذا كانت الاستجابة مصفوفة مباشرة (توافق عكسي ودعم احتياطي)
   if (Array.isArray(data)) {
+    const totalCount = data.length;
+    const size = pageSize === "all" ? totalCount : Number(pageSize || 20);
+    const currentPage = Number(page || 1);
+    const totalPages = size > 0 ? Math.max(1, Math.ceil(totalCount / size)) : 1;
+    const start = (currentPage - 1) * size;
+    const sliced = pageSize === "all" ? data : data.slice(start, start + size);
+
     return {
-      items: data.map(normalizeProduct),
-      page: 1,
-      pageSize: data.length,
-      totalCount: data.length,
-      totalPages: 1,
-      pagination: { currentPage: 1, pageSize: data.length, totalCount: data.length, totalPages: 1 },
+      items: sliced.map(normalizeProduct),
+      page: currentPage,
+      pageSize: size,
+      totalCount,
+      totalPages,
+      pagination: { currentPage, pageSize: size, totalCount, totalPages },
     };
   }
 

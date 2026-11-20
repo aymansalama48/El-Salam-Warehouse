@@ -33,7 +33,33 @@ export const getDaybook = async (params = {}) => {
   if (params.pageSize === "all") query.pageSize = 1000;
 
   const data = await apiClient.get(ENDPOINTS.DAYBOOK.GET_ALL, { params: query });
-  const pagination = data?.entries?.pagination || {};
+  
+  let entryItems = [];
+  let entryPage = Number(params.page || 1);
+  let entryPageSize = params.pageSize === "all" ? 1000 : Number(params.pageSize || 50);
+  let entryTotalCount = 0;
+  let entryTotalPages = 1;
+  let entryHasPrev = false;
+  let entryHasNext = false;
+  let entryPagination = null;
+
+  if (data?.entries && Array.isArray(data.entries.items)) {
+    const pagination = data.entries.pagination || {};
+    entryItems = data.entries.items;
+    entryPage = Number(pagination.currentPage ?? data.entries.page ?? entryPage);
+    entryPageSize = Number(pagination.pageSize ?? data.entries.pageSize ?? entryPageSize);
+    entryTotalCount = Number(pagination.totalCount ?? data.entries.totalCount ?? entryItems.length);
+    entryTotalPages = Number(pagination.totalPages ?? data.entries.totalPages ?? 1);
+    entryHasPrev = Boolean(pagination.hasPreviousPage);
+    entryHasNext = Boolean(pagination.hasNextPage);
+    entryPagination = pagination;
+  } else if (Array.isArray(data?.entries)) {
+    entryTotalCount = data.entries.length;
+    entryTotalPages = entryPageSize > 0 ? Math.max(1, Math.ceil(entryTotalCount / entryPageSize)) : 1;
+    const start = (entryPage - 1) * entryPageSize;
+    entryItems = params.pageSize === "all" ? data.entries : data.entries.slice(start, start + entryPageSize);
+    entryPagination = { currentPage: entryPage, pageSize: entryPageSize, totalCount: entryTotalCount, totalPages: entryTotalPages };
+  }
 
   return {
     totals: {
@@ -45,14 +71,14 @@ export const getDaybook = async (params = {}) => {
       outboundCartons: Number(data?.totals?.outboundCartons ?? 0),
     },
     entries: {
-      items: Array.isArray(data?.entries?.items) ? data.entries.items : [],
-      page: Number(pagination.currentPage ?? data?.entries?.page ?? 1),
-      pageSize: Number(pagination.pageSize ?? data?.entries?.pageSize ?? 50),
-      totalCount: Number(pagination.totalCount ?? data?.entries?.totalCount ?? 0),
-      totalPages: Number(pagination.totalPages ?? data?.entries?.totalPages ?? 1),
-      hasPreviousPage: Boolean(pagination.hasPreviousPage),
-      hasNextPage: Boolean(pagination.hasNextPage),
-      pagination,
+      items: entryItems,
+      page: entryPage,
+      pageSize: entryPageSize,
+      totalCount: entryTotalCount,
+      totalPages: entryTotalPages,
+      hasPreviousPage: entryHasPrev,
+      hasNextPage: entryHasNext,
+      pagination: entryPagination,
     },
   };
 };

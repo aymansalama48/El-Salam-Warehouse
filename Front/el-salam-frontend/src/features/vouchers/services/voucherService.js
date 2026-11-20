@@ -31,17 +31,40 @@ export const getStockVouchers = async (params = {}) => {
   if (params.pageSize === "all") query.pageSize = 1000;
 
   const data = await apiClient.get(ENDPOINTS.STOCK_VOUCHERS.GET_ALL, { params: query });
-  const pagination = data?.pagination || {};
-  return {
-    items: Array.isArray(data?.items) ? data.items : [],
-    page: Number(pagination.currentPage ?? data?.page ?? 1),
-    pageSize: Number(pagination.pageSize ?? data?.pageSize ?? 20),
-    totalCount: Number(pagination.totalCount ?? data?.totalCount ?? 0),
-    totalPages: Number(pagination.totalPages ?? data?.totalPages ?? 1),
-    hasPreviousPage: Boolean(pagination.hasPreviousPage),
-    hasNextPage: Boolean(pagination.hasNextPage),
-    pagination,
-  };
+  
+  if (data && Array.isArray(data.items)) {
+    const pagination = data.pagination || {};
+    return {
+      items: data.items,
+      page: Number(pagination.currentPage ?? data?.page ?? params.page ?? 1),
+      pageSize: Number(pagination.pageSize ?? data?.pageSize ?? params.pageSize ?? 20),
+      totalCount: Number(pagination.totalCount ?? data?.totalCount ?? data.items.length),
+      totalPages: Number(pagination.totalPages ?? data?.totalPages ?? 1),
+      hasPreviousPage: Boolean(pagination.hasPreviousPage),
+      hasNextPage: Boolean(pagination.hasNextPage),
+      pagination,
+    };
+  }
+
+  if (Array.isArray(data)) {
+    const totalCount = data.length;
+    const size = params.pageSize === "all" ? totalCount : Number(params.pageSize || 20);
+    const currentPage = Number(params.page || 1);
+    const totalPages = size > 0 ? Math.max(1, Math.ceil(totalCount / size)) : 1;
+    const start = (currentPage - 1) * size;
+    const sliced = params.pageSize === "all" ? data : data.slice(start, start + size);
+
+    return {
+      items: sliced,
+      page: currentPage,
+      pageSize: size,
+      totalCount,
+      totalPages,
+      pagination: { currentPage, pageSize: size, totalCount, totalPages },
+    };
+  }
+
+  return { items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 1 };
 };
 
 /**
