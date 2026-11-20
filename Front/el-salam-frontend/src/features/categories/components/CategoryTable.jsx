@@ -1,6 +1,7 @@
 import { Edit2, Trash2, Eye, Tags, GripVertical, Calendar } from "lucide-react";
 import { useTableReorder } from "../../../hooks/useTableReorder";
 import { formatCairoDateTime } from "../../../utils/dateUtils";
+import { Pagination } from "../../../components/common/Pagination";
 
 export function CategoryTable({
   categories = [],
@@ -11,6 +12,12 @@ export function CategoryTable({
   onShowProducts,
   onReorder,
   canReorder = true,
+  page = 1,
+  totalPages = 1,
+  totalCount,
+  pageSize = 20,
+  onPageChange,
+  onPageSizeChange,
 }) {
   const { draggedIndex, dropTargetIndex, isLongPressing, getRowProps } = useTableReorder({
     items: categories,
@@ -168,6 +175,19 @@ export function CategoryTable({
         </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {Boolean(onPageChange) && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount !== undefined ? totalCount : categories.length}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          itemLabel="فئة"
+        />
+      )}
     </div>
   );
 }

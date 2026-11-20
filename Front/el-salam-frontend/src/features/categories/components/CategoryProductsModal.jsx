@@ -17,12 +17,15 @@ import {
 import { getCategoryProducts } from "../services/categoryService";
 import { formatCairoDateTime } from "../../../utils/dateUtils";
 import { formatBaseUnitStock } from "../../products/services/productService";
+import { Pagination } from "../../../components/common/Pagination";
 
 export function CategoryProductsModal({ isOpen, onClose, category }) {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     if (!isOpen || !category?.id) return;
@@ -59,6 +62,13 @@ export function CategoryProductsModal({ isOpen, onClose, category }) {
     onClose();
     navigate(`/finished-goods?categoryId=${category.id}`);
   };
+
+  const totalCount = products.length;
+  const numericSize = pageSize === "all" ? totalCount : Number(pageSize) || 10;
+  const totalPages = numericSize > 0 ? Math.max(1, Math.ceil(totalCount / numericSize)) : 1;
+  const paginatedProducts = pageSize === "all"
+    ? products
+    : products.slice((page - 1) * numericSize, page * numericSize);
 
   const getStatusBadge = (status) => {
     if (status === 3) {
@@ -171,9 +181,11 @@ export function CategoryProductsModal({ isOpen, onClose, category }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {products.map((p, idx) => (
+                      {paginatedProducts.map((p, idx) => (
                         <tr key={p.id || idx} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="py-3 px-3 text-slate-400 font-mono">{idx + 1}</td>
+                          <td className="py-3 px-3 text-slate-400 font-mono">
+                            {pageSize === "all" ? idx + 1 : (page - 1) * numericSize + idx + 1}
+                          </td>
                           <td className="py-3 px-3">
                             <div className="font-bold text-slate-900">{p.name}</div>
                             <div className="text-2xs text-slate-400 mt-0.5">
@@ -209,6 +221,20 @@ export function CategoryProductsModal({ isOpen, onClose, category }) {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination */}
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  totalCount={totalCount}
+                  pageSize={pageSize}
+                  onPageChange={(p) => setPage(p)}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setPage(1);
+                  }}
+                  itemLabel="صنف"
+                />
               </div>
             </div>
           )}

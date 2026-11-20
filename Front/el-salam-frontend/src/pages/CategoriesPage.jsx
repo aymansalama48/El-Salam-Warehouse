@@ -22,6 +22,8 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [viewingCategory, setViewingCategory] = useState(null);
@@ -162,6 +164,13 @@ export default function CategoriesPage() {
     );
   });
 
+  const totalCount = filteredCategories.length;
+  const numericSize = pageSize === "all" ? totalCount : Number(pageSize) || 20;
+  const totalPages = numericSize > 0 ? Math.max(1, Math.ceil(totalCount / numericSize)) : 1;
+  const paginatedCategories = pageSize === "all"
+    ? filteredCategories
+    : filteredCategories.slice((page - 1) * numericSize, page * numericSize);
+
   const getFields = (cat) => {
     if (!cat) return [];
     return [
@@ -226,18 +235,30 @@ export default function CategoriesPage() {
 
       <CategoryFilter
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+        setSearchTerm={(term) => {
+          setSearchTerm(term);
+          setPage(1);
+        }}
       />
 
       <CategoryTable
-        categories={filteredCategories}
+        categories={paginatedCategories}
         loading={loading}
         onView={handleViewCategory}
         onEdit={handleOpenEdit}
         onDelete={handleDeleteCategory}
         onShowProducts={(cat) => setSelectedCategoryForProducts(cat)}
         onReorder={handleReorderCategories}
-        canReorder={!searchTerm.trim()}
+        canReorder={!searchTerm.trim() && (pageSize === "all" || totalCount <= numericSize)}
+        page={page}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        onPageChange={(p) => setPage(p)}
+        onPageSizeChange={(s) => {
+          setPageSize(s);
+          setPage(1);
+        }}
       />
 
       {isModalOpen && (

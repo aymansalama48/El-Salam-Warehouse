@@ -8,7 +8,7 @@ export function Pagination({
   pageSize = 20,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 50, 100],
+  pageSizeOptions = [10, 20, 50, 100, "all"],
   itemLabel = "عنصر",
 }) {
   const numericPageSize = pageSize === "all" ? 0 : Number(pageSize) || 20;

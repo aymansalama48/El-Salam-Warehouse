@@ -21,6 +21,7 @@ import { useAuth } from "../features/auth/hooks/useAuth";
 import { validateAssignRole } from "../features/auth/schemas/authSchemas";
 import { showConfirm, showSuccess, showError } from "../utils/alertUtils";
 import { AddUserModal } from "../features/auth/components/AddUserModal";
+import { Pagination } from "../components/common/Pagination";
 
 /**
  * دالة مساعدة لتعريب أسماء الأدوار
@@ -613,29 +614,19 @@ export function UsersPage() {
         </div>
 
         {/* 5. ترقيم الصفحات (Pagination) */}
-        {!loading && totalPages > 1 && (
-          <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-2xs text-slate-500 font-medium">
-              الصفحة {pageNumber} من {totalPages} (إجمالي {totalCount} مستخدم)
-            </span>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                disabled={pageNumber <= 1}
-                onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                السابق
-              </button>
-              <button
-                disabled={pageNumber >= totalPages}
-                onClick={() => setPageNumber((p) => Math.min(totalPages, p + 1))}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                التالي
-              </button>
-            </div>
-          </div>
+        {!loading && (
+          <Pagination
+            page={pageNumber}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            onPageChange={(p) => setPageNumber(p)}
+            onPageSizeChange={(s) => {
+              setPageSize(s);
+              setPageNumber(1);
+            }}
+            itemLabel="مستخدم"
+          />
         )}
       </div>
 
