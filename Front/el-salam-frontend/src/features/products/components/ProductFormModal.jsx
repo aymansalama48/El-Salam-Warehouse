@@ -282,14 +282,14 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
 
   const getStockLabel = () => {
     if (isBoxUnit) {
-      return initialStockUnit === 2 ? `عدد الكراتين (الرصيد الافتتاحي)` : `عدد الرزم (الرصيد الافتتاحي)`;
+      return "الرصيد الافتتاحي بالمستودع";
     }
     return `عدد ${subUnit} (الرصيد الافتتاحي)`;
   };
 
   const getStockPlaceholder = () => {
     if (isBoxUnit) {
-      return initialStockUnit === 2 ? `مثال: 50 كرتونة` : `مثال: 250 رزمة`;
+      return initialStockUnit === 2 ? "مثال: 50" : "مثال: 250";
     }
     return `مثال: 500 ${subUnit}`;
   };
@@ -671,39 +671,13 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
               {/* خانة الرصيد الافتتاحي: تظهر فقط عند إضافة منتج جديد (في التعديل لا يوجد رصيد) */}
               {!isEdit && (
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between mb-1.5 h-5">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                       <Layers className={`w-3.5 h-3.5 ${isBoxUnit ? "text-emerald-600" : "text-blue-600"}`} />
                       {getStockLabel()}
                     </label>
-                    {isBoxUnit && (
-                      <div className="flex items-center gap-1 bg-slate-200/90 p-0.5 rounded-lg border border-slate-300">
-                        <button
-                          type="button"
-                          onClick={() => setInitialStockUnit(2)}
-                          className={`px-2.5 py-1 text-2xs font-extrabold rounded-md transition-all cursor-pointer ${
-                            initialStockUnit === 2
-                              ? "bg-emerald-600 text-white shadow-2xs"
-                              : "text-slate-600 hover:text-slate-900"
-                          }`}
-                        >
-                          📦 بالكرتونة
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setInitialStockUnit(1)}
-                          className={`px-2.5 py-1 text-2xs font-extrabold rounded-md transition-all cursor-pointer ${
-                            initialStockUnit === 1
-                              ? "bg-blue-600 text-white shadow-2xs"
-                              : "text-slate-600 hover:text-slate-900"
-                          }`}
-                        >
-                          📄 بالرزمة
-                        </button>
-                      </div>
-                    )}
                   </div>
-                  <div className="relative">
+                  <div className="relative flex items-center">
                     <input
                       type="number"
                       min="0"
@@ -713,13 +687,26 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                         if (errors.initialStock) setErrors((prev) => ({ ...prev, initialStock: null }));
                       }}
                       placeholder={getStockPlaceholder()}
-                      className={`w-full px-3.5 py-2.5 pl-16 text-xs sm:text-sm font-bold bg-slate-50 border rounded-xl focus:outline-none focus:bg-white transition-colors ${
+                      className={`w-full h-10 px-3.5 ${isBoxUnit ? "pl-28" : "pl-16"} text-xs sm:text-sm font-bold bg-slate-50 border rounded-xl focus:outline-none focus:bg-white transition-colors ${
                         errors.initialStock ? "border-rose-400 focus:border-rose-500 bg-rose-50/30" : "border-slate-200 focus:border-slate-800"
                       }`}
                     />
-                    <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400 pointer-events-none">
-                      {getStockInputBadge()}
-                    </span>
+                    {isBoxUnit ? (
+                      <div className="absolute left-1.5 inset-y-1.5 flex items-center">
+                        <select
+                          value={initialStockUnit}
+                          onChange={(e) => setInitialStockUnit(Number(e.target.value))}
+                          className="h-full px-2.5 py-0.5 text-xs font-bold text-emerald-900 bg-emerald-100/90 hover:bg-emerald-200/90 border border-emerald-300/80 rounded-lg cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                        >
+                          <option value={2}>كرتونة</option>
+                          <option value={1}>رزمة</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <span className="absolute left-3 text-xs font-bold text-slate-400 pointer-events-none">
+                        {subUnit}
+                      </span>
+                    )}
                   </div>
                   {errors.initialStock ? (
                     <p className="text-xs text-rose-500 font-bold mt-1">{errors.initialStock}</p>
@@ -768,7 +755,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
 
             {/* حد تنبيه النواقص المخصص لهذا الصنف */}
             <div className="p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex items-center justify-between">
                 <div>
                   <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                     <AlertTriangle className="w-4 h-4 text-amber-600" />
@@ -780,40 +767,9 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                       : `تحديد الرصيد الحرج بالكشكول أو الكراس (بال${subUnit})`}
                   </p>
                 </div>
-
-                {isBoxUnit ? (
-                  <div className="flex items-center gap-1 bg-amber-100/80 p-0.5 rounded-lg border border-amber-200">
-                    <button
-                      type="button"
-                      onClick={() => setLowStockThresholdUnit(2)}
-                      className={`px-2.5 py-1 text-2xs font-extrabold rounded-md transition-all cursor-pointer ${
-                        lowStockThresholdUnit === 2
-                          ? "bg-amber-600 text-white shadow-2xs"
-                          : "text-amber-800 hover:text-amber-950"
-                      }`}
-                    >
-                      📦 بالكرتونة
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLowStockThresholdUnit(1)}
-                      className={`px-2.5 py-1 text-2xs font-extrabold rounded-md transition-all cursor-pointer ${
-                        lowStockThresholdUnit === 1
-                          ? "bg-blue-600 text-white shadow-2xs"
-                          : "text-amber-800 hover:text-amber-950"
-                      }`}
-                    >
-                      📄 بالرزمة
-                    </button>
-                  </div>
-                ) : (
-                  <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-2xs font-bold rounded-md border border-blue-200">
-                    بال{subUnit}
-                  </span>
-                )}
               </div>
 
-              <div className="relative">
+              <div className="relative flex items-center">
                 <input
                   type="number"
                   min="0"
@@ -825,17 +781,30 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                   placeholder={
                     isBoxUnit
                       ? lowStockThresholdUnit === 2
-                        ? "مثال: 50 كرتونة"
-                        : "مثال: 250 رزمة"
-                      : `مثال: 1000 ${subUnit}`
+                        ? "مثال: 50"
+                        : "مثال: 250"
+                      : `مثال: 1000`
                   }
-                  className={`w-full px-3.5 py-2.5 pl-20 text-xs sm:text-sm font-bold bg-white border rounded-xl focus:outline-none focus:border-amber-600 transition-colors ${
+                  className={`w-full h-10 px-3.5 ${isBoxUnit ? "pl-28" : "pl-20"} text-xs sm:text-sm font-bold bg-white border rounded-xl focus:outline-none focus:border-amber-600 transition-colors ${
                     errors.lowStockThreshold ? "border-rose-400 bg-rose-50/30" : "border-slate-200"
                   }`}
                 />
-                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-500 pointer-events-none">
-                  {isBoxUnit ? (lowStockThresholdUnit === 2 ? "كرتونة" : "رزمة") : subUnit}
-                </span>
+                {isBoxUnit ? (
+                  <div className="absolute left-1.5 inset-y-1.5 flex items-center">
+                    <select
+                      value={lowStockThresholdUnit}
+                      onChange={(e) => setLowStockThresholdUnit(Number(e.target.value))}
+                      className="h-full px-2.5 py-0.5 text-xs font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200/90 border border-amber-300/80 rounded-lg cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors"
+                    >
+                      <option value={2}>كرتونة</option>
+                      <option value={1}>رزمة</option>
+                    </select>
+                  </div>
+                ) : (
+                  <span className="absolute left-3 text-xs font-bold text-slate-500 pointer-events-none">
+                    {subUnit}
+                  </span>
+                )}
               </div>
 
               {/* نص توضيحي وحسابي للحد */}
