@@ -157,8 +157,9 @@ function ProfileModalContent({ onClose }) {
 
       {/* Tab 1: الملف الشخصي */}
       {activeTab === "profile" && (
-        <form onSubmit={handleSaveProfile} className="p-4 sm:p-6 space-y-4 flex-1 overflow-y-auto" noValidate>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form onSubmit={handleSaveProfile} className="flex flex-col flex-1 overflow-hidden min-h-0" noValidate>
+          <div className="p-4 sm:p-6 space-y-4 flex-1 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 الاسم الأول <span className="text-rose-500">*</span>
@@ -291,32 +292,34 @@ function ProfileModalContent({ onClose }) {
               )}
             </div>
           </div>
+        </div>
 
-          {/* Footer Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-3 pb-2 border-t border-slate-100 shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 shadow-xs">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <Check className="w-4 h-4 text-emerald-400" />
-              {loading ? "جاري الحفظ..." : "حفظ التعديلات"}
-            </button>
-          </div>
-        </form>
+        {/* Footer Buttons (Fixed outside scrollable body) */}
+        <div className="px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0 bg-slate-50/90 shadow-2xs">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+          >
+            إلغاء
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            <Check className="w-4 h-4 text-emerald-400" />
+            {loading ? "جاري الحفظ..." : "حفظ التعديلات"}
+          </button>
+        </div>
+      </form>
       )}
 
       {/* Tab 2: تغيير كلمة المرور */}
       {activeTab === "password" && (
-        <form onSubmit={handleChangePassword} className="p-4 sm:p-6 space-y-4 flex-1 overflow-y-auto" noValidate>
-          <div>
+        <form onSubmit={handleChangePassword} className="flex flex-col flex-1 overflow-hidden min-h-0" noValidate>
+          <div className="p-4 sm:p-6 space-y-4 flex-1 overflow-y-auto">
+            <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               كلمة المرور الحالية <span className="text-rose-500">*</span>
             </label>
@@ -406,26 +409,27 @@ function ProfileModalContent({ onClose }) {
               إظهار كلمات المرور المدخلة
             </label>
           </div>
+        </div>
 
-          {/* Footer Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-3 pb-2 border-t border-slate-100 shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 shadow-xs">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <Check className="w-4 h-4 text-emerald-400" />
-              {loading ? "جاري التغيير..." : "تغيير كلمة المرور"}
-            </button>
-          </div>
-        </form>
+        {/* Footer Buttons (Fixed outside scrollable body) */}
+        <div className="px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0 bg-slate-50/90 shadow-2xs">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+          >
+            إلغاء
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            <Check className="w-4 h-4 text-emerald-400" />
+            {loading ? "جاري التغيير..." : "تغيير كلمة المرور"}
+          </button>
+        </div>
+      </form>
       )}
     </div>
   );
