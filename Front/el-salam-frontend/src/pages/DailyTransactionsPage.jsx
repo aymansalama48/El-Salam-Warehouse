@@ -52,15 +52,15 @@ export default function DailyTransactionsPage() {
   // جلب خيارات الفئات والأصناف للفلترة
   useEffect(() => {
     let ignore = false;
-    Promise.all([
-      getCategoriesLookup().catch(() => []),
-      getProducts().catch(() => []),
-    ]).then(([cats, prods]) => {
-      if (!ignore) {
-        setCategories(Array.isArray(cats) ? cats : []);
-        setProducts(Array.isArray(prods) ? prods : []);
-      }
-    });
+      Promise.all([
+        getCategoriesLookup().catch(() => []),
+        getProducts({ pageSize: "all" }).catch(() => []),
+      ]).then(([cats, prods]) => {
+        if (!ignore) {
+          setCategories(Array.isArray(cats) ? cats : []);
+          setProducts(Array.isArray(prods) ? prods : (prods?.items || []));
+        }
+      });
 
     return () => {
       ignore = true;

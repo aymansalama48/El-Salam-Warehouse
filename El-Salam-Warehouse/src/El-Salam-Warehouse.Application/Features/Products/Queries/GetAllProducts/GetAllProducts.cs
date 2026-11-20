@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using El_Salam_Warehouse.Application.Common.Abstractions.Identity.UserManagement;
 using El_Salam_Warehouse.Application.Common.Abstractions.Messaging;
 using El_Salam_Warehouse.Application.Common.Abstractions.Persistence.Data;
+using El_Salam_Warehouse.Application.Common.Pagination;
 using El_Salam_Warehouse.Application.Features.Products.Shared;
 using El_Salam_Warehouse.Domain.Common.Results;
 using El_Salam_Warehouse.Domain.Entities.Products;
@@ -14,12 +15,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace El_Salam_Warehouse.Application.Features.Products.Queries.GetAllProducts;
 
-// 1. Query (مع دعم البحث والتصفية بالفئة)
+// 1. Query (مع دعم البحث والتصفية بالفئة والصفحات)
 [El_Salam_Warehouse.Application.Common.Abstractions.Identity.Authorization.Permission(El_Salam_Warehouse.Domain.Constants.Permissions.Products.View)]
-public record GetAllProductsQuery(string? SearchTerm, Guid? CategoryId) : IQuery<List<ProductDto>>;
+public record GetAllProductsQuery(
+    string? SearchTerm = null, 
+    Guid? CategoryId = null,
+    int Page = 1,
+    int PageSize = 20) : IQuery<PagedResult<ProductDto>>;
 
 // 2. Handler
-internal sealed class GetAllProductsQueryHandler : IQueryHandler<GetAllProductsQuery, List<ProductDto>>
+internal sealed class GetAllProductsQueryHandler : IQueryHandler<GetAllProductsQuery, PagedResult<ProductDto>>
 {
     private readonly IReadDbContext _readContext;
     private readonly IUserManagementService _userManagementService;
@@ -30,16 +35,20 @@ internal sealed class GetAllProductsQueryHandler : IQueryHandler<GetAllProductsQ
         _userManagementService = userManagementService;
     }
 
-    public async Task<Result<List<ProductDto>>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<ProductDto>>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
     {
+        var page = Math.Max(request.Page, 1);
+        var pageSize = Math.Clamp(request.PageSize, 1, 1000);
+
         // جلب المنتجات مع تضمين الفئة لعرض اسمها
         var query = _readContext.Products.Include(p => p.Category).AsQueryable();
 
         // فلترة بالبحث النصي
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            var searchTerm = request.SearchTerm.ToLower();
-            query = query.Where(p => p.Name.ToLower().Contains(searchTerm));
+            var searchTerm = request.SearchTerm.Trim().ToLower();
+            query = query.Where(p => p.Name.ToLower().Contains(searchTerm) ||
+                                     p.StorageLocation.ToLower().Contains(searchTerm));
         }
 
         // فلترة بتحديد الفئة (Category)
@@ -48,9 +57,13 @@ internal sealed class GetAllProductsQueryHandler : IQueryHandler<GetAllProductsQ
             query = query.Where(p => p.CategoryId == request.CategoryId.Value);
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
+
         var rawProducts = await query
             .OrderBy(p => p.DisplayOrder)
             .ThenBy(p => p.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(p => new
             {
                 p.Id,
@@ -140,6 +153,7 @@ internal sealed class GetAllProductsQueryHandler : IQueryHandler<GetAllProductsQ
             p.DisplayOrder
         )).ToList();
 
-        return Result<List<ProductDto>>.Success(products);
+        var pagedResult = PagedResult<ProductDto>.Create(products, page, pageSize, totalCount);
+        return Result<PagedResult<ProductDto>>.Success(pagedResult);
     }
 }

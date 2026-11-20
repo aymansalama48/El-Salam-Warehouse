@@ -33,6 +33,8 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [showFloatingAdd, setShowFloatingAdd] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -95,31 +97,39 @@ export default function ProductsPage() {
     };
   }, []);
 
-  // جلب المنتجات والملخص من الخادم بناءً على الفلاتر
+  // جلب المنتجات والملخص من الخادم بناءً على الفلاتر والصفحات
   const refetchProducts = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     setApiError(null);
     try {
-      const [data, sum] = await Promise.all([
+      const [res, sum] = await Promise.all([
         getProducts({
           search: searchTerm,
           categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
+          page,
+          pageSize,
         }),
         getProductsSummary().catch((err) => {
           console.error("فشل في تحديث ملخص المنتجات:", err);
           return null;
         }),
       ]);
-      setProducts(data);
+      setProducts(res.items);
+      setTotalCount(res.totalCount);
+      setTotalPages(res.totalPages);
       if (sum) setSummary(sum);
     } catch (err) {
       console.error("فشل في تحميل المنتجات من الخادم:", err);
       setApiError(err.message || "تعذر الاتصال بخادم الـ Backend");
-      if (!isSilent) setProducts([]);
+      if (!isSilent) {
+        setProducts([]);
+        setTotalCount(0);
+        setTotalPages(1);
+      }
     } finally {
       if (!isSilent) setLoading(false);
     }
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, page, pageSize]);
 
   useEffect(() => {
     let ignore = false;
@@ -127,15 +137,19 @@ export default function ProductsPage() {
       getProducts({
         search: searchTerm,
         categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
+        page,
+        pageSize,
       }),
       getProductsSummary().catch((err) => {
         console.error("فشل في تحميل ملخص المنتجات:", err);
         return null;
       }),
     ])
-      .then(([data, sum]) => {
+      .then(([res, sum]) => {
         if (!ignore) {
-          setProducts(data);
+          setProducts(res.items);
+          setTotalCount(res.totalCount);
+          setTotalPages(res.totalPages);
           if (sum) setSummary(sum);
           setLoading(false);
         }
@@ -145,6 +159,8 @@ export default function ProductsPage() {
           console.error("فشل في تحميل المنتجات من الخادم:", err);
           setApiError(err.message || "تعذر الاتصال بخادم الـ Backend");
           setProducts([]);
+          setTotalCount(0);
+          setTotalPages(1);
           setLoading(false);
         }
       });
@@ -152,7 +168,7 @@ export default function ProductsPage() {
     return () => {
       ignore = true;
     };
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, page, pageSize]);
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
@@ -247,42 +263,6 @@ export default function ProductsPage() {
   useEffect(() => {
     setPage(1);
   }, [searchTerm, selectedCategory]);
-
-  // فلترة إضافية في الواجهة لضمان سرعة الاستجابة اللحظية
-  const filteredProducts = useMemo(() => {
-    return products.filter((item) => {
-      const term = searchTerm.toLowerCase();
-      const matchSearch =
-        item.name.toLowerCase().includes(term) ||
-        (item.baseUnit && item.baseUnit.toLowerCase().includes(term)) ||
-        (item.categoryName && item.categoryName.toLowerCase().includes(term)) ||
-        (item.storageLocation && item.storageLocation.toLowerCase().includes(term));
-
-      const matchCategory =
-        selectedCategory === "all" ||
-        item.categoryId === selectedCategory ||
-        item.categoryName === selectedCategory;
-
-      return matchSearch && matchCategory;
-    });
-  }, [products, searchTerm, selectedCategory]);
-
-  const totalCount = filteredProducts.length;
-  const totalPages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(totalCount / pageSize));
-
-  // ضمان عدم بقاء الصفحة خارج النطاق بعد الحذف أو الفلترة
-  useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
-
-  // الأصناف المعروضة في الصفحة الحالية
-  const displayedProducts = useMemo(() => {
-    if (pageSize === "all") return filteredProducts;
-    const start = (page - 1) * pageSize;
-    return filteredProducts.slice(start, start + pageSize);
-  }, [filteredProducts, page, pageSize]);
 
   const getProductFields = (prod) => {
     if (!prod) return [];
@@ -414,13 +394,13 @@ export default function ProductsPage() {
       />
 
       <ProductsTable
-        products={displayedProducts}
+        products={products}
         loading={loading}
         onView={handleViewProduct}
         onEdit={handleOpenEdit}
         onDelete={handleDeleteProduct}
         onReorder={handleReorderProducts}
-        canReorder={!searchTerm.trim() && selectedCategory === "all"}
+        canReorder={!searchTerm.trim() && selectedCategory === "all" && (pageSize === "all" || totalCount <= products.length)}
         page={page}
         totalPages={totalPages}
         totalCount={totalCount}

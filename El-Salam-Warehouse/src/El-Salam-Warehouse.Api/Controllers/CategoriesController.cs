@@ -47,9 +47,9 @@ public class CategoriesController : BaseApiController
     // جلب الأصناف والمنتجات التابعة لفئة معينة
     [HttpGet("{id:guid}/products")]
     [Permission(Permissions.Categories.View)]
-    public async Task<IResult> GetCategoryProducts(Guid id)
+    public async Task<IResult> GetCategoryProducts(Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 100)
     {
-        var query = new GetAllProductsQuery(null, id);
+        var query = new GetAllProductsQuery(null, id, page, pageSize);
         var result = await Sender.Send(query);
         return HandleResult(result);
     }

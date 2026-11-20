@@ -29,12 +29,16 @@ namespace El_Salam_Warehouse.Api.Controllers;
 [Authorize]
 public class ProductsController : BaseApiController
 {
-    // 1. جلب كل المنتجات (مع دعم البحث والفلترة بالفئة)
+    // 1. جلب كل المنتجات (مع دعم البحث والفلترة بالفئة والصفحات)
     [HttpGet]
     [Permission(Permissions.Products.View)]
-    public async Task<IResult> GetAll([FromQuery] string? search, [FromQuery] Guid? categoryId)
+    public async Task<IResult> GetAll(
+        [FromQuery] string? search, 
+        [FromQuery] Guid? categoryId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var query = new GetAllProductsQuery(search, categoryId);
+        var query = new GetAllProductsQuery(search, categoryId, page, pageSize);
         var result = await Sender.Send(query);
         return HandleResult(result);
     }

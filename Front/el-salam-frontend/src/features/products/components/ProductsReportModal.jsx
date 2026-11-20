@@ -59,10 +59,11 @@ export function ProductsReportModal({
     if (!isOpen || propProducts.length > 0) return;
 
     let ignore = false;
-    getProducts()
+    getProducts({ pageSize: "all" })
       .then((data) => {
-        if (!ignore && Array.isArray(data)) {
-          setFetchedProducts(data);
+        if (!ignore) {
+          const list = Array.isArray(data) ? data : (data?.items || []);
+          setFetchedProducts(list);
         }
       })
       .catch((err) => {

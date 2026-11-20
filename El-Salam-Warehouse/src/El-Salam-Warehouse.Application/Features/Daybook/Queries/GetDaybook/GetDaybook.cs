@@ -88,7 +88,7 @@ internal sealed class GetDaybookQueryHandler : IQueryHandler<GetDaybookQuery, Da
     public async Task<Result<DaybookResponse>> Handle(GetDaybookQuery request, CancellationToken cancellationToken)
     {
         var page = Math.Max(request.Page, 1);
-        var pageSize = Math.Clamp(request.PageSize, 1, 200);
+        var pageSize = Math.Clamp(request.PageSize, 1, 1000);
 
         // الافتراضي: النهاردة بس (لو من بس: لحد النهاردة | لو لحد بس: نفس اليوم)
         // استخدام _dateTime بدلاً من CairoTime

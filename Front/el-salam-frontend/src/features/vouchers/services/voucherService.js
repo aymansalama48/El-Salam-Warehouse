@@ -27,15 +27,20 @@ export const getStockVouchers = async (params = {}) => {
   if (params.status != null && params.status !== "" && params.status !== "all") query.status = params.status;
   if (params.search && params.search.trim()) query.search = params.search.trim();
   if (params.page) query.page = params.page;
-  if (params.pageSize) query.pageSize = params.pageSize;
+  if (params.pageSize != null && params.pageSize !== "all") query.pageSize = params.pageSize;
+  if (params.pageSize === "all") query.pageSize = 1000;
 
   const data = await apiClient.get(ENDPOINTS.STOCK_VOUCHERS.GET_ALL, { params: query });
+  const pagination = data?.pagination || {};
   return {
     items: Array.isArray(data?.items) ? data.items : [],
-    page: Number(data?.page ?? 1),
-    pageSize: Number(data?.pageSize ?? 20),
-    totalCount: Number(data?.totalCount ?? 0),
-    totalPages: Number(data?.totalPages ?? 1),
+    page: Number(pagination.currentPage ?? data?.page ?? 1),
+    pageSize: Number(pagination.pageSize ?? data?.pageSize ?? 20),
+    totalCount: Number(pagination.totalCount ?? data?.totalCount ?? 0),
+    totalPages: Number(pagination.totalPages ?? data?.totalPages ?? 1),
+    hasPreviousPage: Boolean(pagination.hasPreviousPage),
+    hasNextPage: Boolean(pagination.hasNextPage),
+    pagination,
   };
 };
 

@@ -29,9 +29,11 @@ export const getDaybook = async (params = {}) => {
   if (params.status != null && params.status !== "" && params.status !== "all") query.status = params.status;
   if (params.search && params.search.trim()) query.search = params.search.trim();
   if (params.page) query.page = params.page;
-  if (params.pageSize) query.pageSize = params.pageSize;
+  if (params.pageSize != null && params.pageSize !== "all") query.pageSize = params.pageSize;
+  if (params.pageSize === "all") query.pageSize = 1000;
 
   const data = await apiClient.get(ENDPOINTS.DAYBOOK.GET_ALL, { params: query });
+  const pagination = data?.entries?.pagination || {};
 
   return {
     totals: {
@@ -44,10 +46,13 @@ export const getDaybook = async (params = {}) => {
     },
     entries: {
       items: Array.isArray(data?.entries?.items) ? data.entries.items : [],
-      page: Number(data?.entries?.page ?? 1),
-      pageSize: Number(data?.entries?.pageSize ?? 50),
-      totalCount: Number(data?.entries?.totalCount ?? 0),
-      totalPages: Number(data?.entries?.totalPages ?? 1),
+      page: Number(pagination.currentPage ?? data?.entries?.page ?? 1),
+      pageSize: Number(pagination.pageSize ?? data?.entries?.pageSize ?? 50),
+      totalCount: Number(pagination.totalCount ?? data?.entries?.totalCount ?? 0),
+      totalPages: Number(pagination.totalPages ?? data?.entries?.totalPages ?? 1),
+      hasPreviousPage: Boolean(pagination.hasPreviousPage),
+      hasNextPage: Boolean(pagination.hasNextPage),
+      pagination,
     },
   };
 };

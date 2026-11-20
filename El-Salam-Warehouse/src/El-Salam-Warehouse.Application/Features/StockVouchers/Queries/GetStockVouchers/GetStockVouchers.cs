@@ -39,7 +39,7 @@ internal sealed class GetStockVouchersQueryHandler
         GetStockVouchersQuery request, CancellationToken cancellationToken)
     {
         var page = Math.Max(request.Page, 1);
-        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var pageSize = Math.Clamp(request.PageSize, 1, 1000);
 
         var query = _readContext.StockVouchers.AsQueryable();
 

@@ -5,8 +5,8 @@ namespace El_Salam_Warehouse.Application.Common.Pagination;
 /// </summary>
 public class PaginationParameters
 {
-    private const int DefaultPageSize = 10;
-    private const int MaxPageSize = 100;
+    public const int DefaultPageSize = 20;
+    public const int MaxPageSize = 1000;
 
     private int _pageNumber = 1;
     private int _pageSize = DefaultPageSize;
@@ -15,13 +15,28 @@ public class PaginationParameters
     {
     }
 
+    public PaginationParameters(int pageNumber, int pageSize)
+    {
+        PageNumber = pageNumber;
+        PageSize = pageSize;
+    }
+
     /// <summary>
     /// رقم الصفحة الحالية.
     /// </summary>
     public int PageNumber
     {
         get => _pageNumber;
-        init => _pageNumber = value < 1 ? 1 : value;
+        set => _pageNumber = value < 1 ? 1 : value;
+    }
+
+    /// <summary>
+    /// اسم بديل لرقم الصفحة لدعم الـ query parameter باسم page.
+    /// </summary>
+    public int Page
+    {
+        get => _pageNumber;
+        set => _pageNumber = value < 1 ? 1 : value;
     }
 
     /// <summary>
@@ -30,7 +45,7 @@ public class PaginationParameters
     public int PageSize
     {
         get => _pageSize;
-        init
+        set
         {
             if (value < 1)
                 _pageSize = DefaultPageSize;

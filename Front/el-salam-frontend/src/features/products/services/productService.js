@@ -144,10 +144,10 @@ export function normalizeProductLookup(dto) {
 }
 
 /**
- * 1. جلب كل المنتجات (مع دعم البحث والفلترة بالفئة)
- * GET /api/products?search={search}&categoryId={categoryId}
+ * 1. جلب كل المنتجات (مع دعم البحث والفلترة بالفئة والصفحات من الباك اند)
+ * GET /api/products?search={search}&categoryId={categoryId}&page={page}&pageSize={pageSize}
  */
-export const getProducts = async ({ search = "", categoryId = null } = {}) => {
+export const getProducts = async ({ search = "", categoryId = null, page = 1, pageSize = 20 } = {}) => {
   const params = {};
   if (search && search.trim()) {
     params.search = search.trim();
@@ -155,12 +155,40 @@ export const getProducts = async ({ search = "", categoryId = null } = {}) => {
   if (categoryId && categoryId !== "all") {
     params.categoryId = categoryId;
   }
+  if (page != null) params.page = page;
+  if (pageSize != null && pageSize !== "all") params.pageSize = pageSize;
+  if (pageSize === "all") params.pageSize = 1000;
 
   const data = await apiClient.get(ENDPOINTS.PRODUCTS.GET_ALL, { params });
-  if (Array.isArray(data)) {
-    return data.map(normalizeProduct);
+
+  // إذا كانت الاستجابة مقسمة على صفحات PagedResult من الـ Backend
+  if (data && Array.isArray(data.items)) {
+    const pagination = data.pagination || {};
+    return {
+      items: data.items.map(normalizeProduct),
+      page: Number(pagination.currentPage ?? data.page ?? params.page ?? 1),
+      pageSize: Number(pagination.pageSize ?? data.pageSize ?? params.pageSize ?? 20),
+      totalCount: Number(pagination.totalCount ?? data.totalCount ?? data.items.length),
+      totalPages: Number(pagination.totalPages ?? data.totalPages ?? 1),
+      hasPreviousPage: Boolean(pagination.hasPreviousPage),
+      hasNextPage: Boolean(pagination.hasNextPage),
+      pagination,
+    };
   }
-  return [];
+
+  // إذا كانت الاستجابة مصفوفة مباشرة (توافق عكسي)
+  if (Array.isArray(data)) {
+    return {
+      items: data.map(normalizeProduct),
+      page: 1,
+      pageSize: data.length,
+      totalCount: data.length,
+      totalPages: 1,
+      pagination: { currentPage: 1, pageSize: data.length, totalCount: data.length, totalPages: 1 },
+    };
+  }
+
+  return { items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 1 };
 };
 
 /**
