@@ -151,10 +151,9 @@ export function AdvancedProductPickerModal({
                     : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                 }`}
               >
-                جميع الفئات ({products.length})
+                جميع الفئات
               </button>
               {categories.map((cat) => {
-                const count = products.filter((p) => p.categoryName === cat).length;
                 const isSelected = selectedCategory === cat;
                 return (
                   <button
@@ -167,7 +166,7 @@ export function AdvancedProductPickerModal({
                         : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                     }`}
                   >
-                    {cat} ({count})
+                    {cat}
                   </button>
                 );
               })}
