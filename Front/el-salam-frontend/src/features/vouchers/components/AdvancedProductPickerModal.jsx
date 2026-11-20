@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Search, Check, Package, X, Layers, AlertCircle, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { getProductsLookup } from "../../products/services/productService";
 
@@ -78,8 +79,8 @@ export function AdvancedProductPickerModal({
 
   const selectedCount = selectedProductIds.length;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+  const modalContent = (
+    <div className="fixed inset-0 w-screen h-screen z-[60] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 text-right"
         dir="rtl"
@@ -313,6 +314,8 @@ export function AdvancedProductPickerModal({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(modalContent, document.body) : modalContent;
 }
 
 export default AdvancedProductPickerModal;

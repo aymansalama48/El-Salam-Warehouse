@@ -480,8 +480,8 @@ export default function ProductsPage() {
         onSaved={refetchProducts}
       />
 
-      {/* Floating Add Product Button when scrolled down */}
-      {showFloatingAdd && (
+      {/* Floating Add Product Button when scrolled down and no modal is open */}
+      {showFloatingAdd && !isModalOpen && !isReportModalOpen && !isAlertSettingsOpen && !viewingProduct && (
         <button
           type="button"
           onClick={handleOpenAdd}

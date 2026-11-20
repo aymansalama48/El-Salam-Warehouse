@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Sliders, Layers, Box, AlertCircle, Loader2, Check, Search, BookOpen, AlertTriangle } from "lucide-react";
 import { getStockAlertThresholds, updateStockAlertThresholds } from "../services/productService";
 import { showSuccess, showError } from "../../../utils/alertUtils";
@@ -105,8 +106,8 @@ export function StockAlertSettingsModal({ isOpen, onClose, onSaved }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+  const modalContent = (
+    <div className="fixed inset-0 w-screen h-screen z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
       <div
         className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
         role="dialog"
@@ -367,4 +368,6 @@ export function StockAlertSettingsModal({ isOpen, onClose, onSaved }) {
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(modalContent, document.body) : modalContent;
 }
