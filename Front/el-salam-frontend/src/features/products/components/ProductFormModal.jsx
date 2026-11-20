@@ -521,15 +521,11 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
               {activeTab === "paper" ? (
                 /* في ورق التصوير: الفئة محددة تلقائياً كـ ورق تصوير */
                 <div>
-                  <div className="flex items-center justify-between mb-1.5 h-5">
+                  <div className="flex items-center mb-1.5 h-5">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                       <Tag className="w-3.5 h-3.5 text-emerald-600" />
                       فئة المنتج <span className="text-rose-500">*</span>
                     </label>
-                    <span className="text-2xs font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1 shrink-0">
-                      <Check className="w-3 h-3" />
-                      تلقائي
-                    </span>
                   </div>
                   {displayedCategories.length > 1 ? (
                     <select
@@ -597,22 +593,19 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
               {activeTab === "paper" ? (
                 /* في ورق التصوير: نوع الصنف مثبت بالكرتونة والرزمة بدون الحاجة للاختيار وبنفس حجم الفئة تماماً */
                 <div>
-                  <div className="flex items-center justify-between mb-1.5 h-5">
+                  <div className="flex items-center mb-1.5 h-5">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                       <Layers className="w-3.5 h-3.5 text-emerald-600" />
                       نوع المنتج <span className="text-rose-500">*</span>
                     </label>
-                    <span className="text-2xs font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200 shrink-0">
-                      ثابت
-                    </span>
                   </div>
                   <div className="w-full h-10 px-3.5 text-xs sm:text-sm bg-emerald-50/70 border border-emerald-200 rounded-xl text-emerald-900 font-extrabold flex items-center justify-between whitespace-nowrap">
                     <span className="flex items-center gap-2 shrink-0">
                       <Box className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>ورق تصوير</span>
                     </span>
-                    <span className="text-2xs font-bold text-emerald-700 bg-white/90 px-2 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs shrink-0">
-                      كرتونة (5 رزم)
+                    <span className="text-2xs font-bold text-emerald-700 bg-white/90 px-2.5 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs shrink-0">
+                      كرتونة
                     </span>
                   </div>
                 </div>
