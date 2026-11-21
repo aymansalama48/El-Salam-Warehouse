@@ -57,6 +57,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
   const [lowStockThresholdUnit, setLowStockThresholdUnit] = useState(
     initialData?.lowStockThresholdUnit ?? (initialData?.unitType === 3 ? 2 : 1)
   );
+  const [isThresholdModalOpen, setIsThresholdModalOpen] = useState(false);
 
   const [storageLocation, setStorageLocation] = useState(
     initialData?.storageLocation || ""
@@ -755,76 +756,35 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
               </>
             )}
 
-            {/* حد تنبيه النواقص المخصص لهذا الصنف */}
-            <div className="p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between">
+            {/* زر فتح نافذة حد النفاذ المنبثقة الصغير */}
+            <div className="flex items-center justify-between p-3.5 bg-amber-50/60 hover:bg-amber-50/90 border border-amber-200/90 rounded-2xl transition-all">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-600" />
-                    <span>حد تنبيه النواقص والحد الحرج للصنف</span>
-                  </label>
+                  <div className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <span>حد تنبيه النواقص (الرصيد الحرج)</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
+                      {parsedThreshold > 0
+                        ? `${parsedThreshold.toLocaleString()} ${isBoxUnit ? (lowStockThresholdUnit === 2 ? "كرتونة" : "رزمة") : subUnit}`
+                        : "غير محدد (0)"}
+                    </span>
+                  </div>
                   <p className="text-2xs text-slate-500 mt-0.5">
-                    {isBoxUnit
-                      ? "تحديد الرصيد الحرج لورق التصوير بالكرتونة أو بالرزمة"
-                      : "تحديد كمية الحد الأدنى لتنبيه النواقص بالمستودع"}
+                    اضغط لتعديل وتحديد الرصيد الحرج في نافذة منبثقة مخصصة
                   </p>
                 </div>
               </div>
 
-              <div className="relative flex items-center">
-                <input
-                  type="number"
-                  min="0"
-                  value={lowStockThreshold}
-                  onChange={(e) => {
-                    setLowStockThreshold(e.target.value);
-                    if (errors.lowStockThreshold) setErrors((prev) => ({ ...prev, lowStockThreshold: null }));
-                  }}
-                  placeholder={
-                    isBoxUnit
-                      ? lowStockThresholdUnit === 2
-                        ? "مثال: 50"
-                        : "مثال: 250"
-                      : `مثال: 1000`
-                  }
-                  className={`w-full h-10 px-3.5 ${isBoxUnit ? "pl-28" : "pl-20"} text-xs sm:text-sm font-bold bg-white border rounded-xl focus:outline-none focus:border-amber-600 transition-colors ${
-                    errors.lowStockThreshold ? "border-rose-400 bg-rose-50/30" : "border-slate-200"
-                  }`}
-                />
-                {isBoxUnit ? (
-                  <div className="absolute left-1.5 inset-y-1.5 flex items-center">
-                    <UnitSelect
-                      value={lowStockThresholdUnit}
-                      onChange={(val) => setLowStockThresholdUnit(val)}
-                      theme="amber"
-                      options={[
-                        { value: 2, label: "كرتونة" },
-                        { value: 1, label: "رزمة" },
-                      ]}
-                    />
-                  </div>
-                ) : (
-                  <span className="absolute left-3 text-xs font-bold text-slate-500 pointer-events-none">
-                    {subUnit}
-                  </span>
-                )}
-              </div>
-
-              {/* نص توضيحي وحسابي للحد */}
-              <div className="flex items-center justify-between text-2xs text-amber-900 bg-white/90 p-2.5 rounded-xl border border-amber-200/60 font-semibold shadow-2xs">
-                <span>
-                  {isBoxUnit
-                    ? lowStockThresholdUnit === 2
-                      ? `إذا انخفض رصيد المخزن إلى ${parsedThreshold.toLocaleString()} كرتونة أو أقل، سيظهر الصنف كمنخفض المخزون.`
-                      : `إذا انخفض رصيد المخزن إلى ${parsedThreshold.toLocaleString()} رزمة أو أقل، سيظهر الصنف كمنخفض المخزون.`
-                    : `إذا انخفض رصيد الصنف إلى ${parsedThreshold.toLocaleString()} ${subUnit} أو أقل، سيظهر الصنف كمنخفض المخزون.`}
-                </span>
-                {isBoxUnit && lowStockThresholdUnit === 2 && parsedThreshold > 0 && parsedUnitsPer > 0 && (
-                  <span className="font-extrabold text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-md border border-amber-200">
-                    = {(parsedThreshold * parsedUnitsPer).toLocaleString()} رزمة
-                  </span>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsThresholdModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-amber-900 bg-white hover:bg-amber-100/70 border border-amber-300 rounded-xl shadow-2xs transition-colors shrink-0 cursor-pointer"
+              >
+                <Edit className="w-3.5 h-3.5 text-amber-600" />
+                <span>تعديل الحد</span>
+              </button>
             </div>
 
             {/* مكان التخزين بالمستودع */}
@@ -869,6 +829,111 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
             </button>
           </div>
         </form>
+
+        {/* نافذة منبثقة صغيرة لتعديل حد النفاذ والحد الحرج */}
+        {isThresholdModalOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-2xs animate-in fade-in duration-150">
+            <div
+              className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 p-5 space-y-4 animate-in zoom-in-95 duration-150 text-right"
+              dir="rtl"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      حد تنبيه النواقص والحد الحرج للصنف
+                    </h3>
+                    <p className="text-2xs text-slate-500 mt-0.5">
+                      {isBoxUnit
+                        ? "تحديد الرصيد الحرج لورق التصوير بالكرتونة أو بالرزمة"
+                        : "تحديد كمية الحد الأدنى لتنبيه النواقص بالمستودع"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsThresholdModalOpen(false)}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Input */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700">كمية الحد الحرج:</label>
+                <div className="relative flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    value={lowStockThreshold}
+                    onChange={(e) => {
+                      setLowStockThreshold(e.target.value);
+                      if (errors.lowStockThreshold) setErrors((prev) => ({ ...prev, lowStockThreshold: null }));
+                    }}
+                    placeholder={
+                      isBoxUnit
+                        ? lowStockThresholdUnit === 2
+                          ? "مثال: 50"
+                          : "مثال: 250"
+                        : "مثال: 1000"
+                    }
+                    autoFocus
+                    className="w-full h-11 px-3.5 pl-24 text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-600 focus:bg-white transition-colors"
+                  />
+                  {isBoxUnit ? (
+                    <div className="absolute left-1.5 inset-y-1.5 flex items-center">
+                      <UnitSelect
+                        value={lowStockThresholdUnit}
+                        onChange={(val) => setLowStockThresholdUnit(val)}
+                        theme="amber"
+                        options={[
+                          { value: 2, label: "كرتونة" },
+                          { value: 1, label: "رزمة" },
+                        ]}
+                      />
+                    </div>
+                  ) : (
+                    <span className="absolute left-3 text-xs font-bold text-slate-500 pointer-events-none">
+                      {subUnit}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Explanation Note */}
+              <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-2xs text-amber-900 leading-relaxed font-medium">
+                <span>
+                  {isBoxUnit
+                    ? lowStockThresholdUnit === 2
+                      ? `إذا انخفض رصيد المخزن إلى ${parsedThreshold.toLocaleString()} كرتونة أو أقل، سيظهر الصنف كمنخفض المخزون.`
+                      : `إذا انخفض رصيد المخزن إلى ${parsedThreshold.toLocaleString()} رزمة أو أقل، سيظهر الصنف كمنخفض المخزون.`
+                    : `إذا انخفض رصيد الصنف إلى ${parsedThreshold.toLocaleString()} ${subUnit} أو أقل، سيظهر الصنف كمنخفض المخزون.`}
+                </span>
+                {isBoxUnit && lowStockThresholdUnit === 2 && parsedThreshold > 0 && parsedUnitsPer > 0 && (
+                  <div className="mt-1 font-bold text-amber-800">
+                    أي ما يعادل {(parsedThreshold * parsedUnitsPer).toLocaleString()} رزمة إجمالاً.
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsThresholdModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  تأكيد وحفظ الحد
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
