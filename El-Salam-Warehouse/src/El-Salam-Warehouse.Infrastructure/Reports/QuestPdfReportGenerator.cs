@@ -97,7 +97,7 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
 
             // تجميع البنود بحسب الإذن بحيث يكتب رقم الإذن وبياناته مرة واحدة فقط
             var voucherGroups = day.Rows
-                .GroupBy(r => new { r.VoucherNumber, r.Type, r.Party, r.Receiver })
+                .GroupBy(r => new { r.VoucherNumber, r.Type, r.Party, r.ReceiverName })
                 .ToList();
 
             foreach (var vg in voucherGroups)
@@ -129,41 +129,43 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     _ => Colors.Grey.Lighten4
                 };
 
-                // شريط عنوان الإذن (يكتب مرة واحدة فقط لكل إذن)
-                col.Item().Background(typeBg).Border(1).BorderColor(Colors.Grey.Lighten3).Padding(5).Row(row =>
+                // شريط عنوان الإذن (يكتب مرة واحدة فقط فوق الجدول مثل التاريخ)
+                col.Item().PaddingTop(4).Background(typeBg).Border(0.8f).BorderColor(Colors.Grey.Lighten2).Padding(6).Row(row =>
                 {
                     row.RelativeItem().AlignRight().Text(text =>
                     {
-                        text.Span($"{typeTitle} رقم: ").Bold().FontColor(typeColor);
+                        text.Span("رقم الإذن: ").Bold().FontColor(Colors.Grey.Darken3);
                         text.Span($" {vg.Key.VoucherNumber} ").Bold().FontColor(Colors.Blue.Darken2);
-                        if (!string.IsNullOrWhiteSpace(vg.Key.Party) && vg.Key.Party != "-")
+                        text.Span("   |   نوع الحركة: ").FontColor(Colors.Grey.Darken2);
+                        text.Span(typeTitle).Bold().FontColor(typeColor);
+                        if (!string.IsNullOrWhiteSpace(vg.Key.ReceiverName) && vg.Key.ReceiverName != "-")
                         {
-                            text.Span("   •   الجهة / المصدر: ").FontColor(Colors.Grey.Darken3);
-                            text.Span(Clean(vg.Key.Party)).Bold();
-                        }
-                        if (!string.IsNullOrWhiteSpace(vg.Key.Receiver) && vg.Key.Receiver != "-")
-                        {
-                            text.Span("   •   المستلم: ").FontColor(Colors.Grey.Darken3);
-                            text.Span(Clean(vg.Key.Receiver));
+                            text.Span("   |   المستلم: ").FontColor(Colors.Grey.Darken2);
+                            text.Span(Clean(vg.Key.ReceiverName)).Bold();
                         }
                     });
                 });
 
                 // جدول أصناف هذا الإذن
+                // الأعمدة: م | الصنف | الكمية | النوع | الجهة / المصدر (آخر عمود)
                 col.Item().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
                     {
-                        c.ConstantColumn(26);    // م
+                        c.ConstantColumn(28);    // م
                         c.RelativeColumn(3f);    // اسم الصنف أو المنتج
-                        c.ConstantColumn(140);   // الكمية بالحركة
+                        c.ConstantColumn(120);   // الكمية
+                        c.ConstantColumn(70);    // النوع
+                        c.RelativeColumn(2f);    // الجهة / المصدر (آخر عمود)
                     });
 
                     table.Header(h =>
                     {
                         h.Cell().Element(HeaderCell).Text("م");
-                        h.Cell().Element(HeaderCell).Text("اسم الصنف أو المنتج");
-                        h.Cell().Element(HeaderCell).Text("الكمية بالحركة");
+                        h.Cell().Element(HeaderCell).Text("الصنف");
+                        h.Cell().Element(HeaderCell).Text("الكمية");
+                        h.Cell().Element(HeaderCell).Text("النوع");
+                        h.Cell().Element(HeaderCell).Text("الجهة / المصدر");
                     });
 
                     var itemIndex = 1;
@@ -171,9 +173,29 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                     {
                         string qtyDisplay = $"{Num(r.Quantity)} {r.UnitLabel}";
 
+                        var rowTypeTitle = r.Type switch
+                        {
+                            StockVoucherType.Inbound => "وارد",
+                            StockVoucherType.Outbound => "صرف",
+                            StockVoucherType.Return => "مرتجع",
+                            StockVoucherType.Shortage => "عجز",
+                            _ => "-"
+                        };
+
+                        var rowTypeColor = r.Type switch
+                        {
+                            StockVoucherType.Inbound => Colors.Green.Darken2,
+                            StockVoucherType.Outbound => Colors.Red.Darken2,
+                            StockVoucherType.Return => Colors.Orange.Darken2,
+                            StockVoucherType.Shortage => Colors.Purple.Darken2,
+                            _ => Colors.Grey.Darken2
+                        };
+
                         table.Cell().Element(BodyCell).Text(itemIndex++.ToString());
                         table.Cell().Element(TextCell).Text(Clean(r.ProductName));
                         table.Cell().Element(BodyCell).Text(Clean(qtyDisplay)).Bold();
+                        table.Cell().Element(BodyCell).Text(Clean(rowTypeTitle)).Bold().FontColor(rowTypeColor);
+                        table.Cell().Element(TextCell).Text(Clean(string.IsNullOrWhiteSpace(r.Party) ? "-" : r.Party));
                     }
                 });
             }
@@ -310,7 +332,7 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                             c.Item().Text(isPaper ? $"الرصيد الحالي بالكرتونة:" : "الرصيد الفعلي الحالي:").FontSize(8).FontColor(Colors.Grey.Darken2);
                             var stockText = isPaper
                                 ? ($"{Num(model.FullBaseUnits)} كرتونة" + (model.RemainingSubUnits > 0 ? $" و {model.RemainingSubUnits} رزمة" : ""))
-                                : $"{Num(model.TotalSubUnitStock)} {model.SubUnit}";
+                                : $"{Num(model.TotalSubUnits)} {model.SubUnit}";
                             c.Item().PaddingTop(2).Text(stockText).FontSize(11).Bold();
                         });
                     });
