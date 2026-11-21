@@ -191,9 +191,10 @@ public class ProductsController : BaseApiController
     public async Task<IResult> Lookup(
         [FromQuery] string? search,
         [FromQuery] bool? notebooksOnly,
-        [FromQuery] int limit = 50)
+        [FromQuery] Guid? categoryId,
+        [FromQuery] int limit = 100)
     {
-        var result = await Sender.Send(new GetProductsLookupQuery(search, notebooksOnly ?? false, limit));
+        var result = await Sender.Send(new GetProductsLookupQuery(search, notebooksOnly ?? false, categoryId, limit));
         return HandleResult(result);
     }
 

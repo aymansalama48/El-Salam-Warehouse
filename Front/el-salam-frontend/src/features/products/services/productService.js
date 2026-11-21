@@ -135,6 +135,7 @@ export function normalizeProductLookup(dto) {
   return {
     id: dto.id || dto.Id || "",
     name: dto.name || dto.Name || "",
+    categoryId: dto.categoryId || dto.CategoryId || "",
     categoryName: dto.categoryName || dto.CategoryName || "عام",
     baseUnit,
     subUnit,
@@ -213,13 +214,19 @@ export const getProducts = async ({ search = "", categoryId = null, page = 1, pa
  * 2. جلب قائمة خفيفة ومخصصة للأصناف (Lookup) لاستخدامها في نماذج الإذونات (وارد وصرف)
  * GET /api/products/lookup?search={search}&notebooksOnly={notebooksOnly}&limit={limit}
  */
-export const getProductsLookup = async ({ search = "", notebooksOnly = false } = {}) => {
+export const getProductsLookup = async ({ search = "", categoryId = null, notebooksOnly = false, limit = 500 } = {}) => {
   const params = {};
   if (notebooksOnly) {
     params.notebooksOnly = true;
   }
   if (search && search.trim()) {
     params.search = search.trim();
+  }
+  if (categoryId && categoryId !== "all") {
+    params.categoryId = categoryId;
+  }
+  if (limit) {
+    params.limit = limit;
   }
 
   const data = await apiClient.get(ENDPOINTS.PRODUCTS.LOOKUP, { params });

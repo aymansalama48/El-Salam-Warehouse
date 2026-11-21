@@ -20,6 +20,7 @@ public record ProductLookupDto(
     int AvailableInEntryUnit,        // الرصيد المتاح بوحدة الإذن (مثال: 50 كرتونة)
     ProductUnitType UnitType,        // نوع المنتج (1 كشكول / 2 كراس / 3 ورق تصوير)
     int TotalSubUnitStock,           // الرصيد الفعلي بأصغر وحدة (رزم أو قطع)
+    Guid CategoryId,                 // معرّف الفئة للفلترة
     int DisplayOrder = 0);           // ترتيب العرض اليدوي
 
 // 1. الـ Query
@@ -27,7 +28,8 @@ public record ProductLookupDto(
 public record GetProductsLookupQuery(
     string? Search,
     bool NotebooksOnly,              // true = الكشاكيل والكراريس بس (وارد صالة الإنتاج)
-    int Limit = 50) : IQuery<List<ProductLookupDto>>;
+    Guid? CategoryId = null,         // فلترة بفئة محددة
+    int Limit = 100) : IQuery<List<ProductLookupDto>>;
 
 // 2. الـ Handler
 internal sealed class GetProductsLookupQueryHandler : IQueryHandler<GetProductsLookupQuery, List<ProductLookupDto>>
@@ -44,7 +46,7 @@ internal sealed class GetProductsLookupQueryHandler : IQueryHandler<GetProductsL
     // جلب المنتجات
     public async Task<Result<List<ProductLookupDto>>> Handle(GetProductsLookupQuery request, CancellationToken cancellationToken)
     {
-        var limit = Math.Clamp(request.Limit, 1, 100);
+        var limit = Math.Clamp(request.Limit, 1, 1000);
 
         var query = _readContext.Products.AsQueryable();
 
@@ -52,12 +54,17 @@ internal sealed class GetProductsLookupQueryHandler : IQueryHandler<GetProductsL
         if (request.NotebooksOnly)
             query = query.Where(p => p.EntryUnit == StockEntryUnit.SubUnit);
 
+        // الفئة المحددة
+        if (request.CategoryId.HasValue && request.CategoryId.Value != Guid.Empty)
+            query = query.Where(p => p.CategoryId == request.CategoryId.Value);
+
         // بحث بالاسم أو اسم الفئة
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var s = request.Search.Trim();
             query = query.Where(p => p.Name.Contains(s) || p.Category.Name.Contains(s));
         }
+
         var products = await query
             .OrderBy(p => p.DisplayOrder)
             .ThenByDescending(p => p.CreatedAt)
@@ -76,6 +83,7 @@ internal sealed class GetProductsLookupQueryHandler : IQueryHandler<GetProductsL
                     : p.TotalSubUnitStock,
                 p.UnitType,
                 p.TotalSubUnitStock,
+                p.CategoryId,
                 p.DisplayOrder))
             .ToListAsync(cancellationToken);
 

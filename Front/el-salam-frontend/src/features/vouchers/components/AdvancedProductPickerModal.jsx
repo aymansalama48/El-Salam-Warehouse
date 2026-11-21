@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Search, Check, Package, X, Layers, AlertCircle, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { getProductsLookup } from "../../products/services/productService";
+import { getCategoriesLookup } from "../../categories/services/categoryService";
 
 /**
  * نافذة الإضافة المتقدمة للأصناف في أذونات المخزن
- * تتيح اختيار وإضافة عدة أصناف بضغطة واحدة مع ظهور علامة صح فورية
+ * متصلة بالكامل بالباك إند (Backend): البحث، الفلترة بالفئات، والترتيب اليدوي
  */
 export function AdvancedProductPickerModal({
   isOpen,
@@ -16,64 +17,79 @@ export function AdvancedProductPickerModal({
   isOutbound = false,
 }) {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
 
+  const debounceTimerRef = useRef(null);
+
+  // 1. تحميل الفئات من الباك إند عند فتح النافذة
   useEffect(() => {
     if (!isOpen) return;
     let ignore = false;
-    setLoading(true);
 
-    getProductsLookup({ notebooksOnly })
+    getCategoriesLookup()
       .then((data) => {
-        if (!ignore) {
-          const list = Array.isArray(data) ? [...data] : [];
-          list.sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
-          setProducts(list);
-          setLoading(false);
+        if (!ignore && Array.isArray(data)) {
+          setCategories(data);
         }
       })
       .catch((err) => {
-        if (!ignore) {
-          console.error("فشل في تحميل الأصناف للنافذة المتقدمة:", err);
-          setProducts([]);
-          setLoading(false);
-        }
+        console.error("فشل في تحميل الفئات من الباك إند:", err);
       });
 
     return () => {
       ignore = true;
     };
-  }, [isOpen, notebooksOnly]);
+  }, [isOpen]);
 
-  // استخراج قائمة الفئات الفريدة للفلترة
-  const categories = useMemo(() => {
-    const map = new Map();
-    products.forEach((p) => {
-      if (p.categoryName && !map.has(p.categoryName)) {
-        map.set(p.categoryName, p.categoryName);
+  // 2. تحميل الأصناف من الباك إند بناءً على البحث والفئة
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // تأخير البحث بالكتابة 250ms لتجنب الضغط، وتنفيذ فوري عند تغيير الفئة
+    const delay = search ? 250 : 0;
+
+    debounceTimerRef.current = setTimeout(() => {
+      let ignore = false;
+      setLoading(true);
+
+      getProductsLookup({
+        search: search.trim(),
+        categoryId: selectedCategoryId !== "all" ? selectedCategoryId : null,
+        notebooksOnly,
+        limit: 500,
+      })
+        .then((data) => {
+          if (!ignore) {
+            setProducts(Array.isArray(data) ? data : []);
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          if (!ignore) {
+            console.error("فشل في جلب الأصناف من الباك إند:", err);
+            setProducts([]);
+            setLoading(false);
+          }
+        });
+
+      return () => {
+        ignore = true;
+      };
+    }, delay);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
-    });
-    return Array.from(map.values());
-  }, [products]);
-
-  // تصفية الأصناف بالبحث والفئة
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const term = search.trim().toLowerCase();
-      const matchSearch =
-        !term ||
-        p.name?.toLowerCase().includes(term) ||
-        p.categoryName?.toLowerCase().includes(term) ||
-        p.baseUnit?.toLowerCase().includes(term);
-
-      const matchCategory =
-        selectedCategory === "all" || p.categoryName === selectedCategory;
-
-      return matchSearch && matchCategory;
-    });
-  }, [products, search, selectedCategory]);
+    };
+  }, [isOpen, search, selectedCategoryId, notebooksOnly]);
 
   if (!isOpen) return null;
 
@@ -124,7 +140,7 @@ export function AdvancedProductPickerModal({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث باسم الصنف أو الفئة أو الوحدة..."
+              placeholder="ابحث باسم الصنف أو الفئة أو الوحدة (مباشر من الباك إند)..."
               className="w-full pr-10 pl-9 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-all font-medium"
               autoFocus
             />
@@ -139,14 +155,14 @@ export function AdvancedProductPickerModal({
             )}
           </div>
 
-          {/* Category Chips */}
+          {/* Category Chips (مباشرة من الباك إند بدون أرقام) */}
           {categories.length > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-2xs sm:text-xs">
               <button
                 type="button"
-                onClick={() => setSelectedCategory("all")}
+                onClick={() => setSelectedCategoryId("all")}
                 className={`px-3 py-1 rounded-lg font-bold transition-all shrink-0 cursor-pointer ${
-                  selectedCategory === "all"
+                  selectedCategoryId === "all"
                     ? "bg-slate-900 text-white shadow-2xs"
                     : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                 }`}
@@ -154,19 +170,19 @@ export function AdvancedProductPickerModal({
                 جميع الفئات
               </button>
               {categories.map((cat) => {
-                const isSelected = selectedCategory === cat;
+                const isSelected = selectedCategoryId === cat.id;
                 return (
                   <button
-                    key={cat}
+                    key={cat.id}
                     type="button"
-                    onClick={() => setSelectedCategory(cat)}
+                    onClick={() => setSelectedCategoryId(cat.id)}
                     className={`px-3 py-1 rounded-lg font-bold transition-all shrink-0 cursor-pointer ${
                       isSelected
                         ? "bg-emerald-700 text-white shadow-2xs"
                         : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                     }`}
                   >
-                    {cat}
+                    {cat.name}
                   </button>
                 );
               })}
@@ -174,24 +190,24 @@ export function AdvancedProductPickerModal({
           )}
         </div>
 
-        {/* Products List / Grid */}
+        {/* Products List / Grid (بيانات الباك إند الفعلية) */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-4">
           {loading ? (
             <div className="py-16 text-center flex flex-col items-center justify-center gap-2 text-slate-500">
               <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-              <p className="text-xs font-bold">جاري تحميل دليل الأصناف بالترتيب المعتمد...</p>
+              <p className="text-xs font-bold">جاري تحميل الأصناف من قاعدة البيانات بالترتيب المعتمد...</p>
             </div>
-          ) : filteredProducts.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="py-16 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
               <AlertCircle className="w-8 h-8 text-slate-300" />
-              <p className="text-sm font-bold text-slate-700">لم يتم العثور على أي صنف مطابق</p>
+              <p className="text-sm font-bold text-slate-700">لم يتم العثور على أي صنف مطابق في قاعدة البيانات</p>
               <p className="text-xs text-slate-400">
                 جرب تغيير كلمة البحث أو اختيار تصنيف آخر من القائمة.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-              {filteredProducts.map((p) => {
+              {products.map((p) => {
                 const isSelected = selectedProductIds.includes(p.id);
                 const actualStock =
                   p.totalSubUnitStock !== undefined ? p.totalSubUnitStock : p.availableInEntryUnit;
@@ -318,4 +334,3 @@ export function AdvancedProductPickerModal({
 }
 
 export default AdvancedProductPickerModal;
-
