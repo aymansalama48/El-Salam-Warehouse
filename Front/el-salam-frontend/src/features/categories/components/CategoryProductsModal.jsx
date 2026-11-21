@@ -189,7 +189,9 @@ export function CategoryProductsModal({ isOpen, onClose, category }) {
                           <td className="py-3 px-3">
                             <div className="font-bold text-slate-900">{p.name}</div>
                             <div className="text-2xs text-slate-400 mt-0.5">
-                              {p.unitsPerBaseUnit} {p.subUnit || "قطعة"} بال{p.baseUnit || "باكو"}
+                              {p.unitType === 3 || p.baseUnit === "كرتونة"
+                                ? `${p.unitsPerBaseUnit} رزمة بالكرتونة`
+                                : `الوحدة: ${p.subUnit || "كشكول"}`}
                             </div>
                           </td>
                           <td className="py-3 px-3 text-center">

@@ -469,7 +469,7 @@ export function ProductsReportModal({
                             </span>
                           )}
                           <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold">
-                            {prod.baseUnit || "باكو"}
+                            {prod.baseUnit || "كشكول"}
                           </span>
                         </div>
                       </div>
@@ -498,7 +498,7 @@ export function ProductsReportModal({
                 ? `يحتوي التقرير على تفاصيل رصيد أصناف فئة (${categories.find((c) => c.id === selectedCategoryId)?.name || ""}) ${selectedType !== "all" ? `(${selectedType === "notebooks" ? "كشاكيل وكراريس" : "ورق تصوير فقط"})` : ""} بالوحدات المعتمدة.`
                 : selectedType !== "all"
                 ? `يحتوي التقرير على جرد شامل لجميع أصناف (${selectedType === "notebooks" ? "الكشاكيل والكراريس" : "ورق التصوير فقط"}) بالوحدات المعتمدة.`
-                : "يحتوي التقرير على تفاصيل رصيد كل صنف بالوحدة الكبيرة (باكو / كرتونة) وبالوحدة الصغيرة (كشكول / رزمة) مع إجمالي الرصيد الفعلي لجميع الأصناف."}
+                : "يحتوي التقرير على تفاصيل رصيد كل صنف بالوحدات المعتمدة (كرتونة ورزمة لورق التصوير، والعدد الفعلي للكشاكيل والكراريس) لجميع الأصناف."}
             </p>
           </div>
         </div>

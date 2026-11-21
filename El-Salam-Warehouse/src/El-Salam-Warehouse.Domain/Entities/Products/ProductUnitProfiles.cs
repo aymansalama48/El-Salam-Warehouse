@@ -14,11 +14,11 @@ public record ProductUnitProfile(
 // الكلاس الثابت اللي فيه تعريف كل نوع منتج ووحداته وهو المصدر الوحيد للقواعد دي
 public static class ProductUnitProfiles
 {
-    // القاموس اللي شايل تعريفات التلات أنواع
+    // القاموس اللي شايل تعريفات التلات أنواع (الكشكول والكراس بيتحسبوا بالواحدة، وورق التصوير بالكرتونة والرزمة)
     private static readonly Dictionary<ProductUnitType, ProductUnitProfile> Profiles = new()
     {
-        [ProductUnitType.Notebook] = new ProductUnitProfile("كشكول", "باكو", "كشكول", StockEntryUnit.SubUnit),
-        [ProductUnitType.Booklet] = new ProductUnitProfile("كراس", "باكو", "كراس", StockEntryUnit.SubUnit),
+        [ProductUnitType.Notebook] = new ProductUnitProfile("كشكول", "كشكول", "كشكول", StockEntryUnit.SubUnit),
+        [ProductUnitType.Booklet] = new ProductUnitProfile("كراس", "كراس", "كراس", StockEntryUnit.SubUnit),
         [ProductUnitType.CopyPaper] = new ProductUnitProfile("ورق تصوير", "كرتونة", "رزمة", StockEntryUnit.BaseUnit)
     };
 

@@ -277,8 +277,8 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
 
   const getContentExample = () => {
     if (isBoxUnit) return "مثال: 5 رزم في الكرتونة";
-    if (activeProfile.unitType === 2) return "مثال: 20 كراس في الباكو";
-    return "مثال: 10 أو 12 كشكول في الباكو";
+    if (activeProfile.unitType === 2) return "كراس فردي";
+    return "كشكول فردي";
   };
 
   const getStockLabel = () => {
@@ -401,7 +401,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                   ? "تعديل مواصفات الصنف وحد تنبيه النواقص ومكان التخزين"
                   : activeTab === "paper"
                   ? "تسجيل ورق التصوير بالكرتونة والرزم والرصيد وحد التنبيه"
-                  : "تسجيل الكراس أو الكشكول بالباكو والرصيد وحد التنبيه"}
+                  : "تسجيل الكراس أو الكشكول بالعدد الفردي والرصيد وحد التنبيه"}
               </p>
             </div>
           </div>
@@ -450,7 +450,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                   </div>
                   <div className="text-right">
                     <div className="leading-tight font-extrabold">كراسات وكشاكيل</div>
-                    <div className="text-2xs font-medium text-slate-400">بالباكو والقطعة</div>
+                    <div className="text-2xs font-medium text-slate-400">بالواحدة (كشكول / كراس)</div>
                   </div>
                 </button>
 
@@ -626,7 +626,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                   >
                     {notebookUnitTypes.map((opt) => (
                       <option key={opt.unitType} value={opt.unitType}>
-                        {opt.displayName} ({opt.baseUnit})
+                        {opt.displayName}
                       </option>
                     ))}
                   </select>
@@ -766,7 +766,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                   <p className="text-2xs text-slate-500 mt-0.5">
                     {isBoxUnit
                       ? "تحديد الرصيد الحرج لورق التصوير بالكرتونة أو بالرزمة"
-                      : `تحديد الرصيد الحرج بالكشكول أو الكراس (بال${subUnit})`}
+                      : "تحديد كمية الحد الأدنى لتنبيه النواقص بالمستودع"}
                   </p>
                 </div>
               </div>

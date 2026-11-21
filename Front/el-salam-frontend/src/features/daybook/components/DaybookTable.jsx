@@ -181,16 +181,8 @@ export function DaybookTable({
                           }
                         }
                       } else {
-                        // كشاكيل وكراريس
-                        if (item.unitLabel === "باكو" || (unitsPer > 1 && item.unitLabel !== "قطعة")) {
-                          eqText = `(${subQty.toLocaleString()} قطعة)`;
-                        } else if (unitsPer > 1) {
-                          const packs = Math.floor(qty / unitsPer);
-                          const remPacks = qty % unitsPer;
-                          if (packs > 0) {
-                            eqText = `(${packs.toLocaleString()} باكو${remPacks > 0 ? ` و ${remPacks} قطعة` : ""})`;
-                          }
-                        }
+                        // كشاكيل وكراريس: لا يوجد حساب بالباكو
+                        eqText = "";
                       }
 
                       const isAddition = isInbound || (isReturn && item.returnDirection === 1);
@@ -255,19 +247,11 @@ export function DaybookTable({
                         );
                       }
 
-                      const fullPacks = unitsPer > 1 ? Math.floor(balanceSub / unitsPer) : 0;
-                      const remPieces = unitsPer > 1 ? balanceSub % unitsPer : 0;
-
                       return (
                         <div className="flex flex-col items-center gap-0.5">
                           <span className="text-xs font-bold text-slate-800">
-                            {balanceSub.toLocaleString()} قطعة
+                            {balanceSub.toLocaleString()} {item.unitLabel || "قطعة"}
                           </span>
-                          {fullPacks > 0 && (
-                            <span className="text-2xs font-extrabold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/60">
-                              ({fullPacks.toLocaleString()} باكو{remPieces > 0 ? ` و ${remPieces} قطعة` : ""})
-                            </span>
-                          )}
                         </div>
                       );
                     })()}

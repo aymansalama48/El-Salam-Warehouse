@@ -142,8 +142,8 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
 
   const getContentExample = () => {
     if (isBoxUnit) return "مثال: 5 رزم في الكرتونة";
-    if (activeProfile.unitType === 2) return "مثال: 20 كراس في الباكو";
-    return "مثال: 10 أو 12 كشكول في الباكو";
+    if (activeProfile.unitType === 2) return "كراس فردي";
+    return "كشكول فردي";
   };
 
   const getStockLabel = () => {
@@ -437,48 +437,38 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
         </div>
 
         {!isEdit && isBoxUnit && (
-          <>
-            <div className="px-3.5 py-2.5 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200/80 flex items-center justify-between text-xs font-bold shadow-2xs">
-              <span className="text-emerald-800 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                {isBoxUnit
-                  ? initialStockUnit === 2
+          isBoxUnit && (
+            <>
+              <div className="px-3.5 py-2.5 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200/80 flex items-center justify-between text-xs font-bold shadow-2xs">
+                <span className="text-emerald-800 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {initialStockUnit === 2
                     ? "إجمالي الرزم المحسوبة تلقائياً:"
-                    : "الرصيد المحسوب بالكرتونة تلقائياً:"
-                  : "الرصيد المحسوب بالباكو تلقائياً:"}
-              </span>
-              <span className="text-emerald-950 font-extrabold text-xs sm:text-sm bg-white/90 px-2.5 py-1 rounded-lg border border-emerald-200/70 shadow-2xs">
-                {isBoxUnit
-                  ? initialStockUnit === 2
+                    : "الرصيد المحسوب بالكرتونة تلقائياً:"}
+                </span>
+                <span className="text-emerald-950 font-extrabold text-xs sm:text-sm bg-white/90 px-2.5 py-1 rounded-lg border border-emerald-200/70 shadow-2xs">
+                  {initialStockUnit === 2
                     ? `${totalReams.toLocaleString()} رزمة`
                     : parsedUnitsPer === 0 || parsedInitialStock === 0
                     ? `0 كرتونة`
                     : restPieces > 0
                     ? `${fullPacks} كرتونة و ${restPieces} رزمة`
-                    : `${fullPacks} كرتونة`
-                  : parsedUnitsPer === 0 || parsedInitialStock === 0
-                  ? `0 باكو`
-                  : restPieces > 0
-                  ? `${fullPacks} باكو و ${restPieces} ${subUnit}`
-                  : `${fullPacks} باكو`}
-              </span>
-            </div>
+                    : `${fullPacks} كرتونة`}
+                </span>
+              </div>
 
-            <div className="p-2.5 bg-blue-50/70 rounded-xl border border-blue-100 flex items-center justify-between text-xs">
-              <span className="text-blue-800 font-medium">معادلة الاحتساب:</span>
-              <span className="font-bold text-blue-900 bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs">
-                {isBoxUnit
-                  ? initialStockUnit === 2
+              <div className="p-2.5 bg-blue-50/70 rounded-xl border border-blue-100 flex items-center justify-between text-xs">
+                <span className="text-blue-800 font-medium">معادلة الاحتساب:</span>
+                <span className="font-bold text-blue-900 bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs">
+                  {initialStockUnit === 2
                     ? `${parsedInitialStock.toLocaleString()} كرتونة × ${parsedUnitsPer} رزمة = ${totalReams.toLocaleString()} رزمة`
                     : parsedInitialStock > 0 && parsedUnitsPer > 0
                     ? `${parsedInitialStock.toLocaleString()} رزمة ÷ ${parsedUnitsPer} = ${fullPacks} كرتونة${restPieces > 0 ? ` و ${restPieces} رزمة` : ""}`
-                    : `كل 1 كرتونة = ${parsedUnitsPer || 0} رزمة`
-                  : parsedInitialStock > 0 && parsedUnitsPer > 0
-                  ? `${parsedInitialStock.toLocaleString()} ${subUnit} ÷ ${parsedUnitsPer} = ${fullPacks} باكو${restPieces > 0 ? ` و ${restPieces} ${subUnit}` : ""}`
-                  : `كل 1 باكو = ${parsedUnitsPer || 0} ${subUnit}`}
-              </span>
-            </div>
-          </>
+                    : `كل 1 كرتونة = ${parsedUnitsPer || 0} رزمة`}
+                </span>
+              </div>
+            </>
+          )
         )}
 
         {/* حد تنبيه النواقص المخصص لهذا الصنف */}

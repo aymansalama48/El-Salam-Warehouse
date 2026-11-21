@@ -45,23 +45,23 @@ internal sealed class GetDashboardStatsQueryHandler
         var bookletProducts = products.Where(p => p.UnitType == ProductUnitType.Booklet).ToList();
         var copyPaperProducts = products.Where(p => p.UnitType == ProductUnitType.CopyPaper).ToList();
 
-        // حساب إحصائيات الكشاكيل
+        // حساب إحصائيات الكشاكيل (تحسب مباشرة بعدد الكشكول بدون باكو)
         var notebookSummary = new ProductTypeStockSummary(
             ProductCount: notebookProducts.Count,
-            FullBaseUnits: notebookProducts.Sum(p => p.UnitsPerBaseUnit > 0 ? p.TotalSubUnitStock / p.UnitsPerBaseUnit : 0),
-            RemainingSubUnits: notebookProducts.Sum(p => p.UnitsPerBaseUnit > 0 ? p.TotalSubUnitStock % p.UnitsPerBaseUnit : 0),
+            FullBaseUnits: notebookProducts.Sum(p => p.TotalSubUnitStock),
+            RemainingSubUnits: 0,
             TotalSubUnits: notebookProducts.Sum(p => p.TotalSubUnitStock),
-            BaseUnitName: "باكو",
+            BaseUnitName: "كشكول",
             SubUnitName: "كشكول"
         );
 
-        // حساب إحصائيات الكراريس
+        // حساب إحصائيات الكراريس (تحسب مباشرة بعدد الكراس بدون باكو)
         var bookletSummary = new ProductTypeStockSummary(
             ProductCount: bookletProducts.Count,
-            FullBaseUnits: bookletProducts.Sum(p => p.UnitsPerBaseUnit > 0 ? p.TotalSubUnitStock / p.UnitsPerBaseUnit : 0),
-            RemainingSubUnits: bookletProducts.Sum(p => p.UnitsPerBaseUnit > 0 ? p.TotalSubUnitStock % p.UnitsPerBaseUnit : 0),
+            FullBaseUnits: bookletProducts.Sum(p => p.TotalSubUnitStock),
+            RemainingSubUnits: 0,
             TotalSubUnits: bookletProducts.Sum(p => p.TotalSubUnitStock),
-            BaseUnitName: "باكو",
+            BaseUnitName: "كراس",
             SubUnitName: "كراس"
         );
 

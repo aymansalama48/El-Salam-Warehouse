@@ -100,7 +100,7 @@ export function LowStockWidget({ lowStockItems = [], totalProducts = 0, loading,
           <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
             {lowStockItems.map((item) => {
               const isOut = item.status === "منعدم" || item.totalSubUnitStock <= 0;
-              const baseLabel = item.baseUnit || item.entryUnitLabel || "باكو";
+              const baseLabel = item.baseUnit || item.entryUnitLabel || (item.unitType === 3 ? "كرتونة" : item.unitType === 2 ? "كراس" : "كشكول");
               const subLabel = item.subUnit || item.entryUnitLabel || "قطعة";
 
               const productId = item.productId || item.id;
@@ -138,32 +138,50 @@ export function LowStockWidget({ lowStockItems = [], totalProducts = 0, loading,
 
                   <div className="text-left shrink-0">
                     {(() => {
-                      const fullBase = item.fullBaseUnits ?? 0;
-                      const remSub = item.remainingSubUnits ?? (item.unitsPerBaseUnit > 0 ? item.totalSubUnitStock % item.unitsPerBaseUnit : 0);
-                      let baseStockText = `${fullBase.toLocaleString()} ${baseLabel}`;
-                      if (remSub > 0) {
-                        baseStockText += ` و ${remSub.toLocaleString()} ${subLabel}`;
+                      const isPaper = item.unitType === 3 || baseLabel === "كرتونة";
+                      if (isPaper) {
+                        const fullBase = item.fullBaseUnits ?? 0;
+                        const remSub = item.remainingSubUnits ?? (item.unitsPerBaseUnit > 0 ? item.totalSubUnitStock % item.unitsPerBaseUnit : 0);
+                        let baseStockText = `${fullBase.toLocaleString()} كرتونة`;
+                        if (remSub > 0) {
+                          baseStockText += ` و ${remSub.toLocaleString()} رزمة`;
+                        }
+
+                        return (
+                          <>
+                            <span
+                              className={`inline-block px-2.5 py-1 rounded-lg text-3xs font-extrabold ${
+                                isOut
+                                  ? "bg-rose-100 text-rose-800 border border-rose-200"
+                                  : "bg-amber-100 text-amber-800 border border-amber-200"
+                              }`}
+                            >
+                              {isOut
+                                ? "نافذ تماماً (0 رصيد)"
+                                : `قارب على النفاد (${baseStockText})`}
+                            </span>
+                            {!isOut && item.totalSubUnitStock > 0 && (
+                              <p className="text-3xs text-slate-500 mt-0.5 text-left font-bold">
+                                ({item.totalSubUnitStock.toLocaleString()} رزمة)
+                              </p>
+                            )}
+                          </>
+                        );
                       }
 
+                      // للكشاكيل والكراريس: عرض مباشر بعدد الكشكول أو الكراس
                       return (
-                        <>
-                          <span
-                            className={`inline-block px-2.5 py-1 rounded-lg text-3xs font-extrabold ${
-                              isOut
-                                ? "bg-rose-100 text-rose-800 border border-rose-200"
-                                : "bg-amber-100 text-amber-800 border border-amber-200"
-                            }`}
-                          >
-                            {isOut
-                              ? "نافذ تماماً (0 رصيد)"
-                              : `قارب على النفاد (${baseStockText})`}
-                          </span>
-                          {!isOut && item.totalSubUnitStock > 0 && (
-                            <p className="text-3xs text-slate-500 mt-0.5 text-left font-bold">
-                              ({item.totalSubUnitStock.toLocaleString()} {subLabel})
-                            </p>
-                          )}
-                        </>
+                        <span
+                          className={`inline-block px-2.5 py-1 rounded-lg text-3xs font-extrabold ${
+                            isOut
+                              ? "bg-rose-100 text-rose-800 border border-rose-200"
+                              : "bg-amber-100 text-amber-800 border border-amber-200"
+                          }`}
+                        >
+                          {isOut
+                            ? "نافذ تماماً (0 رصيد)"
+                            : `قارب على النفاد (${item.totalSubUnitStock.toLocaleString()} ${subLabel})`}
+                        </span>
                       );
                     })()}
                   </div>

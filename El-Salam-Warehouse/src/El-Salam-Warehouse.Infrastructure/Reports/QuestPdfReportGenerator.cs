@@ -253,14 +253,19 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                         r.Spacing(8);
                         r.RelativeItem().Border(0.6f).BorderColor(Colors.Grey.Lighten1).Background(Colors.Grey.Lighten5).Padding(8).Column(c =>
                         {
-                            c.Item().Text("محتوى الباكو / الكرتونة (الوحدة الكبرى):").FontSize(8).FontColor(Colors.Grey.Darken2);
-                            c.Item().PaddingTop(2).Text($"{model.UnitsPerBaseUnit} {model.SubUnit} بال{model.BaseUnit}").FontSize(11).Bold();
+                            var isPaper = model.BaseUnit == "كرتونة" || model.SubUnit == "رزمة";
+                            c.Item().Text(isPaper ? "محتوى الكرتونة (الوحدة الكبرى):" : "وحدة القياس المعتمدة:").FontSize(8).FontColor(Colors.Grey.Darken2);
+                            c.Item().PaddingTop(2).Text(isPaper ? $"{model.UnitsPerBaseUnit} رزمة بالكرتونة" : $"{model.SubUnit}").FontSize(11).Bold();
                         });
 
                         r.RelativeItem().Border(0.6f).BorderColor(Colors.Grey.Lighten1).Background(Colors.Grey.Lighten5).Padding(8).Column(c =>
                         {
-                            c.Item().Text($"الرصيد الحالي بال{model.BaseUnit}:").FontSize(8).FontColor(Colors.Grey.Darken2);
-                            c.Item().PaddingTop(2).Text($"{Num(model.FullBaseUnits)} {model.BaseUnit}" + (model.RemainingSubUnits > 0 ? $" و {model.RemainingSubUnits} {model.SubUnit}" : "")).FontSize(11).Bold();
+                            var isPaper = model.BaseUnit == "كرتونة" || model.SubUnit == "رزمة";
+                            c.Item().Text(isPaper ? $"الرصيد الحالي بالكرتونة:" : "الرصيد الفعلي الحالي:").FontSize(8).FontColor(Colors.Grey.Darken2);
+                            var stockText = isPaper
+                                ? ($"{Num(model.FullBaseUnits)} كرتونة" + (model.RemainingSubUnits > 0 ? $" و {model.RemainingSubUnits} رزمة" : ""))
+                                : $"{Num(model.TotalSubUnitStock)} {model.SubUnit}";
+                            c.Item().PaddingTop(2).Text(stockText).FontSize(11).Bold();
                         });
                     });
 

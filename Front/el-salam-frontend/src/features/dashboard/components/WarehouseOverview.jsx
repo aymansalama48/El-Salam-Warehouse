@@ -29,10 +29,12 @@ export function WarehouseOverview({ stats, loading }) {
   if (remReams > 0) {
     cartonsText += ` و ${remReams.toLocaleString()} رزمة`;
   }
-  const packsText = `${(stats?.totalPacks ?? 0).toLocaleString()} باكو`;
-  const packsAndCartonsText = cartonsCount > 0 || remReams > 0
-    ? `${packsText} / ${cartonsText}`
-    : packsText;
+  const notebooksCount = stats?.notebooks?.totalSubUnits ?? 0;
+  const bookletsCount = stats?.booklets?.totalSubUnits ?? 0;
+  const totalNotebooksAndBooklets = notebooksCount + bookletsCount;
+  const stockText = cartonsCount > 0 || remReams > 0
+    ? `${totalNotebooksAndBooklets.toLocaleString()} كشكول وكراس / ${cartonsText}`
+    : `${totalNotebooksAndBooklets.toLocaleString()} كشكول وكراس`;
   const stockDetail = `إجمالي ${(stats?.totalSubUnits ?? 0).toLocaleString()} قطعة ورزمة`;
 
   const transactionsText = `${stats?.todayTransactionsCount ?? 0} إذن`;
@@ -80,8 +82,8 @@ export function WarehouseOverview({ stats, loading }) {
           color="blue"
         />
         <StatCard
-          title="رصيد المستودع (باكو / كرتونة)"
-          value={packsAndCartonsText}
+          title="رصيد المستودع الحالي"
+          value={stockText}
           change={stockDetail}
           changeType="positive"
           icon={Layers}
@@ -121,20 +123,15 @@ export function WarehouseOverview({ stats, loading }) {
                 </span>
               </div>
               <p className="text-base font-black text-slate-900 mt-0.5">
-                {(stats?.notebooks?.fullBaseUnits ?? 0).toLocaleString()}{" "}
-                <span className="text-xs font-semibold text-slate-500">باكو</span>
-                {(stats?.notebooks?.remainingSubUnits > 0) && (
-                  <span className="text-xs font-bold text-blue-700 mr-1">
-                    و {stats.notebooks.remainingSubUnits} كشكول
-                  </span>
-                )}
+                {(stats?.notebooks?.totalSubUnits ?? 0).toLocaleString()}{" "}
+                <span className="text-xs font-semibold text-slate-500">كشكول</span>
               </p>
             </div>
           </div>
           <div className="text-left">
             <span className="text-3xs text-slate-400 block font-medium">الرصيد بالكشكول</span>
             <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-              ({(stats?.notebooks?.totalSubUnits ?? 0).toLocaleString()} كشكول)
+              {(stats?.notebooks?.totalSubUnits ?? 0).toLocaleString()} كشكول
             </span>
           </div>
         </div>
@@ -153,20 +150,15 @@ export function WarehouseOverview({ stats, loading }) {
                 </span>
               </div>
               <p className="text-base font-black text-slate-900 mt-0.5">
-                {(stats?.booklets?.fullBaseUnits ?? 0).toLocaleString()}{" "}
-                <span className="text-xs font-semibold text-slate-500">باكو</span>
-                {(stats?.booklets?.remainingSubUnits > 0) && (
-                  <span className="text-xs font-bold text-emerald-700 mr-1">
-                    و {stats.booklets.remainingSubUnits} كراس
-                  </span>
-                )}
+                {(stats?.booklets?.totalSubUnits ?? 0).toLocaleString()}{" "}
+                <span className="text-xs font-semibold text-slate-500">كراس</span>
               </p>
             </div>
           </div>
           <div className="text-left">
             <span className="text-3xs text-slate-400 block font-medium">الرصيد بالكراس</span>
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-              ({(stats?.booklets?.totalSubUnits ?? 0).toLocaleString()} كراس)
+              {(stats?.booklets?.totalSubUnits ?? 0).toLocaleString()} كراس
             </span>
           </div>
         </div>

@@ -207,7 +207,7 @@ export function StockAlertSettingsModal({ isOpen, onClose, onSaved }) {
               filteredItems.map((item) => {
                 const isPaper = item.unitType === 3;
                 const subUnit = item.subUnit || "كشكول";
-                const baseUnit = item.baseUnit || (isPaper ? "كرتونة" : "باكو");
+                const baseUnit = item.baseUnit || (isPaper ? "كرتونة" : item.unitType === 2 ? "كراس" : "كشكول");
                 const numVal = parseInt(item.thresholdInput, 10) || 0;
                 const isCarton = isPaper && item.thresholdUnit === 2;
                 const currentThresholdUnitLabel = isPaper ? (isCarton ? "كرتونة" : "رزمة") : subUnit;
@@ -258,9 +258,7 @@ export function StockAlertSettingsModal({ isOpen, onClose, onSaved }) {
                               ? `${item.fullBaseUnits} كرتونة و ${item.remainingSubUnits} رزمة`
                               : `${item.fullBaseUnits} كرتونة`
                           ) : (
-                            item.remainingSubUnits > 0
-                              ? `${item.fullBaseUnits} باكو و ${item.remainingSubUnits} ${subUnit}`
-                              : `${item.totalSubUnitStock.toLocaleString()} ${subUnit}`
+                            `${item.totalSubUnitStock.toLocaleString()} ${subUnit}`
                           )}
                         </span>
                       </div>

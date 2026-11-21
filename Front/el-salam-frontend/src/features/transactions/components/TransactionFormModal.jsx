@@ -23,12 +23,12 @@ export function TransactionFormModal({
   if (!isOpen) return null;
 
   const productOptions = [
-    { name: "كشكول مدرسي مسطر 60 ورقة دبوس", unit: "باكو", content: 10 },
-    { name: "كشكول مدرسي إنجليزي 80 ورقة دبوس فاخر", unit: "باكو", content: 10 },
-    { name: "كشكول سلك جامعي A4 عدد 5 فواصل 140 ورقة", unit: "باكو", content: 5 },
-    { name: "كراسة مدرسية مسطر عربي 28 ورقة غلاف كوشيه", unit: "باكو", content: 12 },
-    { name: "كراسة رسم وتلوين كانسون 20 ورقة مقاس كبير", unit: "باكو", content: 10 },
-    { name: "كشكول سلك مدرسي B5 غلاف بلاستيك ملون 80 ورقة", unit: "باكو", content: 10 },
+    { name: "كشكول مدرسي مسطر 60 ورقة دبوس", unit: "كشكول", content: 1 },
+    { name: "كشكول مدرسي إنجليزي 80 ورقة دبوس فاخر", unit: "كشكول", content: 1 },
+    { name: "كشكول سلك جامعي A4 عدد 5 فواصل 140 ورقة", unit: "كشكول", content: 1 },
+    { name: "كراسة مدرسية مسطر عربي 28 ورقة غلاف كوشيه", unit: "كراس", content: 1 },
+    { name: "كراسة رسم وتلوين كانسون 20 ورقة مقاس كبير", unit: "كراس", content: 1 },
+    { name: "كشكول سلك مدرسي B5 غلاف بلاستيك ملون 80 ورقة", unit: "كشكول", content: 1 },
     { name: "كرتونة ورق تصوير فاخر A4 وزن 80 جم (5 رزم)", unit: "كرتونة", content: 5 },
     { name: "كرتونة ورق تصوير مكاتب A4 وزن 70 جم (5 رزم)", unit: "كرتونة", content: 5 },
     { name: "كرتونة ورق تصوير ومخططات A3 وزن 80 جم (5 رزم)", unit: "كرتونة", content: 5 },
@@ -197,7 +197,7 @@ export function TransactionFormModal({
                 <div className="mt-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-2xs font-bold border border-emerald-100 flex items-center justify-between">
                   <span>إجمالي المحتوى الفعلي:</span>
                   <span>
-                    {(Number(packsCount) * activeProduct.content).toLocaleString()} {activeProduct.unit === "كرتونة" ? "باكو / رزمة" : "كشكول / كراسة"}
+                    {(Number(packsCount) * activeProduct.content).toLocaleString()} {activeProduct.unit === "كرتونة" ? "رزمة" : "كشكول / كراسة"}
                   </span>
                 </div>
               )}

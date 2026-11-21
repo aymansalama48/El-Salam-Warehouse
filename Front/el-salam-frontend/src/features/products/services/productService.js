@@ -9,8 +9,8 @@ import { apiClient, ENDPOINTS } from "../../../api";
  * الأنواع الافتراضية لوحدات المنتجات (في حال تعذر الاتصال بالخادم مؤقتاً)
  */
 export const DEFAULT_PRODUCT_UNIT_TYPES = [
-  { unitType: 1, displayName: "كشكول", baseUnit: "باكو", subUnit: "كشكول", entryUnit: 1 },
-  { unitType: 2, displayName: "كراس", baseUnit: "باكو", subUnit: "كراس", entryUnit: 1 },
+  { unitType: 1, displayName: "كشكول", baseUnit: "كشكول", subUnit: "كشكول", entryUnit: 1 },
+  { unitType: 2, displayName: "كراس", baseUnit: "كراس", subUnit: "كراس", entryUnit: 1 },
   { unitType: 3, displayName: "ورق تصوير", baseUnit: "كرتونة", subUnit: "رزمة", entryUnit: 2 },
 ];
 
@@ -44,12 +44,17 @@ export const getProductUnitTypes = async () => {
  */
 export function formatBaseUnitStock(product) {
   if (!product) return "";
-  const baseUnit = product.baseUnit || "باكو";
-  const subUnit = product.subUnit || "كشكول";
-  const full = Number(product.fullBaseUnits ?? 0);
-  const remaining = Number(product.remainingSubUnits ?? 0);
+  const isPaper = product.unitType === 3 || product.baseUnit === "كرتونة";
+  const subUnit = product.subUnit || (isPaper ? "رزمة" : product.unitType === 2 ? "كراس" : "كشكول");
   const total = Number(product.totalSubUnitStock ?? 0);
 
+  if (!isPaper) {
+    return `${total.toLocaleString()} ${subUnit}`;
+  }
+
+  const baseUnit = product.baseUnit || "كرتونة";
+  const full = Number(product.fullBaseUnits ?? 0);
+  const remaining = Number(product.remainingSubUnits ?? 0);
   const baseText = remaining > 0 ? `${full.toLocaleString()} ${baseUnit} و ${remaining.toLocaleString()} ${subUnit}` : `${full.toLocaleString()} ${baseUnit}`;
   return total > 0 ? `${baseText} (${total.toLocaleString()} ${subUnit})` : baseText;
 }
@@ -69,8 +74,8 @@ export function normalizeProduct(dto) {
   const totalSubUnitStock = Number(raw.totalSubUnitStock ?? raw.TotalSubUnitStock ?? 0);
   const fullBaseUnits = Number(raw.fullBaseUnits ?? raw.FullBaseUnits ?? 0);
   const remainingSubUnits = Number(raw.remainingSubUnits ?? raw.RemainingSubUnits ?? 0);
-  const baseUnit = raw.baseUnit || raw.BaseUnit || "باكو";
-  const subUnit = raw.subUnit || raw.SubUnit || (baseUnit === "كرتونة" ? "رزمة" : "كشكول");
+  const baseUnit = raw.baseUnit || raw.BaseUnit || (raw.unitType === 3 ? "كرتونة" : raw.unitType === 2 ? "كراس" : "كشكول");
+  const subUnit = raw.subUnit || raw.SubUnit || (baseUnit === "كرتونة" ? "رزمة" : baseUnit === "كراس" ? "كراس" : "كشكول");
   const unitType = Number(raw.unitType ?? raw.UnitType ?? (baseUnit === "كرتونة" ? 3 : subUnit === "كراس" ? 2 : 1));
 
   // الحالة تأتي مباشرة ومحسوبة بالكامل من الـ Backend:
@@ -119,7 +124,7 @@ export function normalizeProduct(dto) {
  */
 export function normalizeProductLookup(dto) {
   if (!dto) return null;
-  const baseUnit = dto.baseUnit || dto.BaseUnit || "باكو";
+  const baseUnit = dto.baseUnit || dto.BaseUnit || (dto.unitType === 3 ? "كرتونة" : dto.unitType === 2 ? "كراس" : "كشكول");
   const subUnit = dto.subUnit || dto.SubUnit || "كشكول";
   const entryUnit = Number(dto.entryUnit ?? dto.EntryUnit ?? (baseUnit === "كرتونة" ? 2 : 1));
   const entryUnitLabel = dto.entryUnitLabel || dto.EntryUnitLabel || (entryUnit === 2 ? baseUnit : subUnit);

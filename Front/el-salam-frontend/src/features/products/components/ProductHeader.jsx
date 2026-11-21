@@ -18,7 +18,7 @@ export function ProductHeader({
         <div>
           <h1 className="text-xl font-bold text-slate-900">سجل المنتجات تامة الصنع والأصناف</h1>
           <p className="text-sm font-medium text-slate-500 mt-1">
-            إدارة الكشاكيل والكراريس وورق التصوير بالباكو والكرتونة
+            إدارة الكشاكيل والكراريس وورق التصوير بالمستودع
           </p>
         </div>
 
@@ -71,9 +71,8 @@ export function ProductHeader({
           <div>
             <p className="text-2xs font-bold text-slate-400">رصيد الكشاكيل والكراريس</p>
             <p className="text-sm font-bold text-indigo-900 flex items-baseline gap-1">
-              <span>{notebookPackets.toLocaleString()}</span>
-              <span className="text-xs font-semibold text-slate-500">باكو</span>
-              <span className="text-2xs font-normal text-slate-400">({notebookPieces.toLocaleString()} كشكول)</span>
+              <span>{notebookPieces.toLocaleString()}</span>
+              <span className="text-xs font-semibold text-indigo-700">كشكول / كراس</span>
             </p>
           </div>
         </div>

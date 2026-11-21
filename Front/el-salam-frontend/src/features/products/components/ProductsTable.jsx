@@ -88,8 +88,9 @@ export function ProductsTable({
           </thead>
           <tbody className="divide-y divide-slate-100">
             {products.map((item, index) => {
-              const baseUnit = item.baseUnit || "باكو";
-              const subUnit = item.subUnit || "كشكول";
+              const isPaper = item.unitType === 3 || item.baseUnit === "كرتونة";
+              const baseUnit = item.baseUnit || (isPaper ? "كرتونة" : item.unitType === 2 ? "كراس" : "كشكول");
+              const subUnit = item.subUnit || (isPaper ? "رزمة" : item.unitType === 2 ? "كراس" : "كشكول");
               const content = item.unitsPerBaseUnit || 10;
               const hex = item.categoryColorHex || "#2563EB";
               const isDragged = draggedIndex === index;
@@ -165,7 +166,7 @@ export function ProductsTable({
                       return (
                         <span
                           className="inline-flex items-center gap-1.5"
-                          title={item.fullBaseUnits > 0 ? `${Number(item.fullBaseUnits).toLocaleString()} باكو${item.remainingSubUnits > 0 ? ` و ${Number(item.remainingSubUnits).toLocaleString()} ${subUnit}` : ""}` : undefined}
+                          title={`${Number(totalStock).toLocaleString()} ${subUnit}`}
                         >
                           <Layers className="w-3.5 h-3.5 text-slate-400" />
                           <span className="text-sm font-bold">

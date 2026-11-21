@@ -40,15 +40,12 @@ internal sealed class GetProductsSummaryQueryHandler : IQueryHandler<GetProducts
 
         var totalProducts = products.Count;
 
-        // مجموع الباكو الكاملة للكشاكيل مع الحماية من القسمة على صفر
-        var notebookPackets = products
-            .Where(p => p.EntryUnit == StockEntryUnit.SubUnit && p.UnitsPerBaseUnit > 0)
-            .Sum(p => p.TotalSubUnitStock / p.UnitsPerBaseUnit);
-
-        // مجموع الكشاكيل بالقطعة
+        // مجموع الكشاكيل والكراريس بالواحدة (بدون باكو)
         var notebookPieces = products
             .Where(p => p.EntryUnit == StockEntryUnit.SubUnit)
             .Sum(p => p.TotalSubUnitStock);
+
+        var notebookPackets = notebookPieces;
 
         // مجموع الكراتين الكاملة لورق التصوير مع الحماية من القسمة على صفر
         var copyPaperCartons = products

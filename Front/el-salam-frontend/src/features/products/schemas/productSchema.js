@@ -4,8 +4,8 @@ import { z } from "zod";
  * أنواع وحدات المنتجات المدعومة بالنظام
  */
 export const PRODUCT_UNIT_TYPES = {
-  NOTEBOOK: 1, // كشكول (باكو / كشكول)
-  BOOKLET: 2,  // كراس (باكو / كراس)
+  NOTEBOOK: 1, // كشكول (كشكول فردي)
+  BOOKLET: 2,  // كراس (كراس فردي)
   COPY_PAPER: 3, // ورق تصوير (كرتونة / رزمة)
 };
 
@@ -74,8 +74,8 @@ export const PRODUCT_UNIT_TYPES = {
 /**
  * @typedef {Object} ProductSummaryDto
  * @property {number} totalProducts - عدد الأصناف المسجلة
- * @property {number} notebookPackets - رصيد الكشاكيل والكراريس (باكو)
- * @property {number} notebookPieces - رصيد الكشاكيل والكراريس (كشكول)
+ * @property {number} notebookPackets - رصيد الكشاكيل والكراريس
+ * @property {number} notebookPieces - رصيد الكشاكيل والكراريس (كشكول / كراس)
  * @property {number} copyPaperCartons - رصيد كراتين ورق التصوير (كرتونة)
  * @property {number} copyPaperReams - إجمالي رزم ورق التصوير (رزمة)
  */

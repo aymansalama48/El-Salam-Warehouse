@@ -34,7 +34,7 @@ export function TransactionForm({
   const [quantity, setQuantity] = useState(initialData?.quantity?.toString() || "");
   
   const [quantityLabel, setQuantityLabel] = useState("الكمية المطلوبة");
-  const [currentBaseUnit, setCurrentBaseUnit] = useState("باكو");
+  const [currentBaseUnit, setCurrentBaseUnit] = useState("كشكول");
   const [currentUnitContent, setCurrentUnitContent] = useState(10);
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,9 +48,9 @@ export function TransactionForm({
       setCurrentBaseUnit(unit);
       setCurrentUnitContent(foundProduct.unitContent || 10);
     } else {
-      setQuantityLabel("الكمية (بالباكو)");
-      setCurrentBaseUnit("باكو");
-      setCurrentUnitContent(10);
+      setQuantityLabel("الكمية");
+      setCurrentBaseUnit("كشكول");
+      setCurrentUnitContent(1);
     }
   }, [selectedProductId, products]);
 
@@ -226,7 +226,7 @@ export function TransactionForm({
                 إجمالي المحتوى الفعلي ({parsedQuantity} × {currentUnitContent}):
               </span>
               <span className="font-extrabold">
-                {totalInternalUnits.toLocaleString()} {currentBaseUnit === "كرتونة" ? "باكو / رزمة" : "كشكول / قطعة"}
+                {totalInternalUnits.toLocaleString()} {currentBaseUnit === "كرتونة" ? "رزمة" : "كشكول / قطعة"}
               </span>
             </div>
           )}

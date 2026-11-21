@@ -266,15 +266,17 @@ export default function ProductsPage() {
 
   const getProductFields = (prod) => {
     if (!prod) return [];
-    const baseUnit = prod.baseUnit || "باكو";
-    const subUnit = prod.subUnit || "كشكول";
-    const content = prod.unitsPerBaseUnit || 10;
+    const isPaper = prod.unitType === 3 || prod.baseUnit === "كرتونة";
+    const baseUnit = prod.baseUnit || (isPaper ? "كرتونة" : prod.unitType === 2 ? "كراس" : "كشكول");
+    const subUnit = prod.subUnit || (isPaper ? "رزمة" : prod.unitType === 2 ? "كراس" : "كشكول");
+    const content = prod.unitsPerBaseUnit || 1;
     const full = Number(prod.fullBaseUnits ?? 0);
     const rem = Number(prod.remainingSubUnits ?? 0);
+    const total = Number(prod.totalSubUnitStock ?? 0);
 
-    const formattedStock = rem > 0
-      ? `${full.toLocaleString()} ${baseUnit} و ${rem.toLocaleString()} ${subUnit}`
-      : `${full.toLocaleString()} ${baseUnit}`;
+    const formattedStock = isPaper
+      ? (rem > 0 ? `${full.toLocaleString()} ${baseUnit} و ${rem.toLocaleString()} ${subUnit}` : `${full.toLocaleString()} ${baseUnit}`)
+      : `${total.toLocaleString()} ${subUnit}`;
 
     let thresholdDisplay = "غير محدد (0)";
     if (prod.lowStockThreshold > 0) {
@@ -286,8 +288,6 @@ export default function ProductsPage() {
         thresholdDisplay = `${prod.lowStockThreshold.toLocaleString()} ${subUnit}`;
       }
     }
-
-    const isPaper = prod.unitType === 3 || baseUnit === "كرتونة";
 
     return [
       { label: "اسم المنتج أو الصنف", value: prod.name, icon: Package, fullWidth: true },
@@ -464,7 +464,7 @@ export default function ProductsPage() {
           }
         }}
         printing={printingProduct}
-        extraInfo="مواصفات التعبئة والتغليف معتمدة من صالة الإنتاج والتجليد (الباكو يحتوي على العدد المحدد من الفئة المسجلة)."
+        extraInfo="بيانات الصنف ومواصفات الرصيد الفعلي معتمدة ومسجلة بسجلات المستودع."
       />
 
       <ProductsReportModal
