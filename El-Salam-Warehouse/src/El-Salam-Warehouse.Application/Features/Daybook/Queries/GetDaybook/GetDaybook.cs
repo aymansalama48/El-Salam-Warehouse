@@ -171,8 +171,8 @@ internal sealed class GetDaybookQueryHandler : IQueryHandler<GetDaybookQuery, Da
         var totalCount = await query.CountAsync(cancellationToken);
 
         var entries = await query
-            .OrderByDescending(x => x.Voucher.VoucherDate)
-            .ThenByDescending(x => x.Voucher.OccurredAtUtc)
+            .OrderByDescending(x => x.Voucher.OccurredAtUtc)
+            .ThenByDescending(x => x.Voucher.VoucherDate)
             .ThenBy(x => x.Item.ProductName)
             .Skip((page - 1) * pageSize) // تم الإصلاح هنا
             .Take(pageSize)

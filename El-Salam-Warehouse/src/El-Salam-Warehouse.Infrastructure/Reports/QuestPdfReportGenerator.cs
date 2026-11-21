@@ -85,52 +85,98 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
         });
     }
 
-    // جدول يوم واحد
+    // جدول يوم واحد مجمع حسب رقم الإذن
     private static void DayTable(IContainer container, DaybookReportDay day)
     {
         container.Column(col =>
         {
-            col.Item().Background(Colors.Blue.Lighten5).Padding(5)
-                .Text($"{ArabicDays[(int)day.Date.DayOfWeek]}  {FormatDate(day.Date)}").Bold();
+            col.Item().Background(Colors.Blue.Lighten5).Padding(6)
+                .Text($"{ArabicDays[(int)day.Date.DayOfWeek]}  {FormatDate(day.Date)}").Bold().FontSize(10);
 
-            col.Item().Table(table =>
+            col.Spacing(6);
+
+            // تجميع البنود بحسب الإذن بحيث يكتب رقم الإذن وبياناته مرة واحدة فقط
+            var voucherGroups = day.Rows
+                .GroupBy(r => new { r.VoucherNumber, r.Type, r.Party, r.Receiver })
+                .ToList();
+
+            foreach (var vg in voucherGroups)
             {
-                table.ColumnsDefinition(c =>
+                var typeTitle = vg.Key.Type switch
                 {
-                    c.ConstantColumn(26);    // م
-                    c.ConstantColumn(85);    // رقم الإذن
-                    c.RelativeColumn(1.3f);  // الصنف
-                    c.RelativeColumn(1f);    // الجهة / المصدر
-                    c.ConstantColumn(120);   // الكمية
-                    c.ConstantColumn(45);    // النوع
+                    StockVoucherType.Inbound => "إذن وارد",
+                    StockVoucherType.Outbound => "إذن صرف",
+                    StockVoucherType.Return => "إذن مرتجع",
+                    StockVoucherType.Shortage => "إذن عجز وتسوية",
+                    _ => "إذن حركة"
+                };
+
+                var typeColor = vg.Key.Type switch
+                {
+                    StockVoucherType.Inbound => Colors.Green.Darken2,
+                    StockVoucherType.Outbound => Colors.Red.Darken2,
+                    StockVoucherType.Return => Colors.Orange.Darken2,
+                    StockVoucherType.Shortage => Colors.Purple.Darken2,
+                    _ => Colors.Grey.Darken2
+                };
+
+                var typeBg = vg.Key.Type switch
+                {
+                    StockVoucherType.Inbound => Colors.Green.Lighten5,
+                    StockVoucherType.Outbound => Colors.Red.Lighten5,
+                    StockVoucherType.Return => Colors.Orange.Lighten5,
+                    StockVoucherType.Shortage => Colors.Purple.Lighten5,
+                    _ => Colors.Grey.Lighten4
+                };
+
+                // شريط عنوان الإذن (يكتب مرة واحدة فقط لكل إذن)
+                col.Item().Background(typeBg).Border(1).BorderColor(Colors.Grey.Lighten3).Padding(5).Row(row =>
+                {
+                    row.RelativeItem().AlignRight().Text(text =>
+                    {
+                        text.Span($"{typeTitle} رقم: ").Bold().FontColor(typeColor);
+                        text.Span($" {vg.Key.VoucherNumber} ").Bold().FontColor(Colors.Blue.Darken2);
+                        if (!string.IsNullOrWhiteSpace(vg.Key.Party) && vg.Key.Party != "-")
+                        {
+                            text.Span("   •   الجهة / المصدر: ").FontColor(Colors.Grey.Darken3);
+                            text.Span(Clean(vg.Key.Party)).Bold();
+                        }
+                        if (!string.IsNullOrWhiteSpace(vg.Key.Receiver) && vg.Key.Receiver != "-")
+                        {
+                            text.Span("   •   المستلم: ").FontColor(Colors.Grey.Darken3);
+                            text.Span(Clean(vg.Key.Receiver));
+                        }
+                    });
                 });
 
-                table.Header(h =>
+                // جدول أصناف هذا الإذن
+                col.Item().Table(table =>
                 {
-                    foreach (var title in new[] { "م", "رقم الإذن", "الصنف", "الجهة / المصدر", "الكمية", "النوع" })
-                        h.Cell().Element(HeaderCell).Text(title);
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.ConstantColumn(26);    // م
+                        c.RelativeColumn(3f);    // اسم الصنف أو المنتج
+                        c.ConstantColumn(140);   // الكمية بالحركة
+                    });
+
+                    table.Header(h =>
+                    {
+                        h.Cell().Element(HeaderCell).Text("م");
+                        h.Cell().Element(HeaderCell).Text("اسم الصنف أو المنتج");
+                        h.Cell().Element(HeaderCell).Text("الكمية بالحركة");
+                    });
+
+                    var itemIndex = 1;
+                    foreach (var r in vg)
+                    {
+                        string qtyDisplay = $"{Num(r.Quantity)} {r.UnitLabel}";
+
+                        table.Cell().Element(BodyCell).Text(itemIndex++.ToString());
+                        table.Cell().Element(TextCell).Text(Clean(r.ProductName));
+                        table.Cell().Element(BodyCell).Text(Clean(qtyDisplay)).Bold();
+                    }
                 });
-
-                var index = 1;
-                foreach (var r in day.Rows)
-                {
-                    var isInbound = r.Type == StockVoucherType.Inbound;
-                    var isReturn = r.Type == StockVoucherType.Return;
-                    var isShortage = r.Type == StockVoucherType.Shortage;
-
-                    string qtyDisplay = $"{Num(r.Quantity)} {r.UnitLabel}";
-
-                    table.Cell().Element(BodyCell).Text(index++.ToString());
-                    table.Cell().Element(BodyCell).Text(r.VoucherNumber).FontSize(8);
-                    table.Cell().Element(TextCell).Text(Clean(r.ProductName));
-                    table.Cell().Element(TextCell).Text(string.IsNullOrWhiteSpace(r.Party) ? "-" : Clean(r.Party));
-                    table.Cell().Element(BodyCell).Text(Clean(qtyDisplay));
-                    table.Cell().Element(BodyCell)
-                        .Text(isShortage ? "عجز" : (isReturn ? "مرتجع" : (isInbound ? "وارد" : "صرف")))
-                        .Bold()
-                        .FontColor(isShortage ? Colors.Purple.Darken2 : (isReturn ? Colors.Orange.Darken2 : (isInbound ? Colors.Green.Darken2 : Colors.Red.Darken2)));
-                }
-            });
+            }
         });
     }
 

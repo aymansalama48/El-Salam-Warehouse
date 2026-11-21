@@ -76,8 +76,10 @@ internal sealed class CreateProductCommandHandler : ICommandHandler<CreateProduc
             ? request.InitialStock * request.UnitsPerBaseUnit
             : request.InitialStock;
 
-        // جلب أعلى ترتيب حالي لوضع المنتج الجديد في آخر القائمة دائماً
-        var maxOrder = await _context.Products.MaxAsync(p => (int?)p.DisplayOrder, cancellationToken) ?? 0;
+        // إزاحة ترتيب كافة المنتجات الحالية لأسفل (+1) ليأتي المنتج الجديد في أول القائمة دائماً
+        await _context.Products.ExecuteUpdateAsync(
+            s => s.SetProperty(p => p.DisplayOrder, p => p.DisplayOrder + 1),
+            cancellationToken);
 
         // ننشئ المنتج بالكونستركتور الجديد مع حد النواقص المخصص
         var product = new Product(
@@ -90,7 +92,7 @@ internal sealed class CreateProductCommandHandler : ICommandHandler<CreateProduc
             request.LowStockThreshold ?? 0,
             request.LowStockThresholdUnit);
 
-        product.SetDisplayOrder(maxOrder + 1);
+        product.SetDisplayOrder(0);
 
         // نضيفه ونحفظ
         _context.Products.Add(product);

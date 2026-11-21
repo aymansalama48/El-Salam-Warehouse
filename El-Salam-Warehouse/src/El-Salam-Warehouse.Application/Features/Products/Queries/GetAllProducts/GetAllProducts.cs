@@ -61,7 +61,7 @@ internal sealed class GetAllProductsQueryHandler : IQueryHandler<GetAllProductsQ
 
         var rawProducts = await query
             .OrderBy(p => p.DisplayOrder)
-            .ThenBy(p => p.CreatedAt)
+            .ThenByDescending(p => p.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(p => new

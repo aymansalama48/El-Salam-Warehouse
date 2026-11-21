@@ -45,11 +45,13 @@ internal sealed class CreateCategoryCommandHandler : ICommandHandler<CreateCateg
             return Result<Guid>.Failure(CategoryErrors.NameAlreadyExists);
         }
 
-        // جلب أعلى ترتيب حالي لوضع الفئة الجديدة في آخر القائمة دائماً
-        var maxOrder = await _context.Categories.MaxAsync(c => (int?)c.DisplayOrder, cancellationToken) ?? 0;
+        // إزاحة ترتيب كافة الفئات الحالية لأسفل (+1) لتأتي الفئة الجديدة في أول القائمة دائماً
+        await _context.Categories.ExecuteUpdateAsync(
+            s => s.SetProperty(c => c.DisplayOrder, c => c.DisplayOrder + 1),
+            cancellationToken);
 
         var category = new Category(request.Name, request.Description, request.ColorHex);
-        category.SetDisplayOrder(maxOrder + 1);
+        category.SetDisplayOrder(0);
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync(cancellationToken);

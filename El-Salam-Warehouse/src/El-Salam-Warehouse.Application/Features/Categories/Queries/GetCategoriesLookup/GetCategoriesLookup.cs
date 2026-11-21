@@ -26,7 +26,7 @@ internal sealed class GetCategoriesLookupQueryHandler : IQueryHandler<GetCategor
     {
         var lookup = await _readContext.Categories
             .OrderBy(c => c.DisplayOrder)
-            .ThenBy(c => c.CreatedAt)
+            .ThenByDescending(c => c.CreatedAt)
             .Select(c => new CategoryLookupDto(c.Id, c.Name))
             .ToListAsync(cancellationToken);
 

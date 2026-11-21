@@ -74,8 +74,8 @@ internal sealed class GetStockVouchersQueryHandler
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query
-            .OrderByDescending(v => v.VoucherDate)
-            .ThenByDescending(v => v.OccurredAtUtc)
+            .OrderByDescending(v => v.OccurredAtUtc)
+            .ThenByDescending(v => v.VoucherDate)
             .Skip((page - 1) * pageSize) // تم الإصلاح هنا
             .Take(pageSize)
             .Select(v => new StockVoucherListItemDto(

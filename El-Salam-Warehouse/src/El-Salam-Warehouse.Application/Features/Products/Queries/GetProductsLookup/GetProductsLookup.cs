@@ -60,7 +60,7 @@ internal sealed class GetProductsLookupQueryHandler : IQueryHandler<GetProductsL
         }
         var products = await query
             .OrderBy(p => p.DisplayOrder)
-            .ThenBy(p => p.CreatedAt)
+            .ThenByDescending(p => p.CreatedAt)
             .Take(limit)
             .Select(p => new ProductLookupDto(
                 p.Id,

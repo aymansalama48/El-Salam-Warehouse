@@ -43,7 +43,7 @@ internal sealed class GetAllCategoriesQueryHandler : IQueryHandler<GetAllCategor
 
         var rawCategories = await query
             .OrderBy(c => c.DisplayOrder)
-            .ThenBy(c => c.CreatedAt)
+            .ThenByDescending(c => c.CreatedAt)
             .Select(c => new
             {
                 c.Id,
