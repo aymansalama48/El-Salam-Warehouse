@@ -4,6 +4,7 @@ using El_Salam_Warehouse.Application.Common.Abstractions.Identity.Authorization;
 using El_Salam_Warehouse.Application.Common.Abstractions.Identity.CurrentUser;
 using El_Salam_Warehouse.Application.Features.StockVouchers.Commands.CancelStockVoucher;
 using El_Salam_Warehouse.Application.Features.StockVouchers.Commands.CreateStockVoucher;
+using El_Salam_Warehouse.Application.Features.StockVouchers.Commands.CreateQuickTransfer;
 using El_Salam_Warehouse.Application.Features.StockVouchers.Queries.GetStockVoucherById;
 using El_Salam_Warehouse.Application.Features.StockVouchers.Queries.GetStockVouchers;
 using El_Salam_Warehouse.Application.Features.StockVouchers.Queries.GetStockVouchersSummary;
@@ -101,6 +102,43 @@ public class StockVouchersController : BaseApiController
             request.ReturnDirection,
             request.ReturnReason,
             request.ShortageReason);
+
+        var result = await Sender.Send(command, cancellationToken);
+        return HandleResult(result);
+    }
+
+    // 4.1 حركة سريعة (إذن وارد + إذن صرف فوري)
+    [HttpPost("quick-transfer")]
+    public async Task<IResult> QuickTransfer(
+        [FromBody] CreateQuickTransferRequest request,
+        [FromServices] ICurrentUser currentUser,
+        [FromServices] IPermissionService permissionService,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.UserId.HasValue)
+        {
+            var hasInbound = await permissionService.HasPermissionAsync(currentUser.UserId.Value, Permissions.Vouchers.CreateInbound, cancellationToken);
+            var hasOutbound = await permissionService.HasPermissionAsync(currentUser.UserId.Value, Permissions.Vouchers.CreateOutbound, cancellationToken);
+
+            if (!hasInbound || !hasOutbound)
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status403Forbidden,
+                    title: "Forbidden",
+                    detail: "عفواً، يتطلب تسجيل الحركة السريعة صلاحيتي تسجيل إذن وارد وصرف معاً.");
+            }
+        }
+
+        var command = new CreateQuickTransferCommand(
+            request.Date,
+            request.InboundSource,
+            request.InboundPartyName,
+            request.InboundDelivererName,
+            request.InboundReceiverName,
+            request.OutboundPartyName,
+            request.OutboundReceiverName,
+            request.Notes,
+            request.Items.Select(i => new StockVoucherItemInput(i.ProductId, i.Quantity, i.EntryUnit)).ToList());
 
         var result = await Sender.Send(command, cancellationToken);
         return HandleResult(result);

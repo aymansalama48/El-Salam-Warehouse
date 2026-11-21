@@ -33,6 +33,7 @@ export const ENDPOINTS = {
     GET_ALL: "/stock-vouchers",
     GET_BY_ID: (id) => `/stock-vouchers/${id}`,
     CREATE: "/stock-vouchers",
+    QUICK_TRANSFER: "/stock-vouchers/quick-transfer",
     CANCEL: (id) => `/stock-vouchers/${id}/cancel`,
     SUMMARY: "/stock-vouchers/summary",
     PDF: (id) => `/stock-vouchers/${id}/pdf`,

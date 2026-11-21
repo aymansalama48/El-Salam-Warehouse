@@ -1,4 +1,4 @@
-import { PlusCircle, FileText, DownloadCloud, RefreshCw, RotateCcw, AlertTriangle } from "lucide-react";
+import { PlusCircle, FileText, DownloadCloud, RefreshCw, RotateCcw, AlertTriangle, Zap } from "lucide-react";
 
 export function QuickActions({ 
   onRefresh, 
@@ -6,6 +6,7 @@ export function QuickActions({
   onNewDispatch, 
   onNewReturn,
   onNewShortage,
+  onNewQuickTransfer,
   onExport, 
   refreshing 
 }) {
@@ -26,6 +27,17 @@ export function QuickActions({
           <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
           <span>تحديث البيانات</span>
         </button>
+
+        {onNewQuickTransfer && (
+          <button
+            onClick={onNewQuickTransfer}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold text-amber-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer border border-amber-300/80"
+            title="تسجيل إذن وارد وصرف فوري معاً في نفس اللحظة"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-900 fill-amber-900 animate-bounce" />
+            <span>⚡ حركة سريعة (وارد وصرف فوري)</span>
+          </button>
+        )}
 
         <button
           onClick={onNewSupply}

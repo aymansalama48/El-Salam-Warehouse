@@ -3,7 +3,8 @@ import {
   ArrowDownToLine, 
   Plus, 
   RefreshCw, 
-  AlertCircle 
+  AlertCircle,
+  Zap
 } from "lucide-react";
 import { 
   getStockVouchers, 
@@ -14,6 +15,7 @@ import { VOUCHER_TYPE } from "../features/vouchers/schemas/voucherSchema";
 import { VouchersTable } from "../features/vouchers/components/VouchersTable";
 import { VouchersFilter } from "../features/vouchers/components/VouchersFilter";
 import { VoucherFormModal } from "../features/vouchers/components/VoucherFormModal";
+import { QuickTransferModal } from "../features/vouchers/components/QuickTransferModal";
 import { VoucherDetailsModal } from "../features/vouchers/components/VoucherDetailsModal";
 import { CancelVoucherModal } from "../features/vouchers/components/CancelVoucherModal";
 import { notifyVoucherChanged } from "../features/vouchers/hooks/useVoucherSummary";
@@ -40,6 +42,7 @@ export default function InboundPage() {
 
   // النوافذ المنبثقة
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isQuickTransferOpen, setIsQuickTransferOpen] = useState(false);
   const [viewingVoucherId, setViewingVoucherId] = useState(null);
   const [cancellingVoucher, setCancellingVoucher] = useState(null);
 
@@ -131,14 +134,26 @@ export default function InboundPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          تسجيل إذن وارد جديد
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setIsQuickTransferOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold text-amber-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer border border-amber-300/80"
+            title="تسجيل إذن وارد وصرف فوري معاً في نفس اللحظة"
+          >
+            <Zap className="w-4 h-4 text-amber-900 fill-amber-900 animate-bounce" />
+            <span>⚡ حركة سريعة (وارد وصرف فوري)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            تسجيل إذن وارد جديد
+          </button>
+        </div>
       </div>
 
       {/* تنبيه الخطأ */}
@@ -218,6 +233,17 @@ export default function InboundPage() {
           onClose={() => setIsAddModalOpen(false)}
           onSave={handleSaveVoucher}
           type={VOUCHER_TYPE.INBOUND}
+        />
+      )}
+
+      {/* نافذة تسجيل حركة سريعة (وارد وصرف فوري) */}
+      {isQuickTransferOpen && (
+        <QuickTransferModal
+          isOpen={isQuickTransferOpen}
+          onClose={() => setIsQuickTransferOpen(false)}
+          onSuccess={() => {
+            refetchVouchers();
+          }}
         />
       )}
 

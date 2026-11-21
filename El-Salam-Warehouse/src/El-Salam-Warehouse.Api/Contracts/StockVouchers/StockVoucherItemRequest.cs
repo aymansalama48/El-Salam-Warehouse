@@ -25,3 +25,15 @@ public record CreateStockVoucherRequest(
 
 // إلغاء إذن
 public record CancelStockVoucherRequest(string Reason);
+
+// إنشاء حركة سريعة (إذن وارد + إذن صرف فوري)
+public record CreateQuickTransferRequest(
+    DateOnly? Date,
+    VoucherSource InboundSource,
+    string? InboundPartyName,
+    string InboundDelivererName,
+    string InboundReceiverName,
+    string OutboundPartyName,
+    string OutboundReceiverName,
+    string? Notes,
+    List<StockVoucherItemRequest> Items);

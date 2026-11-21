@@ -5,6 +5,7 @@ import { QuickActions } from "../features/dashboard/components/QuickActions";
 import { RecentTransactionsWidget } from "../features/dashboard/components/RecentTransactionsWidget";
 import { LowStockWidget } from "../features/dashboard/components/LowStockWidget";
 import { VoucherFormModal } from "../features/vouchers/components/VoucherFormModal";
+import { QuickTransferModal } from "../features/vouchers/components/QuickTransferModal";
 import { VoucherDetailsModal } from "../features/vouchers/components/VoucherDetailsModal";
 import { ProductsReportModal } from "../features/products/components/ProductsReportModal";
 import { DetailsModal } from "../components/common/DetailsModal";
@@ -44,6 +45,7 @@ export default function DashboardHome() {
   const [isOutboundModalOpen, setIsOutboundModalOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [isShortageModalOpen, setIsShortageModalOpen] = useState(false);
+  const [isQuickTransferOpen, setIsQuickTransferOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // تفاصيل الإذن عند النقر على أي سطر في آخر الحركات
@@ -280,6 +282,7 @@ export default function DashboardHome() {
         onNewDispatch={handleNewDispatch}
         onNewReturn={handleNewReturn}
         onNewShortage={handleNewShortage}
+        onNewQuickTransfer={() => setIsQuickTransferOpen(true)}
         onExport={handleExport}
         refreshing={refreshing}
       />
@@ -386,6 +389,16 @@ export default function DashboardHome() {
           onClose={() => setIsShortageModalOpen(false)}
           onSave={handleSaveShortage}
           type={VOUCHER_TYPE.SHORTAGE}
+        />
+      )}
+
+      {isQuickTransferOpen && (
+        <QuickTransferModal
+          isOpen={isQuickTransferOpen}
+          onClose={() => setIsQuickTransferOpen(false)}
+          onSuccess={() => {
+            fetchDashboardData(true);
+          }}
         />
       )}
 

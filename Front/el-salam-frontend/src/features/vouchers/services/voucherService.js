@@ -124,6 +124,32 @@ export const createStockVoucher = async (payload) => {
 };
 
 /**
+ * إنشاء حركة سريعة مزدوجة (إذن وارد + إذن منصرف معاً)
+ * POST /api/stock-vouchers/quick-transfer
+ * @param {Object} payload
+ */
+export const createQuickTransfer = async (payload) => {
+  const body = {
+    date: payload.date || null,
+    inboundSource: Number(payload.inboundSource),
+    inboundPartyName: payload.inboundPartyName?.trim() || null,
+    inboundDelivererName: payload.inboundDelivererName?.trim() || "",
+    inboundReceiverName: payload.inboundReceiverName?.trim() || "",
+    outboundPartyName: payload.outboundPartyName?.trim() || "",
+    outboundReceiverName: payload.outboundReceiverName?.trim() || "",
+    notes: payload.notes?.trim() || null,
+    items: payload.items.map((it) => ({
+      productId: it.productId,
+      quantity: Number(it.quantity),
+      entryUnit: it.entryUnit ? Number(it.entryUnit) : null,
+    })),
+  };
+
+  const response = await apiClient.post(ENDPOINTS.STOCK_VOUCHERS.QUICK_TRANSFER, body);
+  return response;
+};
+
+/**
  * إلغاء إذن مخزن
  * POST /api/stock-vouchers/{id}/cancel
  * @param {string} id
