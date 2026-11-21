@@ -16,7 +16,6 @@ import {
   Loader2,
   Package,
   Sparkles,
-  Layers,
   ArrowRightLeft
 } from "lucide-react";
 import Swal from "sweetalert2";
@@ -256,7 +255,8 @@ export function QuickTransferModal({
     }
   };
 
-  const selectedProductIds = items.filter((it) => it.productId).map((it) => it.productId);
+  const validItems = items.filter((it) => it.productId);
+  const selectedProductIds = validItems.map((it) => it.productId);
 
   const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
@@ -594,7 +594,16 @@ export function QuickTransferModal({
             <div className="space-y-2.5">
               {items.map((item, index) => {
                 const prod = item.product;
-                const isCopyPaper = prod?.entryUnit === 2; // ورق تصوير
+                const isCopyPaper = prod?.unitType === 3 || prod?.baseUnit === "كرتونة" || prod?.entryUnit === 2;
+                const currentUnit = item.entryUnit ?? (isCopyPaper ? 2 : 1);
+                const unitLabel = isCopyPaper
+                  ? (currentUnit === 2 ? "كرتونة" : "رزمة")
+                  : (prod?.subUnit || prod?.entryUnitLabel || "كشكول");
+
+                // الأصناف المختارة في بنود أخرى لتتعطل في هذا البند
+                const disabledProductIds = items
+                  .map((it, i) => (i !== index ? it.productId : null))
+                  .filter(Boolean);
 
                 return (
                   <div
@@ -606,10 +615,11 @@ export function QuickTransferModal({
                         الصنف #{index + 1}
                       </label>
                       <ProductCombobox
-                        value={item.productId}
-                        onChange={(selectedProd) => handleProductSelect(index, selectedProd)}
+                        selectedProduct={item.product}
+                        onSelect={(selectedProd) => handleProductSelect(index, selectedProd)}
                         disabled={submitting}
                         notebooksOnly={inboundSource === VOUCHER_SOURCE.PRODUCTION}
+                        disabledProductIds={disabledProductIds}
                         placeholder="ابحث واختر الصنف..."
                       />
                     </div>
@@ -621,17 +631,17 @@ export function QuickTransferModal({
                           الوحدة المحددة
                         </label>
                         <UnitSelect
-                          value={item.entryUnit || prod?.entryUnit || 2}
-                          onChange={(e) => handleUnitChange(index, e.target.value)}
+                          value={currentUnit}
+                          onChange={(val) => handleUnitChange(index, val)}
                           disabled={submitting}
-                          isCopyPaper={true}
+                          theme="emerald"
                         />
                       </div>
                     )}
 
                     <div className="w-full md:w-36">
                       <label className="block text-2xs font-bold text-slate-500 mb-1">
-                        الكمية ({prod ? (isCopyPaper ? (item.entryUnit === 2 ? "كرتونة" : "رزمة") : prod.entryUnitLabel) : "الوحدة"})
+                        الكمية ({prod ? unitLabel : "الوحدة"})
                       </label>
                       <input
                         type="number"
