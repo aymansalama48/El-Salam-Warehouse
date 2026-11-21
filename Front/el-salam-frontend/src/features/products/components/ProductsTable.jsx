@@ -1,4 +1,4 @@
-import { Edit2, Trash2, Eye, Box, MapPin, Layers, AlertTriangle, GripVertical } from "lucide-react";
+import { Edit2, Trash2, Eye, Box, MapPin, Layers, GripVertical } from "lucide-react";
 import { useTableReorder } from "../../../hooks/useTableReorder";
 import { Pagination } from "../../../components/common/Pagination";
 
@@ -80,7 +80,6 @@ export function ProductsTable({
               <th className="py-3 px-4 whitespace-nowrap">اسم المنتج أو الصنف</th>
               <th className="py-3 px-4 whitespace-nowrap">فئة المنتج</th>
               <th className="py-3 px-4 whitespace-nowrap">الرصيد الإجمالي</th>
-              <th className="py-3 px-4 whitespace-nowrap">حد النفاذ (الرصيد الحرج)</th>
               <th className="py-3 px-4 whitespace-nowrap">مكان التخزين</th>
               <th className="py-3 px-4 whitespace-nowrap">الحالة</th>
               <th className="py-3 px-4 text-center whitespace-nowrap">الإجراءات</th>
@@ -175,31 +174,6 @@ export function ProductsTable({
                         </span>
                       );
                     })()}
-                  </td>
-
-                  {/* حد النفاذ والتنبيه */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
-                    {item.lowStockThreshold > 0 ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/70 text-xs font-bold shadow-2xs">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                        {item.unitType === 3 ? (
-                          item.lowStockThresholdUnit === 2 ? (
-                            <span>
-                              {item.lowStockThreshold.toLocaleString()} كرتونة
-                              <span className="text-2xs text-amber-600 font-semibold mr-1">
-                                ({item.lowStockThresholdSubUnits.toLocaleString()} رزمة)
-                              </span>
-                            </span>
-                          ) : (
-                            <span>{item.lowStockThreshold.toLocaleString()} رزمة</span>
-                          )
-                        ) : (
-                          <span>{item.lowStockThreshold.toLocaleString()} {subUnit}</span>
-                        )}
-                      </span>
-                    ) : (
-                      <span className="text-2xs text-slate-400 font-medium">غير محدد (0)</span>
-                    )}
                   </td>
 
                   {/* مكان التخزين بالمستودع */}
