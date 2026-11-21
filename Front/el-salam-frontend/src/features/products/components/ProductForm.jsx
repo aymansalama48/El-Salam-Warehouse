@@ -285,8 +285,26 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
           {errors.name && <p className="text-xs text-rose-500 font-bold mt-1">{errors.name}</p>}
         </div>
 
-        {/* فئة المنتج ونوع المنتج */}
+        {/* نوع المنتج وفئة المنتج (تم التبديل: نوع المنتج أولاً ثم فئة المنتج) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-emerald-600" />
+              نوع المنتج <span className="text-rose-500">*</span>
+            </label>
+            <select
+              value={unitType}
+              onChange={(e) => handleUnitTypeChange(e.target.value)}
+              className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-slate-800 cursor-pointer font-bold"
+            >
+              {availableUnitTypes.map((opt) => (
+                <option key={opt.unitType} value={opt.unitType}>
+                  {opt.displayName} ({opt.baseUnit})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -321,24 +339,6 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
               )}
             </select>
             {errors.categoryId && <p className="text-xs text-rose-500 font-bold mt-1">{errors.categoryId}</p>}
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-emerald-600" />
-              نوع المنتج <span className="text-rose-500">*</span>
-            </label>
-            <select
-              value={unitType}
-              onChange={(e) => handleUnitTypeChange(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-slate-800 cursor-pointer font-bold"
-            >
-              {availableUnitTypes.map((opt) => (
-                <option key={opt.unitType} value={opt.unitType}>
-                  {opt.displayName} ({opt.baseUnit})
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 

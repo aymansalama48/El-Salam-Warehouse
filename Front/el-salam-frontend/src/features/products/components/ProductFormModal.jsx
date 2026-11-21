@@ -517,8 +517,51 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
               {errors.name && <p className="text-xs text-rose-500 font-bold mt-1">{errors.name}</p>}
             </div>
 
-            {/* فئة المنتج ونوع المنتج */}
+            {/* نوع المنتج وفئة المنتج (تم التبديل: نوع المنتج أولاً ثم فئة المنتج) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* نوع المنتج ووحدة القياس */}
+              {activeTab === "paper" ? (
+                /* في ورق التصوير: نوع الصنف مثبت بالكرتونة والرزمة بدون الحاجة للاختيار وبنفس حجم الفئة تماماً */
+                <div>
+                  <div className="flex items-center mb-1.5 h-5">
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-emerald-600" />
+                      نوع المنتج <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
+                  <div className="w-full h-10 px-3.5 text-xs sm:text-sm bg-emerald-50/70 border border-emerald-200 rounded-xl text-emerald-900 font-extrabold flex items-center justify-between whitespace-nowrap">
+                    <span className="flex items-center gap-2 shrink-0">
+                      <Box className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>ورق تصوير</span>
+                    </span>
+                    <span className="text-2xs font-bold text-emerald-700 bg-white/90 px-2.5 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs shrink-0">
+                      كرتونة
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                /* في الكشاكيل والكراريس: اختيار بين كشكول أو كراس */
+                <div>
+                  <div className="flex items-center justify-between mb-1.5 h-5">
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-blue-600" />
+                      نوع المنتج <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
+                  <select
+                    value={unitType}
+                    onChange={(e) => handleNotebookUnitChange(e.target.value)}
+                    className="w-full h-10 px-3.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-slate-800 cursor-pointer font-bold"
+                  >
+                    {notebookUnitTypes.map((opt) => (
+                      <option key={opt.unitType} value={opt.unitType}>
+                        {opt.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* فئة المنتج */}
               {activeTab === "paper" ? (
                 /* في ورق التصوير: الفئة محددة تلقائياً كـ ورق تصوير */
@@ -588,49 +631,6 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                     )}
                   </select>
                   {errors.categoryId && <p className="text-xs text-rose-500 font-bold mt-1">{errors.categoryId}</p>}
-                </div>
-              )}
-
-              {/* نوع المنتج ووحدة القياس */}
-              {activeTab === "paper" ? (
-                /* في ورق التصوير: نوع الصنف مثبت بالكرتونة والرزمة بدون الحاجة للاختيار وبنفس حجم الفئة تماماً */
-                <div>
-                  <div className="flex items-center mb-1.5 h-5">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-emerald-600" />
-                      نوع المنتج <span className="text-rose-500">*</span>
-                    </label>
-                  </div>
-                  <div className="w-full h-10 px-3.5 text-xs sm:text-sm bg-emerald-50/70 border border-emerald-200 rounded-xl text-emerald-900 font-extrabold flex items-center justify-between whitespace-nowrap">
-                    <span className="flex items-center gap-2 shrink-0">
-                      <Box className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>ورق تصوير</span>
-                    </span>
-                    <span className="text-2xs font-bold text-emerald-700 bg-white/90 px-2.5 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs shrink-0">
-                      كرتونة
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                /* في الكشاكيل والكراريس: اختيار بين كشكول أو كراس */
-                <div>
-                  <div className="flex items-center justify-between mb-1.5 h-5">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-blue-600" />
-                      نوع المنتج <span className="text-rose-500">*</span>
-                    </label>
-                  </div>
-                  <select
-                    value={unitType}
-                    onChange={(e) => handleNotebookUnitChange(e.target.value)}
-                    className="w-full h-10 px-3.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-slate-800 cursor-pointer font-bold"
-                  >
-                    {notebookUnitTypes.map((opt) => (
-                      <option key={opt.unitType} value={opt.unitType}>
-                        {opt.displayName}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               )}
             </div>
