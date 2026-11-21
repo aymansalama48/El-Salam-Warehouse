@@ -394,7 +394,7 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
 
                 // 4. ملاحظة المواصفات الفنية المعتمدة
                 col.Item().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(8).Text(
-                    "ملاحظة الجودة والتعبئة: مواصفات التعبئة والتغليف معتمدة رسمياً من صالة الإنتاج والتجليد (الباكو يحتوي على العدد المحدد من الفئة المسجلة) ومطابقة لمعايير المستودع المركزي.")
+                    "ملاحظة الجودة والتعبئة: مواصفات التعبئة والتغليف معتمدة رسمياً من صالة الإنتاج والتجليد ومطابقة لمعايير المستودع المركزي.")
                     .FontSize(8.5f).FontColor(Colors.Grey.Darken3);
 
                 // 5. التوقيعات الرسمية
@@ -512,12 +512,10 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                 {
                     table.ColumnsDefinition(cols =>
                     {
-                        cols.ConstantColumn(24);   // م
-                        cols.RelativeColumn(3);    // اسم الصنف
-                        cols.RelativeColumn(1.5f); // الفئة
-                        cols.RelativeColumn(2);    // الكمية بالإذن
-                        cols.RelativeColumn(2.5f); // بالباكو / الكرتونة
-                        cols.RelativeColumn(2);    // إجمالي بالقطعة/الرزمة
+                        cols.ConstantColumn(30);   // #
+                        cols.RelativeColumn(4.5f); // اسم الصنف أو المنتج
+                        cols.RelativeColumn(2.5f); // فئة المنتج
+                        cols.RelativeColumn(3f);   // الكمية بالإذن
                     });
 
                     table.Header(h =>
@@ -526,8 +524,6 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                         h.Cell().Element(HeaderCell).Text("اسم الصنف أو المنتج");
                         h.Cell().Element(HeaderCell).Text("فئة المنتج");
                         h.Cell().Element(HeaderCell).Text("الكمية بالإذن");
-                        h.Cell().Element(HeaderCell).Text("بالباكو / الكرتونة");
-                        h.Cell().Element(HeaderCell).Text("إجمالي بالقطعة/الرزمة");
                     });
 
                     foreach (var it in model.Items)
@@ -536,16 +532,6 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                         table.Cell().Element(TextCell).Text(Clean(it.ProductName)).Bold();
                         table.Cell().Element(BodyCell).Text(Clean(it.CategoryName));
                         table.Cell().Element(BodyCell).Text(Clean($"{Num(it.Quantity)} {it.UnitLabel}")).Bold();
-
-                        var baseStockText = it.RemainingSubUnits > 0
-                            ? $"{Num(it.FullBaseUnits)} {it.BaseUnit} و {it.RemainingSubUnits} {it.SubUnit}"
-                            : $"{Num(it.FullBaseUnits)} {it.BaseUnit}";
-                        table.Cell().Element(BodyCell).Text(Clean(baseStockText));
-
-                        var totalSubText = it.SubUnit == "رزمة" || it.BaseUnit == "كرتونة"
-                            ? $"{Num(it.TotalSubUnits)} رزمة ({Num(it.FullBaseUnits)} كرتونة)"
-                            : $"{Num(it.TotalSubUnits)} {it.SubUnit}";
-                        table.Cell().Element(BodyCell).Text(Clean(totalSubText));
                     }
                 });
 
