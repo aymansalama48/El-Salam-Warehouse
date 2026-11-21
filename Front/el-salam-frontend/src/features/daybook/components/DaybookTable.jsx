@@ -1,19 +1,19 @@
 import { useMemo } from "react";
 import { 
-  ArrowDownToLine, 
-  ArrowUpFromLine, 
-  RotateCcw,
-  AlertTriangle,
-  Calendar, 
+  Eye, 
   Hash, 
+  Calendar, 
   Building2, 
   User, 
-  Layers, 
-  Eye,
-  Package
+  Package, 
+  Layers,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  RotateCcw,
+  AlertTriangle
 } from "lucide-react";
 import { formatCairoDateTime } from "../../../utils/dateUtils";
-import { VOUCHER_TYPE, VOUCHER_STATUS } from "../../vouchers/schemas/voucherSchema";
+import { VOUCHER_TYPE, VOUCHER_STATUS, VOUCHER_SOURCE } from "../../vouchers/schemas/voucherSchema";
 import { Pagination } from "../../../components/common/Pagination";
 
 export function DaybookTable({
@@ -27,7 +27,7 @@ export function DaybookTable({
   onPageChange,
   onPageSizeChange,
 }) {
-  // تجميع الحركات بحسب الإذن ليظهر كل إذن في سطر واحد فقط بدون تفصيل الأصناف بالجدول
+  // تجميع السطور بحسب الإذن ليظهر كل إذن في سطر واحد تماماً كجدول الأذونات
   const groupedVouchers = useMemo(() => {
     const map = new Map();
     entries.forEach((item) => {
@@ -47,23 +47,9 @@ export function DaybookTable({
           returnReason: item.returnReason,
           shortageReason: item.shortageReason,
           itemCount: 0,
-          notebookTotal: 0,
-          paperCartons: 0,
-          paperReams: 0,
         });
       }
-      const v = map.get(vId);
-      v.itemCount += 1;
-      const isPaper = item.unitType === 3 || item.unitLabel === "كرتونة" || item.unitLabel === "رزمة" || item.categoryName?.includes("ورق");
-      if (isPaper) {
-        if (item.unitLabel === "كرتونة") {
-          v.paperCartons += Number(item.quantity || 0);
-        } else {
-          v.paperReams += Number(item.quantity || 0);
-        }
-      } else {
-        v.notebookTotal += Number(item.quantity || 0);
-      }
+      map.get(vId).itemCount += 1;
     });
     return Array.from(map.values());
   }, [entries]);
@@ -94,164 +80,135 @@ export function DaybookTable({
   return (
     <div className="bg-white rounded-xl border border-slate-200/70 shadow-2xs overflow-hidden text-right">
       <div className="overflow-x-auto">
-        <table className="w-full text-right text-sm border-collapse">
-          <thead className="bg-slate-50/80 border-b border-slate-200/80 text-xs font-bold text-slate-600">
+        <table className="w-full text-right text-sm">
+          <thead className="bg-slate-50/70 border-b border-slate-200/80 text-xs font-bold text-slate-500 uppercase tracking-wider">
             <tr>
-              <th className="py-3 px-3.5 whitespace-nowrap">رقم الإذن</th>
-              <th className="py-3 px-3.5 whitespace-nowrap">التاريخ والوقت</th>
-              <th className="py-3 px-3.5 whitespace-nowrap">نوع الحركة</th>
-              <th className="py-3 px-3.5 text-center whitespace-nowrap">عدد الأصناف</th>
-              <th className="py-3 px-3.5 text-center whitespace-nowrap">إجمالي الكمية</th>
-              <th className="py-3 px-3.5 whitespace-nowrap">الجهة / المصدر</th>
-              <th className="py-3 px-3.5 whitespace-nowrap">المستلم</th>
-              <th className="py-3 px-3.5 whitespace-nowrap">الحالة</th>
-              <th className="py-3 px-3.5 text-center whitespace-nowrap">الإجراءات</th>
+              <th className="py-3 px-4 whitespace-nowrap">رقم الإذن</th>
+              <th className="py-3 px-4 whitespace-nowrap">التاريخ والوقت (توقيت القاهرة)</th>
+              <th className="py-3 px-4 whitespace-nowrap">نوع الحركة</th>
+              <th className="py-3 px-4 whitespace-nowrap">الجهة المنصرف إليها / المصدر</th>
+              <th className="py-3 px-4 whitespace-nowrap">المستلم</th>
+              <th className="py-3 px-4 text-center whitespace-nowrap">عدد الأصناف</th>
+              <th className="py-3 px-4 whitespace-nowrap">الحالة</th>
+              <th className="py-3 px-4 text-center whitespace-nowrap">الإجراءات</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {groupedVouchers.map((voucher) => {
-              const isInbound = voucher.type === VOUCHER_TYPE.INBOUND;
-              const isReturn = voucher.type === VOUCHER_TYPE.RETURN;
-              const isShortage = voucher.type === VOUCHER_TYPE.SHORTAGE;
-              const isCancelled = voucher.status === VOUCHER_STATUS.CANCELLED;
-
-              const rowClass = isCancelled
-                ? "bg-slate-50/70 text-slate-400 opacity-60 hover:bg-slate-100/50"
-                : isShortage
-                ? "hover:bg-purple-50/30 text-slate-800"
-                : isReturn
-                ? "hover:bg-amber-50/30 text-slate-800"
-                : isInbound
-                ? "hover:bg-emerald-50/30 text-slate-800"
-                : "hover:bg-rose-50/30 text-slate-800";
+            {groupedVouchers.map((item) => {
+              const isCancelled = item.status === VOUCHER_STATUS.CANCELLED;
+              const isShortage = item.type === VOUCHER_TYPE.SHORTAGE;
+              const isReturn = item.type === VOUCHER_TYPE.RETURN;
+              const isInbound = item.type === VOUCHER_TYPE.INBOUND;
+              const isProduction = item.source === VOUCHER_SOURCE.PRODUCTION;
 
               return (
                 <tr
-                  key={voucher.voucherId}
-                  onClick={() => onSelectVoucher && onSelectVoucher(voucher.voucherId)}
-                  className={`transition-colors cursor-pointer select-none ${rowClass}`}
-                  title="انقر لفتح بطاقة الإذن وتفاصيله الكاملة"
+                  key={item.voucherId}
+                  onClick={() => onSelectVoucher && onSelectVoucher(item.voucherId)}
+                  className={`transition-colors cursor-pointer select-none ${
+                    isCancelled
+                      ? "opacity-55 bg-slate-50/60 hover:bg-slate-100/50"
+                      : "hover:bg-slate-50/70"
+                  }`}
+                  title="انقر لفتح تفاصيل الإذن والطباعة"
                 >
-                  {/* 1. رقم الإذن */}
-                  <td className="py-3.5 px-3.5 font-mono font-bold text-xs whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1.5 text-blue-700 font-extrabold hover:underline">
-                      <Hash className="w-3.5 h-3.5 text-blue-500" />
-                      {voucher.voucherNumber}
+                  {/* رقم الإذن */}
+                  <td className="py-3.5 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Hash className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{item.voucherNumber}</span>
                     </span>
                   </td>
 
-                  {/* 2. التاريخ والوقت بتوقيت القاهرة */}
-                  <td className="py-3.5 px-3.5 text-xs whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1.5 font-medium text-slate-600">
+                  {/* التاريخ والوقت بتوقيت القاهرة */}
+                  <td className="py-3.5 px-4 text-xs font-medium text-slate-600 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      {formatCairoDateTime(voucher.occurredAtUtc || voucher.voucherDate)}
+                      {formatCairoDateTime(item.occurredAtUtc || item.voucherDate)}
                     </span>
                   </td>
 
-                  {/* 3. نوع الحركة */}
-                  <td className="py-3.5 px-3.5 whitespace-nowrap">
+                  {/* نوع الحركة */}
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     {isCancelled ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-2xs font-extrabold bg-slate-200 text-slate-600">
+                      <span className="px-2.5 py-1 text-2xs font-extrabold rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                         ملغي
                       </span>
                     ) : isShortage ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-2xs font-extrabold bg-purple-100 text-purple-800 border border-purple-200">
+                      <span className="px-2.5 py-1 text-2xs font-extrabold rounded-full bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
                         عجز
                       </span>
                     ) : isReturn ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-2xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
+                      <span className="px-2.5 py-1 text-2xs font-extrabold rounded-full bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1">
                         <RotateCcw className="w-3 h-3" />
                         مرتجع
-                        {voucher.returnDirection === 1 ? " (وارد)" : voucher.returnDirection === 2 ? " (صرف)" : ""}
                       </span>
                     ) : isInbound ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-2xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      <span className="px-2.5 py-1 text-2xs font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
                         <ArrowDownToLine className="w-3 h-3" />
                         وارد
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-2xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
+                      <span className="px-2.5 py-1 text-2xs font-extrabold rounded-full bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1">
                         <ArrowUpFromLine className="w-3 h-3" />
                         صرف
                       </span>
                     )}
                   </td>
 
-                  {/* 4. عدد الأصناف */}
-                  <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
-                      <Package className="w-3.5 h-3.5 text-slate-500" />
-                      {voucher.itemCount} {voucher.itemCount === 1 ? "صنف" : "أصناف"}
+                  {/* الجهة المنصرف إليها / المصدر */}
+                  <td className="py-3.5 px-4 font-bold text-slate-800 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      {item.partyName || (isProduction ? "صالة الإنتاج والتجليد" : "—")}
                     </span>
                   </td>
 
-                  {/* 5. إجمالي الكمية بالحركة */}
-                  <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
-                    <div className="flex flex-col items-center gap-0.5 font-bold text-xs">
-                      {voucher.notebookTotal > 0 && (
-                        <span className={isInbound ? "text-emerald-700" : "text-rose-700"}>
-                          {isInbound ? "+" : "-"}{voucher.notebookTotal.toLocaleString()} كشكول / كراس
-                        </span>
-                      )}
-                      {voucher.paperCartons > 0 && (
-                        <span className="text-amber-800 text-2xs font-semibold">
-                          {voucher.paperCartons.toLocaleString()} كرتونة
-                        </span>
-                      )}
-                      {voucher.paperReams > 0 && (
-                        <span className="text-purple-800 text-2xs font-semibold">
-                          {voucher.paperReams.toLocaleString()} رزمة
-                        </span>
-                      )}
-                      {voucher.notebookTotal === 0 && voucher.paperCartons === 0 && voucher.paperReams === 0 && (
-                        <span className="text-slate-400 text-xs">-</span>
-                      )}
-                    </div>
+                  {/* المستلم */}
+                  <td className="py-3.5 px-4 text-xs font-semibold text-slate-700 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      {item.receiverName || "—"}
+                    </span>
                   </td>
 
-                  {/* 6. الجهة / المصدر */}
-                  <td className="py-3.5 px-3.5 text-xs text-slate-700 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{voucher.partyName || (voucher.source === 2 ? "صالة الإنتاج" : "جهة خارجية")}</span>
-                    </div>
+                  {/* عدد الأصناف */}
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">
+                      <Package className="w-3.5 h-3.5 text-slate-500" />
+                      {item.itemCount} صنف
+                    </span>
                   </td>
 
-                  {/* 7. المستلم */}
-                  <td className="py-3.5 px-3.5 text-xs text-slate-600 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{voucher.receiverName || "-"}</span>
-                    </div>
-                  </td>
-
-                  {/* 8. الحالة */}
-                  <td className="py-3.5 px-3.5 whitespace-nowrap">
+                  {/* الحالة */}
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     {isCancelled ? (
-                      <span className="text-2xs font-extrabold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                      <span className="px-2.5 py-1 text-xs font-extrabold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
                         ملغي
                       </span>
                     ) : (
-                      <span className="text-2xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">
+                      <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
                         فعّال
                       </span>
                     )}
                   </td>
 
-                  {/* 9. الإجراءات */}
-                  <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onSelectVoucher) onSelectVoucher(voucher.voucherId);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-colors cursor-pointer shadow-2xs"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-blue-600" />
-                      <span>تفاصيل الإذن</span>
-                    </button>
+                  {/* الإجراءات */}
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onSelectVoucher) onSelectVoucher(item.voucherId);
+                        }}
+                        title="عرض تفاصيل الإذن والطباعة"
+                        className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
