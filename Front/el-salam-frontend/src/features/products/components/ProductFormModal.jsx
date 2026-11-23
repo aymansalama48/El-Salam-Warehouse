@@ -567,28 +567,6 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                       </option>
                     ))}
                   </select>
-
-                  {Number(unitType) === 4 && (
-                    <div className="mt-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                      <label className="block text-2xs font-bold text-indigo-700 mb-1 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                        اسم الوحدة الجديدة *
-                      </label>
-                      <input
-                        type="text"
-                        value={customUnit}
-                        onChange={(e) => {
-                          setCustomUnit(e.target.value);
-                          if (errors.customUnit) setErrors((prev) => ({ ...prev, customUnit: null }));
-                        }}
-                        placeholder="اكتب اسم الوحدة يدوياً (مثال: دوسيه، دفتر، قلم، علبة)..."
-                        className={`w-full h-10 px-3.5 text-xs sm:text-sm bg-indigo-50/50 border rounded-xl font-bold text-indigo-950 focus:outline-none focus:bg-white focus:border-indigo-600 transition-colors ${
-                          errors.customUnit ? "border-rose-400 bg-rose-50/40" : "border-indigo-300"
-                        }`}
-                      />
-                      {errors.customUnit && <p className="text-2xs text-rose-500 font-bold mt-1">{errors.customUnit}</p>}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -664,6 +642,29 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                 </div>
               )}
             </div>
+
+            {/* خانة اسم الوحدة الجديدة بعرض كامل عند اختيار مخصص */}
+            {activeTab !== "paper" && Number(unitType) === 4 && (
+              <div className="animate-in fade-in slide-in-from-top-1 duration-150 p-3.5 bg-indigo-50/40 rounded-2xl border border-indigo-200/80">
+                <label className="block text-xs font-bold text-indigo-900 mb-1.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  اسم الوحدة الجديدة المخصصة <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={customUnit}
+                  onChange={(e) => {
+                    setCustomUnit(e.target.value);
+                    if (errors.customUnit) setErrors((prev) => ({ ...prev, customUnit: null }));
+                  }}
+                  placeholder="اكتب اسم الوحدة يدوياً (مثال: دوسيه، دفتر، قلم، علبة، كيس، لفة)..."
+                  className={`w-full h-10 px-3.5 text-xs sm:text-sm bg-white border rounded-xl font-bold text-indigo-950 focus:outline-none focus:border-indigo-600 transition-colors ${
+                    errors.customUnit ? "border-rose-400 bg-rose-50/40" : "border-indigo-300"
+                  }`}
+                />
+                {errors.customUnit && <p className="text-2xs text-rose-500 font-bold mt-1.5">{errors.customUnit}</p>}
+              </div>
+            )}
 
             {/* محتوى الوحدة والرصيد الافتتاحي */}
             <div className={`grid ${isBoxUnit && !isEdit ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-4`}>
