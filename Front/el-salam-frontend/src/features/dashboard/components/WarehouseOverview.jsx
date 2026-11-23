@@ -1,12 +1,12 @@
-import { BookOpen, Layers, ArrowUpRight, AlertTriangle, Package2, BookCopy, FileStack } from "lucide-react";
+import { BookOpen, ArrowUpRight, AlertTriangle, Package2, BookCopy, FileStack } from "lucide-react";
 import { StatCard } from "./StatCard";
 
 export function WarehouseOverview({ stats, loading }) {
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((n) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((n) => (
             <div key={n} className="h-28 bg-slate-100 rounded-2xl"></div>
           ))}
         </div>
@@ -22,20 +22,6 @@ export function WarehouseOverview({ stats, loading }) {
   // حساب نصوص الإحصائيات الحقيقية
   const totalProductsText = `${stats?.totalProducts ?? 0} صنف`;
   const productsDetail = `${stats?.totalCategories ?? 0} فئات نشطة بالمخزن`;
-
-  const cartonsCount = stats?.totalCartons ?? 0;
-  const remReams = stats?.copyPaper?.remainingSubUnits ?? ((stats?.copyPaper?.totalSubUnits ?? 0) % 5);
-  let cartonsText = `${cartonsCount.toLocaleString()} كرتونة`;
-  if (remReams > 0) {
-    cartonsText += ` و ${remReams.toLocaleString()} رزمة`;
-  }
-  const notebooksCount = stats?.notebooks?.totalSubUnits ?? 0;
-  const bookletsCount = stats?.booklets?.totalSubUnits ?? 0;
-  const totalNotebooksAndBooklets = notebooksCount + bookletsCount;
-  const stockText = cartonsCount > 0 || remReams > 0
-    ? `${totalNotebooksAndBooklets.toLocaleString()} كشكول وكراس / ${cartonsText}`
-    : `${totalNotebooksAndBooklets.toLocaleString()} كشكول وكراس`;
-  const stockDetail = `إجمالي ${(stats?.totalSubUnits ?? 0).toLocaleString()} قطعة ورزمة`;
 
   const transactionsText = `${stats?.todayTransactionsCount ?? 0} إذن`;
   const transactionsDetail = `وارد: ${stats?.inboundToday ?? 0} • منصرف: ${stats?.outboundToday ?? 0}`;
@@ -71,8 +57,8 @@ export function WarehouseOverview({ stats, loading }) {
 
   return (
     <div className="space-y-4">
-      {/* 1. الكروت الأربعة الرئيسية بإحصائيات حقيقية */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 1. الكروت الثلاثة الرئيسية بإحصائيات حقيقية */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           title="إجمالي الأصناف المسجلة"
           value={totalProductsText}
@@ -80,14 +66,6 @@ export function WarehouseOverview({ stats, loading }) {
           changeType="neutral"
           icon={BookOpen}
           color="blue"
-        />
-        <StatCard
-          title="رصيد المستودع الحالي"
-          value={stockText}
-          change={stockDetail}
-          changeType="positive"
-          icon={Layers}
-          color="emerald"
         />
         <StatCard
           title="حركات اليوم (وارد / منصرف)"
