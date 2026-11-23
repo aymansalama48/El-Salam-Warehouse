@@ -7,6 +7,7 @@ export const PRODUCT_UNIT_TYPES = {
   NOTEBOOK: 1, // كشكول (كشكول فردي)
   BOOKLET: 2,  // كراس (كراس فردي)
   COPY_PAPER: 3, // ورق تصوير (كرتونة / رزمة)
+  CUSTOM: 4,   // مخصص (وحدة يدوي يحددها المستخدم)
 };
 
 /**
@@ -94,9 +95,10 @@ export const createProductSchema = z.object({
     .string()
     .uuid("معرف الفئة غير صالح.")
     .or(z.string().min(1, "يجب تحديد فئة المنتج.")),
-  unitType: z.union([z.literal(1), z.literal(2), z.literal(3)], {
+  unitType: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)], {
     errorMap: () => ({ message: "يجب تحديد نوع منتج صحيح." }),
   }),
+  customUnit: z.string().trim().optional().nullable(),
   unitsPerBaseUnit: z
     .coerce
     .number({ invalid_type_error: "يجب إدخال رقم صحيح لمحتوى الوحدة." })
@@ -145,9 +147,10 @@ export const updateProductSchema = z.object({
     .string()
     .uuid("معرف الفئة غير صالح.")
     .or(z.string().min(1, "يجب تحديد فئة المنتج.")),
-  unitType: z.union([z.literal(1), z.literal(2), z.literal(3)], {
+  unitType: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)], {
     errorMap: () => ({ message: "يجب تحديد نوع منتج صحيح." }),
   }),
+  customUnit: z.string().trim().optional().nullable(),
   unitsPerBaseUnit: z
     .coerce
     .number({ invalid_type_error: "يجب إدخال رقم صحيح لمحتوى الوحدة." })
@@ -180,19 +183,25 @@ export function validateProduct(data, isEdit = false) {
   const schema = isEdit ? updateProductSchema : createProductSchema;
   const result = schema.safeParse(data);
 
-  if (result.success) {
-    return { success: true, data: result.data, errors: {} };
+  const errors = {};
+  if (!result.success) {
+    result.error.issues.forEach((issue) => {
+      const field = issue.path[0];
+      if (field && !errors[field]) {
+        errors[field] = issue.message;
+      }
+    });
   }
 
-  const errors = {};
-  result.error.issues.forEach((issue) => {
-    const field = issue.path[0];
-    if (field && !errors[field]) {
-      errors[field] = issue.message;
-    }
-  });
+  if (Number(data.unitType) === 4 && (!data.customUnit || !data.customUnit.trim())) {
+    errors.customUnit = "يرجى كتابة اسم الوحدة المخصصة للصنف.";
+  }
 
-  return { success: false, errors };
+  if (Object.keys(errors).length > 0) {
+    return { success: false, errors };
+  }
+
+  return { success: true, data: result.data, errors: {} };
 }
 
 /**

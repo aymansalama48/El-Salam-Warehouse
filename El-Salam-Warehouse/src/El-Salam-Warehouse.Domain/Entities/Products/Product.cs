@@ -77,7 +77,8 @@ public class Product : AuditableEntity
         int initialTotalSubUnitStock,
         string? storageLocation,
         int lowStockThreshold = 0,
-        StockEntryUnit? lowStockThresholdUnit = null)
+        StockEntryUnit? lowStockThresholdUnit = null,
+        string? customUnit = null)
     {
         Name = name;
         CategoryId = categoryId;
@@ -85,31 +86,44 @@ public class Product : AuditableEntity
         TotalSubUnitStock = initialTotalSubUnitStock;
         StorageLocation = storageLocation;
 
-        ApplyUnitType(unitType);
+        ApplyUnitType(unitType, customUnit);
         SetLowStockThreshold(lowStockThreshold, lowStockThresholdUnit);
     }
 
     // ميثود خاصة بتحدد الوحدات المناسبة من بروفايل النوع
-    private void ApplyUnitType(ProductUnitType unitType)
+    private void ApplyUnitType(ProductUnitType unitType, string? customUnit = null)
     {
         UnitType = unitType;
         var profile = ProductUnitProfiles.Get(unitType);
-        BaseUnit = profile.BaseUnit;
-        SubUnit = profile.SubUnit;
-        EntryUnit = profile.EntryUnit;
+        var unitToUse = !string.IsNullOrWhiteSpace(customUnit) 
+            ? customUnit.Trim() 
+            : (!string.IsNullOrWhiteSpace(SubUnit) ? SubUnit : profile.SubUnit);
+
+        if (unitType == ProductUnitType.Custom)
+        {
+            BaseUnit = unitToUse;
+            SubUnit = unitToUse;
+            EntryUnit = StockEntryUnit.SubUnit;
+        }
+        else
+        {
+            BaseUnit = profile.BaseUnit;
+            SubUnit = profile.SubUnit;
+            EntryUnit = profile.EntryUnit;
+        }
     }
 
     // ميثود عامة لتغيير نوع المنتج وتحديث كل وحداته
-    public void ChangeUnitType(ProductUnitType newUnitType)
+    public void ChangeUnitType(ProductUnitType newUnitType, string? customUnit = null)
     {
-        ApplyUnitType(newUnitType);
+        ApplyUnitType(newUnitType, customUnit);
     }
 
     // تعيين حد التنبيه بالنواقص للصنف
     public void SetLowStockThreshold(int threshold, StockEntryUnit? unit = null)
     {
         LowStockThreshold = Math.Max(0, threshold);
-        // للكشاكيل والكراريس دايماً أصغر وحدة (كشكول أو كراس)، ولورق التصوير يقدر يختار كرتونة أو رزمة
+        // للكشاكيل والكراريس والأصناف المخصصة دايماً أصغر وحدة (كشكول أو كراس أو مخصص)، ولورق التصوير يقدر يختار كرتونة أو رزمة
         if (UnitType != ProductUnitType.CopyPaper)
         {
             LowStockThresholdUnit = StockEntryUnit.SubUnit;
@@ -133,12 +147,20 @@ public class Product : AuditableEntity
         int unitsPerBaseUnit,
         string? storageLocation,
         int? lowStockThreshold = null,
-        StockEntryUnit? lowStockThresholdUnit = null)
+        StockEntryUnit? lowStockThresholdUnit = null,
+        string? customUnit = null)
     {
         Name = name;
         CategoryId = categoryId;
         UnitsPerBaseUnit = unitsPerBaseUnit;
         StorageLocation = storageLocation;
+
+        if (UnitType == ProductUnitType.Custom && !string.IsNullOrWhiteSpace(customUnit))
+        {
+            var unit = customUnit.Trim();
+            BaseUnit = unit;
+            SubUnit = unit;
+        }
 
         if (lowStockThreshold.HasValue)
         {

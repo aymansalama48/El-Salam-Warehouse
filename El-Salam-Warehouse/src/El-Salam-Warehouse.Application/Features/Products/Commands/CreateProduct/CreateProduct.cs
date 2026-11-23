@@ -24,7 +24,8 @@ public record CreateProductCommand(
     string? StorageLocation,
     StockEntryUnit? InitialStockUnit = null,
     int? LowStockThreshold = 0,
-    StockEntryUnit? LowStockThresholdUnit = null) : ICommand<Guid>;
+    StockEntryUnit? LowStockThresholdUnit = null,
+    string? CustomUnit = null) : ICommand<Guid>;
 
 // 2. الـ Validator: بيتأكد إن البيانات سليمة ونوع المنتج صحيح
 public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
@@ -34,6 +35,7 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
         RuleFor(x => x.Name).NotEmpty().WithMessage("اسم المنتج مطلوب.");
         RuleFor(x => x.CategoryId).NotEmpty().WithMessage("يجب تحديد فئة المنتج.");
         RuleFor(x => x.UnitType).IsInEnum().WithMessage("نوع المنتج غير صحيح.");
+        RuleFor(x => x.CustomUnit).NotEmpty().WithMessage("يرجى كتابة اسم الوحدة المخصصة للصنف.").When(x => x.UnitType == ProductUnitType.Custom);
         RuleFor(x => x.UnitsPerBaseUnit).GreaterThan(0).WithMessage("يجب أن يكون محتوى الوحدة أكبر من صفر.");
         RuleFor(x => x.InitialStock).GreaterThanOrEqualTo(0).WithMessage("الرصيد الافتتاحي لا يمكن أن يكون سالباً.");
         RuleFor(x => x.InitialStockUnit).IsInEnum().When(x => x.InitialStockUnit.HasValue).WithMessage("وحدة الرصيد غير صحيحة.");
@@ -81,7 +83,7 @@ internal sealed class CreateProductCommandHandler : ICommandHandler<CreateProduc
             s => s.SetProperty(p => p.DisplayOrder, p => p.DisplayOrder + 1),
             cancellationToken);
 
-        // ننشئ المنتج بالكونستركتور الجديد مع حد النواقص المخصص
+        // ننشئ المنتج بالكونستركتور الجديد مع حد النواقص المخصص والوحدة المخصصة
         var product = new Product(
             request.Name,
             request.CategoryId,
@@ -90,7 +92,8 @@ internal sealed class CreateProductCommandHandler : ICommandHandler<CreateProduc
             totalSubUnits,
             request.StorageLocation,
             request.LowStockThreshold ?? 0,
-            request.LowStockThresholdUnit);
+            request.LowStockThresholdUnit,
+            request.CustomUnit);
 
         product.SetDisplayOrder(0);
 

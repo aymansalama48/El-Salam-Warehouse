@@ -23,7 +23,8 @@ public record UpdateProductCommand(
     int UnitsPerBaseUnit,
     string? StorageLocation,
     int? LowStockThreshold = null,
-    StockEntryUnit? LowStockThresholdUnit = null) : ICommand;
+    StockEntryUnit? LowStockThresholdUnit = null,
+    string? CustomUnit = null) : ICommand;
 
 // 2. Validator: فحص صحة بيانات التعديل
 public class UpdateProductCommandValidator : AbstractValidator<UpdateProductCommand>
@@ -34,6 +35,7 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
         RuleFor(x => x.Name).NotEmpty().WithMessage("اسم المنتج مطلوب.");
         RuleFor(x => x.CategoryId).NotEmpty().WithMessage("يجب تحديد فئة المنتج.");
         RuleFor(x => x.UnitType).IsInEnum().WithMessage("نوع المنتج غير صحيح.");
+        RuleFor(x => x.CustomUnit).NotEmpty().WithMessage("يرجى كتابة اسم الوحدة المخصصة للصنف.").When(x => x.UnitType == ProductUnitType.Custom && x.CustomUnit != null);
         RuleFor(x => x.UnitsPerBaseUnit).GreaterThan(0).WithMessage("يجب أن يكون محتوى الوحدة أكبر من صفر.");
         RuleFor(x => x.LowStockThreshold).GreaterThanOrEqualTo(0).When(x => x.LowStockThreshold.HasValue).WithMessage("حد النواقص لا يمكن أن يكون سالباً.");
     }
@@ -85,10 +87,11 @@ internal sealed class UpdateProductCommandHandler : ICommandHandler<UpdateProduc
             request.UnitsPerBaseUnit,
             request.StorageLocation,
             request.LowStockThreshold,
-            request.LowStockThresholdUnit);
+            request.LowStockThresholdUnit,
+            request.CustomUnit);
 
         // تغيير نوع المنتج وتحديث الوحدات
-        product.ChangeUnitType(request.UnitType);
+        product.ChangeUnitType(request.UnitType, request.CustomUnit);
 
         await _context.SaveChangesAsync(cancellationToken);
 

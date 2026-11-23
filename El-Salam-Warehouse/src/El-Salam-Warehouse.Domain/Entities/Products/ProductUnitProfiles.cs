@@ -19,7 +19,8 @@ public static class ProductUnitProfiles
     {
         [ProductUnitType.Notebook] = new ProductUnitProfile("كشكول", "كشكول", "كشكول", StockEntryUnit.SubUnit),
         [ProductUnitType.Booklet] = new ProductUnitProfile("كراس", "كراس", "كراس", StockEntryUnit.SubUnit),
-        [ProductUnitType.CopyPaper] = new ProductUnitProfile("ورق تصوير", "كرتونة", "رزمة", StockEntryUnit.BaseUnit)
+        [ProductUnitType.CopyPaper] = new ProductUnitProfile("ورق تصوير", "كرتونة", "رزمة", StockEntryUnit.BaseUnit),
+        [ProductUnitType.Custom] = new ProductUnitProfile("مخصص", "مخصص", "مخصص", StockEntryUnit.SubUnit)
     };
 
     // ميثود بتجيب بروفايل الوحدات لأي نوع منتج يتبعتلها

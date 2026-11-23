@@ -154,6 +154,7 @@ internal sealed class GetDaybookReportQueryHandler : IQueryHandler<GetDaybookRep
                 ProductUnitType.CopyPaper => "ورق تصوير",
                 ProductUnitType.Notebook => "كشاكيل",
                 ProductUnitType.Booklet => "كراريس",
+                ProductUnitType.Custom => "أصناف أخرى / مخصص",
                 _ => ""
             });
         }

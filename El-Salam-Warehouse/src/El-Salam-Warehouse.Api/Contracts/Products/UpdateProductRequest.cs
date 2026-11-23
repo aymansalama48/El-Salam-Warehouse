@@ -8,8 +8,9 @@ namespace El_Salam_Warehouse.Api.Contracts.Products;
 public record UpdateProductRequest(
     string Name,                                  // اسم المنتج
     Guid CategoryId,                              // رقم الفئة
-    ProductUnitType UnitType,                     // نوع المنتج (1 كشكول / 2 كراس / 3 ورق تصوير)
+    ProductUnitType UnitType,                     // نوع المنتج (1 كشكول / 2 كراس / 3 ورق تصوير / 4 مخصص)
     int UnitsPerBaseUnit,                         // عدد الصغيرة في الكبيرة
     string? StorageLocation,                      // مكان التخزين
     int? LowStockThreshold = null,                // حد التنبيه بالنواقص المخصص
-    StockEntryUnit? LowStockThresholdUnit = null);// وحدة حد التنبيه (1 كشكول/كراس/رزمة | 2 كرتونة)
+    StockEntryUnit? LowStockThresholdUnit = null, // وحدة حد التنبيه (1 كشكول/كراس/رزمة | 2 كرتونة)
+    string? CustomUnit = null);                   // اسم الوحدة اليدوية في حالة كان نوع المنتج مخصص

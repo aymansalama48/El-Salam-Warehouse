@@ -78,7 +78,7 @@ public class ProductsController : BaseApiController
     [Permission(Permissions.Products.Create)]
     public async Task<IResult> Create([FromBody] CreateProductRequest request)
     {
-        // تحويل الـ Request لـ Command بالنوع المباشر وحد النواقص المخصص
+        // تحويل الـ Request لـ Command بالنوع المباشر وحد النواقص المخصص والوحدة المخصصة
         var command = new CreateProductCommand(
             request.Name,
             request.CategoryId,
@@ -88,7 +88,8 @@ public class ProductsController : BaseApiController
             request.StorageLocation,
             request.InitialStockUnit,
             request.LowStockThreshold,
-            request.LowStockThresholdUnit);
+            request.LowStockThresholdUnit,
+            request.CustomUnit);
 
         var result = await Sender.Send(command);
         return HandleResult(result);
@@ -107,7 +108,8 @@ public class ProductsController : BaseApiController
             request.UnitsPerBaseUnit,
             request.StorageLocation,
             request.LowStockThreshold,
-            request.LowStockThresholdUnit);
+            request.LowStockThresholdUnit,
+            request.CustomUnit);
 
         var result = await Sender.Send(command);
         return HandleResult(result);

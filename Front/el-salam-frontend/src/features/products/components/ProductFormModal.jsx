@@ -14,8 +14,7 @@ import {
   AlertTriangle,
   BookOpen,
   FileText,
-  Sparkles,
-  Check
+  Sparkles
 } from "lucide-react";
 import { validateProduct } from "../schemas/productSchema";
 import { getCategoriesLookup } from "../../categories/services/categoryService";
@@ -38,6 +37,9 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
   const [name, setName] = useState(initialData?.name || "");
   const [categoryId, setCategoryId] = useState(initialData?.categoryId || categories[0]?.id || "");
   const [unitType, setUnitType] = useState(initialData?.unitType ?? 1);
+  const [customUnit, setCustomUnit] = useState(
+    initialData?.unitType === 4 ? (initialData.subUnit || initialData.baseUnit || "") : ""
+  );
   const [unitsPerBaseUnit, setUnitsPerBaseUnit] = useState(
     (initialData?.unitsPerBaseUnit ?? (initialData?.unitType === 3 ? 5 : initialData?.unitType === 2 ? 20 : 10)).toString()
   );
@@ -140,6 +142,11 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
       setCategoryId(initialData.categoryId || "");
       const uType = initialData.unitType ?? 1;
       setUnitType(uType);
+      if (uType === 4) {
+        setCustomUnit(initialData.subUnit || initialData.baseUnit || "");
+      } else {
+        setCustomUnit("");
+      }
       setActiveTab(uType === 3 ? "paper" : "notebooks");
       setUnitsPerBaseUnit((initialData.unitsPerBaseUnit ?? (uType === 3 ? 5 : uType === 2 ? 20 : 10)).toString());
       setLowStockThreshold(initialData.lowStockThreshold != null ? String(initialData.lowStockThreshold) : uType === 3 ? "50" : "1000");
@@ -147,6 +154,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
       setStorageLocation(initialData.storageLocation || "");
       setErrors({});
     } else {
+      setCustomUnit("");
       // وضع إضافة جديد: إذا كان التاب ورق تصوير نضبط الإعدادات الافتراضية للورق
       if (activeTab === "paper") {
         setUnitType(3);
@@ -168,6 +176,15 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
     }
   }, [isOpen, initialData]);
 
+  // أنواع المنتجات المتاحة للاختيار في الكشاكيل/الكراريس/المخصص
+  const notebookUnitTypes = useMemo(() => {
+    const list = unitTypesList.filter((u) => u.unitType === 1 || u.unitType === 2 || u.unitType === 4);
+    if (!list.some((u) => u.unitType === 4)) {
+      list.push({ unitType: 4, displayName: "مخصص (وحدة يدوية)", baseUnit: "مخصص", subUnit: "مخصص", entryUnit: 1 });
+    }
+    return list;
+  }, [unitTypesList]);
+
   if (!isOpen) return null;
 
   // تحديد مواصفات نوع المنتج النشط
@@ -176,13 +193,13 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
     unitTypesList[0] ||
     DEFAULT_PRODUCT_UNIT_TYPES[0];
 
-  const baseUnit = activeProfile.baseUnit;
   const subUnit = activeProfile.subUnit;
   const isBoxUnit = Number(unitType) === 3;
-  const entryUnit = activeProfile.entryUnit; // 1 = SubUnit | 2 = BaseUnit
 
-  // أنواع المنتجات المتاحة للاختيار في الكشاكيل/الكراريس
-  const notebookUnitTypes = unitTypesList.filter((u) => u.unitType === 1 || u.unitType === 2);
+  const isCustomUnit = Number(unitType) === 4;
+  const effectiveUnit = isCustomUnit 
+    ? (customUnit.trim() || "وحدة") 
+    : (subUnit || (Number(unitType) === 2 ? "كراس" : "كشكول"));
 
   // التبديل الذكي بين تابي (كراسات وكشاكيل) و (ورق تصوير)
   const handleTabSwitch = (tab) => {
@@ -221,6 +238,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
     const newType = Number(newTypeVal);
     setUnitType(newType);
     if (errors.unitType) setErrors((prev) => ({ ...prev, unitType: null }));
+    if (newType !== 4 && errors.customUnit) setErrors((prev) => ({ ...prev, customUnit: null }));
 
     setInitialStockUnit(1);
     setLowStockThresholdUnit(1);
@@ -264,43 +282,25 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
   const parsedUnitsPer = Number(unitsPerBaseUnit) || 0;
   const parsedInitialStock = Number(initialStock) || 0;
 
-  // 1) في حالة entryUnit = 1 (كشكول أو كراس):
+  // 1) في حالة entryUnit = 1 (كشكول أو كراس أو مخصص):
   const fullPacks = parsedUnitsPer > 0 ? Math.floor(parsedInitialStock / parsedUnitsPer) : 0;
   const restPieces = parsedUnitsPer > 0 ? parsedInitialStock % parsedUnitsPer : 0;
 
-  // 2) في حالة entryUnit = 2 (كرتونة ورق):
-  const totalReams = parsedInitialStock * parsedUnitsPer;
-
   const parsedThreshold = Number(lowStockThreshold) || 0;
   const thresholdUnit = isBoxUnit ? Number(lowStockThresholdUnit) : 1;
-
-  const getContentLabel = () => `عدد ${subUnit} في ${baseUnit}`;
-
-  const getContentExample = () => {
-    if (isBoxUnit) return "مثال: 5 رزم في الكرتونة";
-    if (activeProfile.unitType === 2) return "كراس فردي";
-    return "كشكول فردي";
-  };
 
   const getStockLabel = () => {
     if (isBoxUnit) {
       return "الرصيد الافتتاحي بالمستودع";
     }
-    return `عدد ${subUnit} (الرصيد الافتتاحي)`;
+    return `عدد ${effectiveUnit} (الرصيد الافتتاحي)`;
   };
 
   const getStockPlaceholder = () => {
     if (isBoxUnit) {
       return initialStockUnit === 2 ? "مثال: 50" : "مثال: 250";
     }
-    return `مثال: 500 ${subUnit}`;
-  };
-
-  const getStockInputBadge = () => {
-    if (isBoxUnit) {
-      return initialStockUnit === 2 ? "كرتونة" : "رزمة";
-    }
-    return subUnit;
+    return `مثال: 500 ${effectiveUnit}`;
   };
 
   const getStockHint = () => {
@@ -309,7 +309,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
         ? `إجمالي عدد الكراتين المتوفرة بالمستودع`
         : `إجمالي عدد الرزم المتوفرة بالمستودع`;
     }
-    return `إجمالي عدد ال${subUnit} المتوفرة بالمستودع`;
+    return `إجمالي عدد ال${effectiveUnit} المتوفرة بالمستودع`;
   };
 
   const handleSubmit = async (e) => {
@@ -319,6 +319,12 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
     const finalUnitsPer = isBoxUnit ? (parsedUnitsPer || 5) : 1;
     const finalUnitType = activeTab === "paper" ? 3 : Number(unitType);
     const finalCategoryId = categoryId || (activeTab === "paper" ? categoriesList.find(isPaperCategory)?.id : displayedCategories[0]?.id) || categoriesList[0]?.id;
+    const isCustom = finalUnitType === 4;
+
+    if (isCustom && !customUnit.trim()) {
+      setErrors((prev) => ({ ...prev, customUnit: "يرجى كتابة اسم الوحدة المخصصة للصنف (مثل: دوسيه، قلم، علبة)" }));
+      return;
+    }
 
     const formData = isEdit
       ? {
@@ -329,6 +335,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
           storageLocation: storageLocation.trim() || null,
           lowStockThreshold: parsedThreshold,
           lowStockThresholdUnit: thresholdUnit,
+          customUnit: isCustom ? customUnit.trim() : null,
         }
       : {
           name: name.trim(),
@@ -340,6 +347,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
           storageLocation: storageLocation.trim() || null,
           lowStockThreshold: parsedThreshold,
           lowStockThresholdUnit: thresholdUnit,
+          customUnit: isCustom ? customUnit.trim() : null,
         };
 
     const validation = validateProduct(formData, isEdit);
@@ -555,10 +563,32 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                   >
                     {notebookUnitTypes.map((opt) => (
                       <option key={opt.unitType} value={opt.unitType}>
-                        {opt.displayName}
+                        {opt.unitType === 4 ? "مخصص (كتابة وحدة يدوية)" : opt.displayName}
                       </option>
                     ))}
                   </select>
+
+                  {Number(unitType) === 4 && (
+                    <div className="mt-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <label className="block text-2xs font-bold text-indigo-700 mb-1 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                        اسم الوحدة الجديدة *
+                      </label>
+                      <input
+                        type="text"
+                        value={customUnit}
+                        onChange={(e) => {
+                          setCustomUnit(e.target.value);
+                          if (errors.customUnit) setErrors((prev) => ({ ...prev, customUnit: null }));
+                        }}
+                        placeholder="اكتب اسم الوحدة يدوياً (مثال: دوسيه، دفتر، قلم، علبة)..."
+                        className={`w-full h-10 px-3.5 text-xs sm:text-sm bg-indigo-50/50 border rounded-xl font-bold text-indigo-950 focus:outline-none focus:bg-white focus:border-indigo-600 transition-colors ${
+                          errors.customUnit ? "border-rose-400 bg-rose-50/40" : "border-indigo-300"
+                        }`}
+                      />
+                      {errors.customUnit && <p className="text-2xs text-rose-500 font-bold mt-1">{errors.customUnit}</p>}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -707,7 +737,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                       </div>
                     ) : (
                       <span className="absolute left-3 text-xs font-bold text-slate-400 pointer-events-none">
-                        {subUnit}
+                        {effectiveUnit}
                       </span>
                     )}
                   </div>
@@ -767,7 +797,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                     <span>حد تنبيه النواقص (الرصيد الحرج)</span>
                     <span className="px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
                       {parsedThreshold > 0
-                        ? `${parsedThreshold.toLocaleString()} ${isBoxUnit ? (lowStockThresholdUnit === 2 ? "كرتونة" : "رزمة") : subUnit}`
+                        ? `${parsedThreshold.toLocaleString()} ${isBoxUnit ? (lowStockThresholdUnit === 2 ? "كرتونة" : "رزمة") : effectiveUnit}`
                         : "غير محدد (0)"}
                     </span>
                   </div>
@@ -899,7 +929,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                     </div>
                   ) : (
                     <span className="absolute left-3 text-xs font-bold text-slate-500 pointer-events-none">
-                      {subUnit}
+                      {effectiveUnit}
                     </span>
                   )}
                 </div>
@@ -912,7 +942,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData, categor
                     ? lowStockThresholdUnit === 2
                       ? `إذا انخفض رصيد المخزن إلى ${parsedThreshold.toLocaleString()} كرتونة أو أقل، سيظهر الصنف كمنخفض المخزون.`
                       : `إذا انخفض رصيد المخزن إلى ${parsedThreshold.toLocaleString()} رزمة أو أقل، سيظهر الصنف كمنخفض المخزون.`
-                    : `إذا انخفض رصيد الصنف إلى ${parsedThreshold.toLocaleString()} ${subUnit} أو أقل، سيظهر الصنف كمنخفض المخزون.`}
+                    : `إذا انخفض رصيد الصنف إلى ${parsedThreshold.toLocaleString()} ${effectiveUnit} أو أقل، سيظهر الصنف كمنخفض المخزون.`}
                 </span>
                 {isBoxUnit && lowStockThresholdUnit === 2 && parsedThreshold > 0 && parsedUnitsPer > 0 && (
                   <div className="mt-1 font-bold text-amber-800">

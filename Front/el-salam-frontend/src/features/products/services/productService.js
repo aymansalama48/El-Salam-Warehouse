@@ -12,6 +12,7 @@ export const DEFAULT_PRODUCT_UNIT_TYPES = [
   { unitType: 1, displayName: "كشكول", baseUnit: "كشكول", subUnit: "كشكول", entryUnit: 1 },
   { unitType: 2, displayName: "كراس", baseUnit: "كراس", subUnit: "كراس", entryUnit: 1 },
   { unitType: 3, displayName: "ورق تصوير", baseUnit: "كرتونة", subUnit: "رزمة", entryUnit: 2 },
+  { unitType: 4, displayName: "مخصص (وحدة يدوية)", baseUnit: "مخصص", subUnit: "مخصص", entryUnit: 1 },
 ];
 
 /**
@@ -286,6 +287,7 @@ export const addProduct = async (productData) => {
     initialStockUnit: productData.initialStockUnit ? Number(productData.initialStockUnit) : null,
     lowStockThreshold: Number(productData.lowStockThreshold ?? 0),
     lowStockThresholdUnit: productData.lowStockThresholdUnit ? Number(productData.lowStockThresholdUnit) : null,
+    customUnit: productData.customUnit ? productData.customUnit.trim() : null,
   };
 
   const response = await apiClient.post(ENDPOINTS.PRODUCTS.CREATE, payload);
@@ -313,6 +315,7 @@ export const updateProduct = async (id, productData) => {
     unitType: Number(productData.unitType),
     unitsPerBaseUnit: Number(productData.unitsPerBaseUnit),
     storageLocation: productData.storageLocation?.trim() || null,
+    customUnit: productData.customUnit ? productData.customUnit.trim() : null,
   };
 
   // إرسال حد النواقص فقط إذا تم تمريره صراحة لتجنب تصفير الحد في حالة التعديل البسيط (كاسم الصنف)

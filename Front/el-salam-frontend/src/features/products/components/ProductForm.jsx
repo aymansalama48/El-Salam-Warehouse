@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PackagePlus, Edit, Tag, Layers, Box, MapPin, Info, AlertCircle, Loader2, AlertTriangle, Sliders, X } from "lucide-react";
+import { PackagePlus, Edit, Tag, Layers, Box, MapPin, Info, AlertCircle, Loader2, AlertTriangle, X, Sparkles } from "lucide-react";
 import { validateProduct } from "../schemas/productSchema";
 import { getCategoriesLookup } from "../../categories/services/categoryService";
 import { getProductUnitTypes, DEFAULT_PRODUCT_UNIT_TYPES } from "../services/productService";
@@ -18,6 +18,9 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
   const [name, setName] = useState(initialData?.name || "");
   const [categoryId, setCategoryId] = useState(initialData?.categoryId || categories[0]?.id || "");
   const [unitType, setUnitType] = useState(initialData?.unitType ?? 1);
+  const [customUnit, setCustomUnit] = useState(
+    initialData?.unitType === 4 ? (initialData.subUnit || initialData.baseUnit || "") : ""
+  );
   const [initialStockUnit, setInitialStockUnit] = useState(initialData?.unitType === 3 ? 2 : 1);
   const [unitsPerBaseUnit, setUnitsPerBaseUnit] = useState(
     (initialData?.unitsPerBaseUnit ?? (initialData?.unitType === 3 ? 5 : initialData?.unitType === 2 ? 20 : 10)).toString()
@@ -87,21 +90,25 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
     unitTypesList[0] ||
     DEFAULT_PRODUCT_UNIT_TYPES[0];
 
-  const baseUnit = activeProfile.baseUnit;
   const subUnit = activeProfile.subUnit;
   const isBoxUnit = activeProfile.unitType === 3;
-  const entryUnit = activeProfile.entryUnit;
 
   const availableUnitTypes = isEdit
     ? initialData?.unitType === 3
       ? unitTypesList.filter((u) => u.unitType === 3)
-      : unitTypesList.filter((u) => u.unitType === 1 || u.unitType === 2)
+      : unitTypesList.filter((u) => u.unitType === 1 || u.unitType === 2 || u.unitType === 4)
     : unitTypesList;
+
+  const isCustomUnit = Number(unitType) === 4;
+  const effectiveUnit = isCustomUnit
+    ? (customUnit.trim() || "وحدة")
+    : (subUnit || (Number(unitType) === 2 ? "كراس" : "كشكول"));
 
   const handleUnitTypeChange = (newTypeVal) => {
     const newType = Number(newTypeVal);
     setUnitType(newType);
     if (errors.unitType) setErrors((prev) => ({ ...prev, unitType: null }));
+    if (newType !== 4 && errors.customUnit) setErrors((prev) => ({ ...prev, customUnit: null }));
 
     if (newType === 3) {
       setInitialStockUnit(2);
@@ -139,33 +146,25 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
   const restPieces = parsedUnitsPer > 0 ? parsedInitialStock % parsedUnitsPer : 0;
   const totalReams = parsedInitialStock * parsedUnitsPer;
 
-  const getContentLabel = () => `عدد ${subUnit} في ${baseUnit}`;
-
-  const getContentExample = () => {
-    if (isBoxUnit) return "مثال: 5 رزم في الكرتونة";
-    if (activeProfile.unitType === 2) return "كراس فردي";
-    return "كشكول فردي";
-  };
-
   const getStockLabel = () => {
     if (isBoxUnit) {
       return initialStockUnit === 2 ? `عدد الكراتين (الرصيد الافتتاحي)` : `عدد الرزم (الرصيد الافتتاحي)`;
     }
-    return `عدد ${subUnit} (الرصيد الافتتاحي)`;
+    return `عدد ${effectiveUnit} (الرصيد الافتتاحي)`;
   };
 
   const getStockPlaceholder = () => {
     if (isBoxUnit) {
       return initialStockUnit === 2 ? `مثال: 50 كرتونة` : `مثال: 250 رزمة`;
     }
-    return `مثال: 500 ${subUnit}`;
+    return `مثال: 500 ${effectiveUnit}`;
   };
 
   const getStockInputBadge = () => {
     if (isBoxUnit) {
       return initialStockUnit === 2 ? "كرتونة" : "رزمة";
     }
-    return subUnit;
+    return effectiveUnit;
   };
 
   const getStockHint = () => {
@@ -174,7 +173,7 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
         ? `إجمالي عدد الكراتين المتوفرة بالمستودع`
         : `إجمالي عدد الرزم المتوفرة بالمستودع`;
     }
-    return `إجمالي عدد ال${subUnit} المتوفرة بالمستودع`;
+    return `إجمالي عدد ال${effectiveUnit} المتوفرة بالمستودع`;
   };
 
   const handleSubmit = async (e) => {
@@ -182,8 +181,13 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
     setErrors({});
 
     const thresholdUnit = isBoxUnit ? Number(lowStockThresholdUnit) : 1;
-
     const finalUnitsPer = isBoxUnit ? (parsedUnitsPer || 5) : 1;
+    const isCustom = Number(unitType) === 4;
+
+    if (isCustom && !customUnit.trim()) {
+      setErrors((prev) => ({ ...prev, customUnit: "يرجى كتابة اسم الوحدة المخصصة للصنف" }));
+      return;
+    }
 
     const formData = isEdit
       ? {
@@ -194,6 +198,7 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
           storageLocation: storageLocation.trim() || null,
           lowStockThreshold: parsedThreshold,
           lowStockThresholdUnit: thresholdUnit,
+          customUnit: isCustom ? customUnit.trim() : null,
         }
       : {
           name: name.trim(),
@@ -205,6 +210,7 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
           storageLocation: storageLocation.trim() || null,
           lowStockThreshold: parsedThreshold,
           lowStockThresholdUnit: thresholdUnit,
+          customUnit: isCustom ? customUnit.trim() : null,
         };
 
     const validation = validateProduct(formData, isEdit);
@@ -299,10 +305,32 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
             >
               {availableUnitTypes.map((opt) => (
                 <option key={opt.unitType} value={opt.unitType}>
-                  {opt.displayName} ({opt.baseUnit})
+                  {opt.unitType === 4 ? "مخصص (كتابة وحدة يدوية)" : `${opt.displayName} (${opt.baseUnit})`}
                 </option>
               ))}
             </select>
+
+            {Number(unitType) === 4 && (
+              <div className="mt-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                <label className="block text-2xs font-bold text-indigo-700 mb-1 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  اسم الوحدة الجديدة *
+                </label>
+                <input
+                  type="text"
+                  value={customUnit}
+                  onChange={(e) => {
+                    setCustomUnit(e.target.value);
+                    if (errors.customUnit) setErrors((prev) => ({ ...prev, customUnit: null }));
+                  }}
+                  placeholder="اكتب اسم الوحدة يدوياً (مثال: دوسيه، دفتر، قلم، علبة)..."
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-indigo-50/50 border rounded-xl font-bold text-indigo-950 focus:outline-none focus:bg-white focus:border-indigo-600 transition-colors ${
+                    errors.customUnit ? "border-rose-400 bg-rose-50/40" : "border-indigo-300"
+                  }`}
+                />
+                {errors.customUnit && <p className="text-2xs text-rose-500 font-bold mt-1">{errors.customUnit}</p>}
+              </div>
+            )}
           </div>
 
           <div>
@@ -483,7 +511,7 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
                 <span>حد تنبيه النواقص (الرصيد الحرج)</span>
                 <span className="px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
                   {parsedThreshold > 0
-                    ? `${parsedThreshold.toLocaleString()} ${isBoxUnit ? (lowStockThresholdUnit === 2 ? "كرتونة" : "رزمة") : subUnit}`
+                    ? `${parsedThreshold.toLocaleString()} ${isBoxUnit ? (lowStockThresholdUnit === 2 ? "كرتونة" : "رزمة") : effectiveUnit}`
                     : "غير محدد (0)"}
                 </span>
               </div>
@@ -619,7 +647,7 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
                     </div>
                   ) : (
                     <span className="absolute left-3 text-xs font-bold text-slate-500 pointer-events-none">
-                      {subUnit}
+                      {effectiveUnit}
                     </span>
                   )}
                 </div>
@@ -632,7 +660,7 @@ export function ProductForm({ categories = [], onSubmit, onCancel, initialData }
                     ? lowStockThresholdUnit === 2
                       ? `إذا انخفض رصيد المخزن إلى ${parsedThreshold.toLocaleString()} كرتونة أو أقل، سيظهر الصنف كمنخفض المخزون.`
                       : `إذا انخفض رصيد المخزن إلى ${parsedThreshold.toLocaleString()} رزمة أو أقل، سيظهر الصنف كمنخفض المخزون.`
-                    : `إذا انخفض رصيد الصنف إلى ${parsedThreshold.toLocaleString()} ${subUnit} أو أقل، سيظهر الصنف كمنخفض المخزون.`}
+                    : `إذا انخفض رصيد الصنف إلى ${parsedThreshold.toLocaleString()} ${effectiveUnit} أو أقل، سيظهر الصنف كمنخفض المخزون.`}
                 </span>
                 {isBoxUnit && lowStockThresholdUnit === 2 && parsedThreshold > 0 && parsedUnitsPer > 0 && (
                   <div className="mt-1 font-bold text-amber-800">
