@@ -43,6 +43,55 @@ body {
   background: #94a3b8;
 }
 
+/* Explicit Horizontal and Vertical Scrollbars */
+.custom-scrollbar-x {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+.custom-scrollbar-x::-webkit-scrollbar {
+  height: 6px;
+}
+
+.custom-scrollbar-x::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar-x::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar-x::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.custom-scrollbar-y {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 /* SweetAlert2 Theme Customization for El-Salam Warehouse */
 .swal2-popup.salam-swal-popup {
   font-family: 'Cairo', system-ui, sans-serif !important;

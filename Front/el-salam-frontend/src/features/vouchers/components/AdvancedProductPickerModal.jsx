@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Search, Check, Package, X, Layers, AlertCircle, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
+import { Search, Check, Package, X, Layers, AlertCircle, Loader2, Sparkles, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { getProductsLookup } from "../../products/services/productService";
 import { getCategoriesLookup } from "../../categories/services/categoryService";
 
@@ -23,6 +23,23 @@ export function AdvancedProductPickerModal({
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
 
   const debounceTimerRef = useRef(null);
+  const categoriesRef = useRef(null);
+
+  const scrollCategories = (direction) => {
+    if (categoriesRef.current) {
+      const scrollAmount = 200;
+      categoriesRef.current.scrollBy({
+        left: direction === "right" ? scrollAmount : -scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const handleCategoryWheel = (e) => {
+    if (categoriesRef.current && e.deltaY !== 0) {
+      categoriesRef.current.scrollLeft += e.deltaY;
+    }
+  };
 
   // 1. تحميل الفئات من الباك إند عند فتح النافذة
   useEffect(() => {
@@ -155,43 +172,67 @@ export function AdvancedProductPickerModal({
             )}
           </div>
 
-          {/* Category Chips (مباشرة من الباك إند بدون أرقام) */}
+          {/* Category Chips (مباشرة من الباك إند بدون أرقام) مع شريط سكرول جانبي ظاهر وأزرار تمرير */}
           {categories.length > 0 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-2xs sm:text-xs">
+            <div className="relative flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setSelectedCategoryId("all")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all shrink-0 cursor-pointer ${
-                  selectedCategoryId === "all"
-                    ? "bg-slate-900 text-white shadow-2xs"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                }`}
+                onClick={() => scrollCategories("right")}
+                className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center shrink-0 shadow-2xs cursor-pointer transition-colors"
+                title="تمرير لليمين"
               >
-                جميع الفئات
+                <ChevronRight className="w-4 h-4" />
               </button>
-              {categories.map((cat) => {
-                const isSelected = selectedCategoryId === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategoryId(cat.id)}
-                    className={`px-3 py-1 rounded-lg font-bold transition-all shrink-0 cursor-pointer ${
-                      isSelected
-                        ? "bg-emerald-700 text-white shadow-2xs"
-                        : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
+
+              <div
+                ref={categoriesRef}
+                onWheel={handleCategoryWheel}
+                className="flex-1 flex items-center gap-1.5 overflow-x-auto pb-2 pt-0.5 custom-scrollbar-x text-2xs sm:text-xs scroll-smooth"
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId("all")}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all shrink-0 cursor-pointer ${
+                    selectedCategoryId === "all"
+                      ? "bg-slate-900 text-white shadow-2xs"
+                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  }`}
+                >
+                  جميع الفئات
+                </button>
+                {categories.map((cat) => {
+                  const isSelected = selectedCategoryId === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategoryId(cat.id)}
+                      className={`px-3 py-1 rounded-lg font-bold transition-all shrink-0 cursor-pointer ${
+                        isSelected
+                          ? "bg-emerald-700 text-white shadow-2xs"
+                          : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => scrollCategories("left")}
+                className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center shrink-0 shadow-2xs cursor-pointer transition-colors"
+                title="تمرير لليسار"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>
 
         {/* Products List / Grid (بيانات الباك إند الفعلية) */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar-y">
           {loading ? (
             <div className="py-16 text-center flex flex-col items-center justify-center gap-2 text-slate-500">
               <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />

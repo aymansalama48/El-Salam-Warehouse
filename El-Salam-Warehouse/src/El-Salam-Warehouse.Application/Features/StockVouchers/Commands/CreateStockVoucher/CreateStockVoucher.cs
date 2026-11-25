@@ -181,17 +181,28 @@ internal sealed class CreateStockVoucherCommandHandler : ICommandHandler<CreateS
         }
 
         // توليد رقم الإذن (IN-2026-0001 / OUT-2026-0001 / RET-2026-0001 / SHT-2026-0001)
-        var typePrefix = request.Type switch
-        {
-            StockVoucherType.Inbound => "IN",
-            StockVoucherType.Outbound => "OUT",
-            StockVoucherType.Return => "RET",
-            StockVoucherType.Shortage => "SHT",
-            _ => "VOU"
-        };
-        var prefix = $"{typePrefix}-{voucherDate.Year}-";
-        var count = await _context.StockVouchers.CountAsync(v => v.VoucherNumber.StartsWith(prefix), cancellationToken);
-        var voucherNumber = $"{prefix}{count + 1:D4}";
+        //var typePrefix = request.Type switch
+        //{
+        //    StockVoucherType.Inbound => "IN",
+        //    StockVoucherType.Outbound => "OUT",
+        //    StockVoucherType.Return => "RET",
+        //    StockVoucherType.Shortage => "SHT",
+        //    _ => "VOU"
+        //};
+        //var prefix = $"{typePrefix}-{voucherDate.Year}-";
+        //var count = await _context.StockVouchers.CountAsync(v => v.VoucherNumber.StartsWith(prefix), cancellationToken);
+        //var voucherNumber = $"{prefix}{count + 1:D4}";
+
+        var existingNumbers = await _context.StockVouchers
+            .Select(v => v.VoucherNumber)
+            .ToListAsync(cancellationToken);
+
+        var maxNumber = existingNumbers
+            .Select(n => int.TryParse(n, out var num) ? num : 0)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        var voucherNumber = (maxNumber + 1).ToString("D4");
 
         var isExternal = request.Source == VoucherSource.External || isReturn;
 
