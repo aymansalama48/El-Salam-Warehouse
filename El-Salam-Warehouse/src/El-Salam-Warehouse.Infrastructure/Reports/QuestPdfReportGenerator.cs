@@ -337,18 +337,10 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                         });
                     });
 
-                    // الصف الثاني: إجمالي الرصيد وحالة المخزون
+                    // الصف الثاني: حالة المخزون ومسجل الصنف
                     specCol.Item().Row(r =>
                     {
                         r.Spacing(8);
-                        r.RelativeItem().Border(0.6f).BorderColor(Colors.Grey.Lighten1).Background(Colors.Grey.Lighten5).Padding(8).Column(c =>
-                        {
-                            c.Item().Text($"إجمالي الرصيد بال{model.SubUnit}:").FontSize(8).FontColor(Colors.Grey.Darken2);
-                            var totalStockText = model.SubUnit == "رزمة" || model.BaseUnit == "كرتونة"
-                                ? $"{Num(model.TotalSubUnits)} رزمة ({Num(model.FullBaseUnits)} كرتونة)"
-                                : $"{Num(model.TotalSubUnits)} {model.SubUnit}";
-                            c.Item().PaddingTop(2).Text(totalStockText).FontSize(11).Bold().FontColor(Colors.Green.Darken3);
-                        });
 
                         var statusColor = model.StatusLabel switch
                         {
@@ -361,17 +353,6 @@ public sealed class QuestPdfReportGenerator : IReportGenerator
                         {
                             c.Item().Text("حالة وفرة المخزون:").FontSize(8).FontColor(Colors.Grey.Darken2);
                             c.Item().PaddingTop(2).Text(model.StatusLabel).FontSize(11).Bold().FontColor(statusColor);
-                        });
-                    });
-
-                    // الصف الثالث: مكان التخزين ومسجل الصنف
-                    specCol.Item().Row(r =>
-                    {
-                        r.Spacing(8);
-                        r.RelativeItem().Border(0.6f).BorderColor(Colors.Grey.Lighten1).Background(Colors.Grey.Lighten5).Padding(8).Column(c =>
-                        {
-                            c.Item().Text("مكان التخزين المعتمد بالمستودع:").FontSize(8).FontColor(Colors.Grey.Darken2);
-                            c.Item().PaddingTop(2).Text(string.IsNullOrWhiteSpace(model.StorageLocation) ? "المستودع الرئيسي" : model.StorageLocation).FontSize(10).Bold();
                         });
 
                         r.RelativeItem().Border(0.6f).BorderColor(Colors.Grey.Lighten1).Background(Colors.Grey.Lighten5).Padding(8).Column(c =>
