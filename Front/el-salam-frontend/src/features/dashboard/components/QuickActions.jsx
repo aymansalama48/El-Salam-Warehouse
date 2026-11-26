@@ -1,4 +1,13 @@
-import { PlusCircle, FileText, DownloadCloud, RefreshCw, RotateCcw, AlertTriangle, Zap } from "lucide-react";
+import { 
+  PlusCircle, 
+  FileText, 
+  DownloadCloud, 
+  RefreshCw, 
+  RotateCcw, 
+  AlertTriangle, 
+  Zap,
+  Sparkles
+} from "lucide-react";
 
 export function QuickActions({ 
   onRefresh, 
@@ -11,77 +20,129 @@ export function QuickActions({
   refreshing 
 }) {
   return (
-    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h3 className="font-bold text-slate-800 text-sm">إجراءات سريعة</h3>
-        <p className="text-2xs text-slate-400 font-medium">الوصول السريع للمهام اليومية وتسجيل الأذونات بالمستودع</p>
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-5 space-y-3.5">
+      {/* الترويسة: العنوان والأدوات المساعدة (تصدير وتحديث) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200/60 text-blue-600 flex items-center justify-center shrink-0 shadow-2xs">
+            <Sparkles className="w-4.5 h-4.5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-slate-800 text-sm sm:text-base">إجراءات سريعة</h3>
+            <p className="text-2xs sm:text-xs text-slate-400 font-medium">الوصول السريع للمهام اليومية وتسجيل الأذونات بالمستودع</p>
+          </div>
+        </div>
+
+        {/* أدوات التحديث والتصدير */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {onExport && (
+            <button
+              onClick={onExport}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/80 rounded-xl transition-all cursor-pointer shadow-2xs"
+              title="تصدير بيان جرد أصناف المستودع"
+            >
+              <DownloadCloud className="w-3.5 h-3.5 text-slate-500" />
+              <span>تصدير جرد المستودع</span>
+            </button>
+          )}
+
+          <button
+            onClick={onRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/80 rounded-xl transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+            title="تحديث الأرقام والإحصائيات"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${refreshing ? "animate-spin" : ""}`} />
+            <span>تحديث البيانات</span>
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={onRefresh}
-          disabled={refreshing}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-          title="تحديث الأرقام والإحصائيات"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-          <span>تحديث البيانات</span>
-        </button>
-
+      {/* شبكة أزرار العمليات والأذونات الخمسة */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        {/* 1. حركة سريعة (وارد وصرف فوري) - مميزة وبارزة */}
         {onNewQuickTransfer && (
           <button
             onClick={onNewQuickTransfer}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold text-amber-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer border border-amber-300/80"
+            className="group relative flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-amber-950 border border-amber-300/90 shadow-xs hover:shadow-md transition-all cursor-pointer text-right"
             title="تسجيل إذن وارد وصرف فوري معاً في نفس اللحظة"
           >
-            <Zap className="w-3.5 h-3.5 text-amber-900 fill-amber-900 animate-bounce" />
-            <span>⚡ حركة سريعة (وارد وصرف فوري)</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-950/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <Zap className="w-4 h-4 text-amber-950 fill-amber-950" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-black truncate flex items-center gap-1">
+                حركة سريعة
+                <span className="text-3xs px-1 py-0.5 bg-amber-900/15 rounded font-black">فوري</span>
+              </div>
+              <div className="text-2xs text-amber-900/80 font-bold truncate">وارد + صرف معاً</div>
+            </div>
           </button>
         )}
 
+        {/* 2. إذن توريد جديد (وارد) */}
         <button
           onClick={onNewSupply}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors cursor-pointer"
+          className="group flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-blue-50/70 hover:bg-blue-100/80 text-blue-900 border border-blue-200/70 hover:border-blue-300 transition-all cursor-pointer text-right shadow-2xs"
+          title="تسجيل إذن توريد جديد وإضافة كميات للمخزن"
         >
-          <PlusCircle className="w-3.5 h-3.5" />
-          <span>إذن توريد جديد</span>
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <PlusCircle className="w-4 h-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-extrabold truncate text-blue-900">إذن توريد جديد</div>
+            <div className="text-2xs text-blue-600/80 font-medium truncate">إضافة بضاعة للمستودع</div>
+          </div>
         </button>
 
+        {/* 3. إذن صرف بضاعة (منصرف) */}
         <button
           onClick={onNewDispatch}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors cursor-pointer"
+          className="group flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/80 text-emerald-900 border border-emerald-200/70 hover:border-emerald-300 transition-all cursor-pointer text-right shadow-2xs"
+          title="تسجيل إذن صرف وخروج بضاعة من المخزن"
         >
-          <FileText className="w-3.5 h-3.5" />
-          <span>إذن صرف بضاعة</span>
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <FileText className="w-4 h-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-extrabold truncate text-emerald-900">إذن صرف بضاعة</div>
+            <div className="text-2xs text-emerald-600/80 font-medium truncate">صرف وخروج من المخزن</div>
+          </div>
         </button>
 
+        {/* 4. إذن مرتجع جديد */}
         {onNewReturn && (
           <button
             onClick={onNewReturn}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors cursor-pointer"
+            className="group flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-amber-50/60 hover:bg-amber-100/80 text-amber-900 border border-amber-200/70 hover:border-amber-300 transition-all cursor-pointer text-right shadow-2xs"
+            title="تسجيل بضاعة مرتجعة إلى المخزن"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>إذن مرتجع جديد</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <RotateCcw className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-extrabold truncate text-amber-900">إذن مرتجع جديد</div>
+              <div className="text-2xs text-amber-600/80 font-medium truncate">إرجاع كميات للمستودع</div>
+            </div>
           </button>
         )}
 
+        {/* 5. إذن تسوية عجز */}
         {onNewShortage && (
           <button
             onClick={onNewShortage}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors cursor-pointer"
+            className="group flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-purple-50/60 hover:bg-purple-100/80 text-purple-900 border border-purple-200/70 hover:border-purple-300 transition-all cursor-pointer text-right shadow-2xs"
+            title="تسجيل عجز أو تالف وتسوية الرصيد"
           >
-            <AlertTriangle className="w-3.5 h-3.5" />
-            <span>إذن تسوية عجز</span>
+            <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-extrabold truncate text-purple-900">إذن تسوية عجز</div>
+              <div className="text-2xs text-purple-600/80 font-medium truncate">معالجة وتعديل الأرصدة</div>
+            </div>
           </button>
         )}
-
-        <button
-          onClick={onExport}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
-        >
-          <DownloadCloud className="w-3.5 h-3.5 text-slate-500" />
-          <span>تصدير جرد المستودع</span>
-        </button>
       </div>
     </div>
   );
