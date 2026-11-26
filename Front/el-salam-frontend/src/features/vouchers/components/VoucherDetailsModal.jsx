@@ -317,48 +317,20 @@ export function VoucherDetailsModal({
                         <th className="py-2.5 px-3 w-10 text-center">#</th>
                         <th className="py-2.5 px-3">اسم الصنف أو المنتج التام</th>
                         <th className="py-2.5 px-3 text-center">الكمية المقيدة بالإذن</th>
-                        <th className="py-2.5 px-3 text-center">المحتوى الفعلي بالمستودع</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {(voucher.items || []).map((it, idx) => {
-                        const isCarton = it.unitLabel === "كرتونة";
-                        const isReam = it.unitLabel === "رزمة";
-
-                        let actualContentText = `${Number(it.quantitySubUnits).toLocaleString()} ${it.unitLabel}`;
-                        if (isCarton) {
-                          actualContentText = `${Number(it.quantitySubUnits).toLocaleString()} رزمة`;
-                        } else if (isReam) {
-                          const boxes = Math.floor(Number(it.quantity) / 5);
-                          const rest = Number(it.quantity) % 5;
-                          if (boxes > 0 && rest > 0) {
-                            actualContentText = `${boxes.toLocaleString()} كرتونة و ${rest} رزمة`;
-                          } else if (boxes > 0) {
-                            actualContentText = `${boxes.toLocaleString()} كرتونة`;
-                          } else {
-                            actualContentText = `${Number(it.quantity).toLocaleString()} رزمة`;
-                          }
-                        } else {
-                          actualContentText = `${Number(it.quantitySubUnits || it.quantity).toLocaleString()} ${it.unitLabel || "كشكول"}`;
-                        }
-
-                        return (
-                          <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
-                            <td className="py-2.5 px-3 text-slate-400 font-mono text-center font-bold">{idx + 1}</td>
-                            <td className="py-2.5 px-3 font-bold text-slate-900">{it.productName}</td>
-                            <td className="py-2.5 px-3 text-center">
-                              <span className="inline-block px-2.5 py-1 bg-slate-100 rounded-lg text-slate-900 font-extrabold border border-slate-200/60">
-                                {Number(it.quantity).toLocaleString()} {it.unitLabel}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-3 text-center">
-                              <span className="inline-block px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/70 font-extrabold rounded-lg">
-                                {actualContentText}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {(voucher.items || []).map((it, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="py-2.5 px-3 text-slate-400 font-mono text-center font-bold">{idx + 1}</td>
+                          <td className="py-2.5 px-3 font-bold text-slate-900">{it.productName}</td>
+                          <td className="py-2.5 px-3 text-center">
+                            <span className="inline-block px-2.5 py-1 bg-slate-100 rounded-lg text-slate-900 font-extrabold border border-slate-200/60">
+                              {Number(it.quantity).toLocaleString()} {it.unitLabel}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
