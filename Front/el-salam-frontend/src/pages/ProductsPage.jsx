@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   getProducts,
   getProductById,
@@ -8,7 +8,6 @@ import {
   updateProduct,
   deleteProduct,
   reorderProducts,
-  formatBaseUnitStock,
 } from "../features/products/services/productService";
 import { getCategoriesLookup } from "../features/categories/services/categoryService";
 import { ProductHeader } from "../features/products/components/ProductHeader";
@@ -259,11 +258,6 @@ export default function ProductsPage() {
     }
   };
 
-  // إعادة الصفحة إلى الأولى عند تغيير معايير البحث أو الفئة
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm, selectedCategory]);
-
   const getProductFields = (prod) => {
     if (!prod) return [];
     const isPaper = prod.unitType === 3 || prod.baseUnit === "كرتونة";
@@ -387,9 +381,15 @@ export default function ProductsPage() {
 
       <ProductsFilter
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+        setSearchTerm={(term) => {
+          setSearchTerm(term);
+          setPage(1);
+        }}
         selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
+        setSelectedCategory={(cat) => {
+          setSelectedCategory(cat);
+          setPage(1);
+        }}
         categories={categories}
       />
 
@@ -470,8 +470,6 @@ export default function ProductsPage() {
       <ProductsReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        categories={categories}
-        products={products}
       />
 
       <StockAlertSettingsModal

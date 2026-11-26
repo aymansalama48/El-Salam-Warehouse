@@ -13,20 +13,16 @@ import {
   PackageCheck, 
   ListFilter 
 } from "lucide-react";
-import { getProductsReportPdf, getProducts } from "../services/productService";
+import { getProductsReportPdf, getProductsLookup } from "../services/productService";
 import { validateProductsReport } from "../schemas/productSchema";
 import { getCategoriesLookup } from "../../categories/services/categoryService";
 import { handlePdfDownloadAndPreview, createPendingPdfWindow } from "../../../utils/reportUtils";
 import { showSuccess, showError } from "../../../utils/alertUtils";
 
-export function ProductsReportModal({ 
-  isOpen, 
-  onClose, 
-  categories: propCategories = [],
-  products: propProducts = []
-}) {
-  const [fetchedCategories, setFetchedCategories] = useState([]);
-  const [fetchedProducts, setFetchedProducts] = useState([]);
+export function ProductsReportModal({ isOpen, onClose }) {
+  const [categories, setCategories] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [selectedType, setSelectedType] = useState("all"); // "all" | "notebooks" | "paper"
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectionMode, setSelectionMode] = useState("all"); // "all" | "custom"
@@ -35,50 +31,54 @@ export function ProductsReportModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // جلب الفئات إذا لم تُمرر
+  const handleClose = () => {
+    setSelectedProductIds([]);
+    setProductSearch("");
+    setSelectedType("all");
+    setSelectedCategoryId("all");
+    setSelectionMode("all");
+    setError(null);
+    onClose();
+  };
+
+  // جلب كافة الأصناف والفئات كاملة ومباشرة من الباك إند عند فتح النافذة
   useEffect(() => {
-    if (!isOpen || propCategories.length > 0) return;
+    if (!isOpen) return;
 
     let ignore = false;
-    getCategoriesLookup()
-      .then((data) => {
-        if (!ignore && Array.isArray(data)) {
-          setFetchedCategories(data);
-        }
-      })
-      .catch((err) => {
+
+    Promise.all([
+      getCategoriesLookup().catch((err) => {
         console.error("فشل في جلب الفئات للتقرير:", err);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [isOpen, propCategories.length]);
-
-  // جلب المنتجات إذا لم تُمرر
-  useEffect(() => {
-    if (!isOpen || propProducts.length > 0) return;
-
-    let ignore = false;
-    getProducts({ pageSize: "all" })
-      .then((data) => {
+        return [];
+      }),
+      getProductsLookup({ limit: 1000 }).catch((err) => {
+        console.error("فشل في جلب المنتجات للتقرير من الباك إند:", err);
+        return [];
+      }),
+    ])
+      .then(([cats, prods]) => {
         if (!ignore) {
-          const list = Array.isArray(data) ? data : (data?.items || []);
-          setFetchedProducts(list);
+          if (Array.isArray(cats) && cats.length > 0) {
+            setCategories(cats);
+          }
+          if (Array.isArray(prods)) {
+            setAllProducts(prods);
+          }
         }
       })
-      .catch((err) => {
-        console.error("فشل في جلب المنتجات للتقرير:", err);
+      .finally(() => {
+        if (!ignore) {
+          setIsDataLoaded(true);
+        }
       });
 
     return () => {
       ignore = true;
     };
-  }, [isOpen, propProducts.length]);
+  }, [isOpen]);
 
-  const categories = propCategories.length > 0 ? propCategories : fetchedCategories;
-  const allProducts = propProducts.length > 0 ? propProducts : fetchedProducts;
-  const isLoadingProducts = isOpen && propProducts.length === 0 && fetchedProducts.length === 0;
+  const isLoadingProducts = !isDataLoaded;
 
   // تصفية الأصناف المتاحة حسب نوع المنتج (كشاكيل وكراريس معاً / ورق تصوير) والفئة المختارة
   const filteredProducts = useMemo(() => {
@@ -234,7 +234,7 @@ export function ProductsReportModal({
           : `تم تنزيل وفتح تقرير جرد ${selectedCategory ? selectedCategory.name : "جميع الأصناف"} ${typeLabel ? `(${typeLabel})` : ""} بالكامل`;
 
       showSuccess("تم إنشاء تقرير الجرد بنجاح", successDetails);
-      onClose();
+      handleClose();
     } catch (err) {
       if (printWindow && !printWindow.closed) {
         printWindow.close();
@@ -270,7 +270,7 @@ export function ProductsReportModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer disabled:opacity-40"
           >
@@ -507,7 +507,7 @@ export function ProductsReportModal({
         <div className="px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2.5 shrink-0 bg-slate-50/90 shadow-2xs">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
             className="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
           >
